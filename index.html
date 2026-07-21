@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Product Camp 2026 · Tech for Good</title>
+<style>
+  :root{
+    --ink:#1f2933; --body:#3e4c59; --muted:#8a94a6;
+    --accent:#e8622a; --blue:#2563eb; --line:#e4e0d6; --bg:#f4f2ec; --card:#fff;
+    --mono:"SF Mono",Menlo,Consolas,"Courier New",monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--body);font-family:var(--sans);line-height:1.75;font-size:16px}
+  .wrap{max-width:860px;margin:0 auto;padding:0 24px}
+  a{color:var(--blue);text-decoration:none;border-bottom:1px solid rgba(37,99,235,.3)}
+  a:hover{border-bottom-color:var(--blue)}
+  code{font-family:var(--mono);background:#eceae3;padding:2px 6px;border-radius:3px;font-size:.9em}
+
+  /* ---------- language toggle ---------- */
+  body.lang-en :lang(zh){display:none}
+  body.lang-zh :lang(en){display:none}
+  #langToggle{position:fixed;top:16px;right:16px;z-index:50;display:flex;
+              background:rgba(255,255,255,.94);border:1px solid var(--line);
+              border-radius:99px;overflow:hidden;font-family:var(--mono);font-size:12px;
+              box-shadow:0 2px 8px rgba(0,0,0,.08)}
+  #langToggle button{border:0;background:none;padding:7px 15px;cursor:pointer;
+                     color:var(--muted);font-family:inherit;font-size:inherit}
+  #langToggle button.on{background:var(--ink);color:#fff}
+
+  header{background:var(--ink);color:#fff;padding:56px 0 44px;margin-bottom:44px}
+  .prompt{font-family:var(--mono);color:var(--accent);font-size:20px;margin-bottom:14px}
+  .prompt span{animation:blink 1.2s step-end infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+  header h1{font-size:38px;line-height:1.25;margin:0 0 12px;color:#fff;font-weight:700}
+  header p{color:#c9d1da;margin:0;font-size:17px}
+  header .org{color:var(--muted);font-size:13px;margin-top:18px;font-family:var(--mono)}
+
+  h2{font-size:15px;font-family:var(--mono);text-transform:uppercase;letter-spacing:1.5px;
+     color:var(--accent);margin:52px 0 16px;font-weight:700}
+  h3{font-size:21px;color:var(--ink);margin:32px 0 8px;font-weight:700}
+  p{margin:0 0 14px}
+  ul{margin:0 0 14px;padding-left:22px}
+  li{margin-bottom:7px}
+  .lead{font-size:18px;color:var(--ink)}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:22px 24px;margin-bottom:16px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+  .team h3{margin-top:0;display:flex;align-items:center;gap:9px}
+  .dot{width:11px;height:11px;border-radius:50%;display:inline-block;flex:none}
+  .team .links{font-family:var(--mono);font-size:13px;margin-top:12px;line-height:2}
+  .team .links a{display:block}
+  .todo{color:var(--muted);font-style:italic}
+
+  details{background:var(--card);border:1px solid var(--line);border-radius:8px;margin-bottom:10px;overflow:hidden}
+  details[open]{border-color:#d6d1c4}
+  summary{padding:15px 20px;cursor:pointer;font-weight:700;color:var(--ink);font-size:17px;
+          list-style:none;display:flex;align-items:baseline;gap:12px}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"▸";color:var(--accent);font-size:13px;transition:transform .15s;flex:none}
+  details[open] summary::before{transform:rotate(90deg)}
+  .day-no{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:1px;flex:none}
+  .day-body{padding:0 20px 20px 44px}
+  .day-body h4{font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:1.2px;
+               color:var(--muted);margin:16px 0 7px}
+  .rung{display:inline-block;font-family:var(--mono);font-size:11px;background:#eef2ff;color:var(--blue);
+        padding:2px 9px;border-radius:99px;margin-left:auto;letter-spacing:.5px;flex:none}
+
+  .note{border-left:3px solid var(--accent);background:#fff6f1;padding:14px 18px;margin:16px 0;border-radius:0 6px 6px 0}
+  .note strong{color:var(--ink)}
+
+  table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:15px;background:var(--card)}
+  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}
+
+  footer{border-top:1px solid var(--line);margin-top:64px;padding:28px 0 60px;
+         color:var(--muted);font-size:14px;text-align:center}
+  @media(max-width:600px){
+    header h1{font-size:29px} .wrap{padding:0 18px} .day-body{padding-left:20px}
+    .rung{display:none} #langToggle{top:10px;right:10px}
+  }
+</style>
+</head>
+<body class="lang-en">
+
+<div id="langToggle">
+  <button id="btnEn" class="on" onclick="setLang('en')">EN</button>
+  <button id="btnZh" onclick="setLang('zh')">中文</button>
+</div>
+
+<header>
+  <div class="wrap">
+    <div class="prompt">&gt;_<span>|</span></div>
+    <h1>AI Product Camp 2026</h1>
+    <p lang="en">Tech for Good &middot; Seven days to turn an idea into something that actually helps someone</p>
+    <p lang="zh">科技向善 &middot; 七天，把一个想法变成能真正帮到别人的产品</p>
+    <div class="org">TKEthics &times; WeUp &times; Zhong Gu Foundation</div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <p class="lead" lang="en">
+    This is the course homepage. All lesson content, references and templates live here.
+    Each team's code and finished product lives in its own repository.
+  </p>
+  <p class="lead" lang="zh">
+    这是我们 Camp 的公开课程主页。所有课程内容、参考资料与模板都在这里；
+    三个小组的代码与作品在各自的仓库中。
+  </p>
+
+  <!-- ============ REQUIREMENTS ============ -->
+  <h2><span lang="en">Before we start</span><span lang="zh">开营前的准备</span></h2>
+  <div class="card">
+    <ul lang="en">
+      <li>Create a <a href="https://github.com/signup">GitHub account</a> and send your username to a TA</li>
+      <li>Install <a href="https://cursor.com">Cursor</a> (or whichever AI coding tool you prefer) and sign in</li>
+      <li>Install <strong>Lark (飞书)</strong> &mdash; we use it to record interviews on Day 2; it transcribes up to 3 hours</li>
+      <li>A laptop that connects to the internet. You do <strong>not</strong> need Git, and you will never touch a command line</li>
+      <li>Curiosity, a willingness to build, and the patience to sit with something that doesn't work yet</li>
+    </ul>
+    <ul lang="zh">
+      <li>注册一个 <a href="https://github.com/signup">GitHub 账号</a>，并把用户名发给助教</li>
+      <li>安装 <a href="https://cursor.com">Cursor</a>（或你习惯的 AI 编程工具），并登录</li>
+      <li>安装 <strong>飞书 Lark</strong>——第二天田野调查录音要用，可转写 3 小时</li>
+      <li>一台能上网的笔记本电脑（<strong>不需要</strong>安装 Git，也不需要用命令行）</li>
+      <li>好奇心，愿意动手，以及不怕东西一开始跑不起来的耐心</li>
+    </ul>
+  </div>
+
+  <!-- ============ WHAT WILL I LEARN ============ -->
+  <h2><span lang="en">What will I learn</span><span lang="zh">你会学到什么</span></h2>
+  <div lang="en">
+    <p>
+      You will walk the full path of a <strong>product creator</strong>: find a real problem from real users,
+      write it down as a one-page spec, direct an AI to build it, test it, attack it, publish it &mdash;
+      and be able to explain why you made every choice along the way.
+    </p>
+    <p>
+      Technically, you'll learn <strong>vibe coding</strong> (driving an AI with clear language),
+      how to store and share code on GitHub, how to use a real database as your backend,
+      and how to write a <code>SKILL.md</code> so the AI does one job reliably instead of randomly.
+    </p>
+    <p>
+      But the things this course really wants to leave you with are different:
+      <strong>learning to question and verify what the AI tells you</strong> (it will be confidently wrong),
+      the courage to start before you feel ready, the patience to keep going when it breaks,
+      and the ability to take someone else's criticism and use it as fuel.
+    </p>
+  </div>
+  <div lang="zh">
+    <p>
+      你会完整走一遍<strong>产品创造者</strong>的路：从真实用户身上发现问题，写下一页产品规格，
+      指挥 AI 把它做出来，测试它、攻击它，最后把它发布出去，并讲清楚自己为什么这样做。
+    </p>
+    <p>
+      技术上，你会掌握 <strong>Vibe Coding</strong>——用清晰的语言驱动 AI 编程；学会用 GitHub 保存和分享代码；
+      用真实的数据库作为后端；给 AI 写 <code>SKILL.md</code> 让它稳定地做好一件事。
+    </p>
+    <p>
+      但这门课真正想留给你的，是另外几样东西：<strong>学会质疑并检验 AI 给的答案</strong>（它会一本正经地说错）、
+      在不确定中敢于开始、在反复失败时保持耐心，以及把别人的批评当作自己前进的燃料。
+    </p>
+  </div>
+
+  <div class="note">
+    <div lang="en">
+      <strong>One thread runs through the whole week: Model &rarr; Agent &rarr; Workflow.</strong>
+      On Day 1, <em>you</em> are the loop &mdash; you run the code, you paste the error back in.
+      On Day 4, an AI agent closes that loop by itself. On Day 6, you'll watch several agents
+      decide among themselves who does what.
+    </div>
+    <div lang="zh">
+      <strong>贯穿全营的一条主线：Model &rarr; Agent &rarr; Workflow。</strong>
+      第一天你自己是那个循环——你运行代码、你把报错贴回去；第四天，AI 智能体自己完成这个循环；
+      第六天，你会看到多个智能体自己决定谁该做什么。
+    </div>
+  </div>
+
+  <!-- ============ TEAMS ============ -->
+  <h2><span lang="en">Teams</span><span lang="zh">三个小组</span></h2>
+  <p lang="en">Each team gets its own repository, its own live URL and its own commit history. Add your links here:</p>
+  <p lang="zh">每组一个独立仓库，有自己的网址和提交历史。把你们的链接填进来：</p>
+  <div class="grid">
+    <div class="card team">
+      <h3><span class="dot" style="background:var(--accent)"></span>Team 1</h3>
+      <div class="todo"><span lang="en">Product name / one-line description</span><span lang="zh">产品名称 / 一句话介绍</span></div>
+      <div class="links">
+        <a href="#">&rarr; Repository &middot; 代码仓库</a>
+        <a href="#">&rarr; Live app &middot; 在线作品</a>
+      </div>
+    </div>
+    <div class="card team">
+      <h3><span class="dot" style="background:var(--blue)"></span>Team 2</h3>
+      <div class="todo"><span lang="en">Product name / one-line description</span><span lang="zh">产品名称 / 一句话介绍</span></div>
+      <div class="links">
+        <a href="#">&rarr; Repository &middot; 代码仓库</a>
+        <a href="#">&rarr; Live app &middot; 在线作品</a>
+      </div>
+    </div>
+    <div class="card team">
+      <h3><span class="dot" style="background:#0f9d58"></span>Team 3</h3>
+      <div class="todo"><span lang="en">Product name / one-line description</span><span lang="zh">产品名称 / 一句话介绍</span></div>
+      <div class="links">
+        <a href="#">&rarr; Repository &middot; 代码仓库</a>
+        <a href="#">&rarr; Live app &middot; 在线作品</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ DAILY NOTES ============ -->
+  <h2><span lang="en">Daily notes</span><span lang="zh">每日课程</span></h2>
+
+  <!-- ---------- DAY 1 ---------- -->
+  <details open>
+    <summary>
+      <span class="day-no">DAY 1</span>
+      <span lang="en">The Attention War, and Learning to Build</span>
+      <span lang="zh">注意力战争，与动手搭建</span>
+      <span class="rung">Model</span>
+    </summary>
+    <div class="day-body">
+      <div lang="en">
+        <h4>Objectives</h4>
+        <p>Understand how the apps that keep you scrolling were actually designed. Understand why AI
+           says wrong things so confidently. And build your first working, published app.</p>
+        <h4>Process</h4>
+        <ul>
+          <li>Icebreaker: "Where do you stand" &mdash; vote with your feet, then defend your position</li>
+          <li>Round-robin: how do you actually use AI? Has it ever fooled you?</li>
+          <li>Mini-lecture: <strong>how hallucination happens</strong> &mdash; a model predicts the next likely word; it does not look things up</li>
+          <li>Lecture: the attention economy, addiction by design, and how governments have responded</li>
+          <li>Open thinking: mind-map your way to a problem worth solving</li>
+          <li>Tech lecture: <strong>what is vibe coding?</strong> (the Model &rarr; Agent &rarr; Workflow map)</li>
+          <li>Build: make a clickable demo with AI</li>
+          <li><strong>Push &amp; publish</strong>: push to GitHub and get your first live URL</li>
+          <li>Form teams and choose the problem each team will field-test tomorrow</li>
+        </ul>
+        <h4>Line of the day</h4>
+        <p>"The AI that invents a fake fact also invents a fake function."</p>
+      </div>
+      <div lang="zh">
+        <h4>今天的目标</h4>
+        <p>理解那些让人停不下来的 App 究竟是怎么设计的；搞清楚 AI 为什么会一本正经地说错话；
+           并亲手做出你的第一个能运行、能发布的应用。</p>
+        <h4>流程</h4>
+        <ul>
+          <li>破冰："你站在哪一边"——用身体投票，为自己的立场辩护</li>
+          <li>轮流分享：你平时怎么用 AI？它有没有骗过你？</li>
+          <li>迷你讲座：<strong>AI 幻觉是怎么产生的</strong>——它预测下一个最可能的词，而不是查资料</li>
+          <li>讲座：注意力经济、成瘾式设计，以及各国的监管回应</li>
+          <li>开放思考：画一张思维导图，找到你想解决的问题</li>
+          <li>技术讲座：<strong>什么是 Vibe Coding</strong>（Model &rarr; Agent &rarr; Workflow 全景图）</li>
+          <li>动手搭建：用 AI 做出一个可点击的 demo</li>
+          <li><strong>发布上线</strong>：推送到 GitHub，拿到你的第一个网址</li>
+          <li>组队，并确定每组要去田野验证的问题</li>
+        </ul>
+        <h4>今日金句</h4>
+        <p>"会编造假事实的 AI，也一样会编造不存在的函数。"</p>
+      </div>
+    </div>
+  </details>
+
+  <!-- ---------- DAY 2 ---------- -->
+  <details>
+    <summary>
+      <span class="day-no">DAY 2</span>
+      <span lang="en">Field Day &mdash; Rural Jiangxi (Shangrao)</span>
+      <span lang="zh">田野调查：江西上饶</span>
+      <span class="rung">Field</span>
+    </summary>
+    <div class="day-body">
+      <div lang="en">
+        <h4>Objectives</h4>
+        <p>Meet your real users. Watch them use the thing you built yesterday &mdash; the most honest
+           feedback you will ever get.</p>
+        <h4>Process</h4>
+        <ul>
+          <li>On the train: finalise your questions, assign roles, test Lark. Interview in pairs &mdash; one asks, one records</li>
+          <li>Arrival: school tour, icebreaker and group game, lunch (hosted by Zhong Gu)</li>
+          <li>Part 1: <strong>our students</strong> run "Where do you stand" for their rural peers</li>
+          <li>Part 2: <strong>Demo field-test</strong> &mdash; village students use your product while you observe and take notes</li>
+          <li>Part 3: knowledge challenge quiz</li>
+          <li>Part 4: <strong>Wish wall</strong> &mdash; "I hope AI can do ___ for our school." Photograph every single one</li>
+          <li>Home visits: one team per family, interviews only</li>
+          <li>On the train home: turn what you saw into product decisions</li>
+        </ul>
+        <h4>Mindset</h4>
+        <p>We are here as <strong>listeners</strong>, not saviours. The real work today is listening.</p>
+      </div>
+      <div lang="zh">
+        <h4>今天的目标</h4>
+        <p>见到真实的用户。看着他们使用你昨天做的东西——这是你能得到的最诚实的反馈。</p>
+        <h4>流程</h4>
+        <ul>
+          <li>火车上：确定访谈问题、分工、测试 Lark 录音。两人一组，一人问、一人记</li>
+          <li>抵达：参观校园、破冰游戏、午餐（众谷主持）</li>
+          <li>Part 1：由<strong>我们的学生</strong>为乡村同学主持"你站在哪一边"</li>
+          <li>Part 2：<strong>Demo 实测</strong>——乡村同学真实使用你的产品，你在旁边观察记录</li>
+          <li>Part 3：知识挑战小竞赛</li>
+          <li>Part 4：<strong>心愿墙</strong>——"我希望 AI 能为我们校园做 ___"，每一条都拍下来</li>
+          <li>家访：每组一个家庭，只做访谈</li>
+          <li>返程火车上：把发现变成产品结论</li>
+        </ul>
+        <h4>心态</h4>
+        <p>我们是<strong>倾听者</strong>，不是拯救者。今天真正的工作是听。</p>
+      </div>
+    </div>
+  </details>
+
+  <!-- ---------- DAY 3 ---------- -->
+  <details>
+    <summary>
+      <span class="day-no">DAY 3</span>
+      <span lang="en">Product Design and Ethics</span>
+      <span lang="zh">产品设计与伦理审计</span>
+      <span class="rung">Spec</span>
+    </summary>
+    <div class="day-body">
+      <div lang="en">
+        <h4>Objectives</h4>
+        <p>Leave with three things: a <strong>Constitution</strong>, a one-page <strong>Spec</strong>,
+           and a clickable <strong>demo</strong>.</p>
+        <h4>Process</h4>
+        <ul>
+          <li>Spec lecture, with a live side-by-side: same AI, a vague prompt vs. a sharp spec &mdash; wildly different results</li>
+          <li>Write your spec: use the <a href="#resources">seven questions</a>, or let the AI interview you and then cut what it drafts</li>
+          <li>Ethics lecture (laptops closed): three lenses &mdash; consequences, rights and duties, virtue</li>
+          <li><strong>Ethics review &rarr; write your Constitution</strong>: turn the findings into 5&ndash;7 rules you will never break</li>
+          <li>From spec to demo: one core feature, mock data</li>
+          <li><strong>Boardroom pitch</strong>: the other teams are the board, and their job is to find a rule your product would break</li>
+        </ul>
+        <h4>The most important sentence today</h4>
+        <p>"<strong>A rule with no mechanism is a rule you will break.</strong>"<br>
+           Finding a violation in your own product is a win, not a failure.</p>
+      </div>
+      <div lang="zh">
+        <h4>今天的目标</h4>
+        <p>带走三样东西：一份<strong>宪法</strong>、一页<strong>产品规格</strong>、一个能点的 <strong>demo</strong>。</p>
+        <h4>流程</h4>
+        <ul>
+          <li>规格讲座：现场对比——同一个 AI，模糊的提示 vs. 清晰的规格，结果天差地别</li>
+          <li>写你的规格：用<a href="#resources">七个问题</a>，或让 AI 反过来采访你，然后你来删改</li>
+          <li>伦理讲座（合上电脑）：三种视角——后果、权利与义务、德性</li>
+          <li><strong>伦理审计 &rarr; 写下你的宪法</strong>：把审计结论变成 5&ndash;7 条永不逾越的规则</li>
+          <li>从规格到 demo：用 mock 数据做出一个核心功能</li>
+          <li><strong>董事会路演</strong>：其他组当董事会，任务是——找出你的产品会违反自己哪一条规则</li>
+        </ul>
+        <h4>今天最重要的一句话</h4>
+        <p>"<strong>没有机制保障的规则，就是你迟早会违反的规则。</strong>"<br>
+           在自己的产品里发现漏洞，是加分，不是丢脸。</p>
+      </div>
+    </div>
+  </details>
+
+  <!-- ---------- DAY 4 ---------- -->
+  <details>
+    <summary>
+      <span class="day-no">DAY 4</span>
+      <span lang="en">From Demo to MVP: the Table Becomes a Backend</span>
+      <span lang="zh">从 Demo 到 MVP：让表格成为后端</span>
+      <span class="rung">Agent</span>
+    </summary>
+    <div class="day-body">
+      <div lang="en">
+        <h4>Objectives</h4>
+        <p>Today you graduate from writing code yourself to <strong>directing an agent</strong> that writes it.
+           The one thing that must work: your app <strong>reads</strong> stories from the backend and
+           <strong>writes</strong> a vote back to it.</p>
+        <h4>Process</h4>
+        <ul>
+          <li>Tech lecture: <strong>the repo, and the two files that steer the agent</strong> &mdash; clone / commit / push;
+              open source and licenses; <code>CLAUDE.md</code> and <code>SKILL.md</code> (not code &mdash; instructions)</li>
+          <li>Plan + schema, built live on a projected table: one row per record, one meaning per column,
+              an ID on every row (<strong>primary key</strong>), a second vote goes in a new row (<strong>one-to-many</strong>)</li>
+          <li><strong>Connect + smoke test</strong>: prove the pipe works <em>before</em> writing any product code</li>
+          <li>READ: stories appear in your app</li>
+          <li>Open-source shortlist: see what others have already built; clone a sample <code>SKILL.md</code></li>
+          <li>Write a Skill that actually works, then build the <strong>glossary feature</strong> &mdash; this product's one AI feature</li>
+          <li><strong>WRITE</strong>: cast a vote and watch a new row land in the table, live on the projector</li>
+          <li>Developer Log: what did the agent get wrong today? What did you change?</li>
+        </ul>
+        <h4>Your Constitution goes to work</h4>
+        <p>Put it at the top of <code>CLAUDE.md</code> &mdash; the agent reads it before it writes a single line of code.</p>
+      </div>
+      <div lang="zh">
+        <h4>今天的目标</h4>
+        <p>今天你从"自己写代码"升级为"<strong>指挥智能体写代码</strong>"。今天必须跑通的一件事：
+           应用能从后端<strong>读出</strong>故事，并把一次投票<strong>写回去</strong>。</p>
+        <h4>流程</h4>
+        <ul>
+          <li>技术讲座：<strong>仓库，以及那两个指挥智能体的文件</strong>——clone / commit / push；
+              开源与许可证；<code>CLAUDE.md</code> 与 <code>SKILL.md</code>（不是代码，是指令）</li>
+          <li>计划 + 数据结构：在投屏的表格上现场建表——
+              一行一个记录、一列一个含义、每行都要有 ID（<strong>主键</strong>）、投票放新的一行（<strong>一对多</strong>）</li>
+          <li><strong>连接 + 冒烟测试</strong>：先证明数据管道是通的，再写任何产品代码</li>
+          <li>READ：故事出现在你的应用里</li>
+          <li>开源清单：看看别人已经做过什么，克隆一份示例 <code>SKILL.md</code></li>
+          <li>写一个真正好用的 Skill，然后做出<strong>生词表功能</strong>——本产品唯一的 AI 核心功能</li>
+          <li><strong>WRITE</strong>：投一票，看着新的一行实时出现在投屏的表格里</li>
+          <li>《开发者日志》：今天智能体哪里错了？你改了什么？</li>
+        </ul>
+        <h4>你的宪法，现在开始生效</h4>
+        <p>把宪法放进 <code>CLAUDE.md</code> 的最上面——智能体在写第一行代码之前就会读到它。</p>
+      </div>
+    </div>
+  </details>
+
+  <!-- ---------- DAY 5 ---------- -->
+  <details>
+    <summary>
+      <span class="day-no">DAY 5</span>
+      <span lang="en">Make It Work, Then Make It Honest</span>
+      <span lang="zh">先让它能用，再让它诚实</span>
+      <span class="rung">Agent+</span>
+    </summary>
+    <div class="day-body">
+      <div lang="en">
+        <h4>Objectives</h4>
+        <p>Morning: actually finish and harden the product. Afternoon: make it honest with its users,
+           then attack it yourself.</p>
+        <h4>Process</h4>
+        <ul>
+          <li>Tech lecture: testing and debugging &mdash; reproduce &rarr; isolate &rarr; fix. Errors are normal, and readable</li>
+          <li>Finish the build, working against the <a href="#resources">done-bar checklist</a></li>
+          <li>Rubber-duck review: say out loud what the code <em>should</em> do, then have the AI read it and find the gap</li>
+          <li><strong>Ship gate</strong>: your live URL must open on a Zhong Gu classroom computer. Hard gate, before lunch</li>
+          <li>Tech lecture: trust and transparency &mdash; <strong>ask an AI why it wrote something and it will invent a plausible reason</strong></li>
+          <li>Build the transparency panel: show what you actually stored, never a story made up afterwards</li>
+          <li><strong>Turn your Constitution into code</strong>: the term must appear in the story, the count must be in range, nothing unapproved is ever shown</li>
+          <li><strong>Red team: break your own Constitution.</strong> Swap products with another team. Log every failure as "broke Article N"</li>
+        </ul>
+        <h4>The best experiment of the week</h4>
+        <p>The AI reports a "confidence" score on its own output. <strong>Go and test whether that confidence
+           actually predicts when it's wrong.</strong> Mostly it won't &mdash; because confidence is a
+           <em>story the model tells you about its answer</em>, not evidence.</p>
+      </div>
+      <div lang="zh">
+        <h4>今天的目标</h4>
+        <p>上午：把产品真正做完、做稳。下午：让它对用户诚实，然后亲手攻击它。</p>
+        <h4>流程</h4>
+        <ul>
+          <li>技术讲座：测试与调试——重现 &rarr; 定位 &rarr; 修复。报错是正常的，也是可读的</li>
+          <li>把功能做完，对照<a href="#resources">验收清单</a>逐条检查</li>
+          <li>橡皮鸭复查：先说清楚这段代码"<em>应该</em>做什么"，再让 AI 读代码，找出实际做了什么</li>
+          <li><strong>交付关卡</strong>：每组的网址必须能在众谷教室的电脑上打开（午餐前硬性通过）</li>
+          <li>技术讲座：信任与透明——<strong>问 AI"你为什么这么写"，它会编一个听起来很合理的理由</strong></li>
+          <li>做透明面板：展示真实存下来的东西，而不是事后编的说法</li>
+          <li><strong>把宪法变成代码</strong>：生词必须真的出现在原文里、数量必须在范围内、未经审核的不许显示</li>
+          <li><strong>红队：攻破你自己的宪法</strong>。与另一组互换产品，失败都记为"违反第 N 条"</li>
+        </ul>
+        <h4>本周最好玩的实验</h4>
+        <p>AI 会给自己的每条输出打一个"信心值"。<strong>去验证一下：它的信心真的能预测它有没有错吗？</strong>
+           多半不能——因为那只是它<em>讲给你听的故事</em>，不是证据。</p>
+      </div>
+    </div>
+  </details>
+
+  <!-- ---------- DAY 6 ---------- -->
+  <details>
+    <summary>
+      <span class="day-no">DAY 6</span>
+      <span lang="en">Test It, Freeze It, Tell the Story</span>
+      <span lang="zh">实测、冻结、讲好你的故事</span>
+      <span class="rung">Workflow</span>
+    </summary>
+    <div class="day-body">
+      <div lang="en">
+        <h4>Objectives</h4>
+        <p>Test the product under <strong>real rural conditions</strong>, lock the version,
+           then start shaping your pitch and your ethics case.</p>
+        <h4>Process</h4>
+        <ul>
+          <li>Tech lecture (a look ahead): <strong>agentic &ne; multi-agent.</strong>
+              Live demo of Claude Code multi-agent &mdash; <em>nobody wrote the order; it read the descriptions and decided who to call</em></li>
+          <li><strong>Blind test</strong>: swap products, throttle to Slow 3G, slow the CPU, shrink to a phone screen &mdash; then use it cold, with no walkthrough</li>
+          <li>Fix what genuinely blocks a real user, then <strong>CODE FREEZE</strong> &mdash; no new features after this</li>
+          <li>Lecture: the development of AI</li>
+          <li>Narrative workshop and pitch clinic: problem, user, product, proof, ask</li>
+          <li>Ethics case writing workshop (Marc Sanders Case Competition)</li>
+        </ul>
+        <h4>An honest closing</h4>
+        <p>"That took four model calls to do something one agent could have done. <strong>More agents means
+           more cost, more latency, and more places to fail. Real engineers use one until they can't.</strong>"</p>
+      </div>
+      <div lang="zh">
+        <h4>今天的目标</h4>
+        <p>在<strong>真实的乡村网络条件</strong>下测试产品，锁定版本，然后开始打磨路演故事与伦理案例。</p>
+        <h4>流程</h4>
+        <ul>
+          <li>技术讲座（前瞻）：<strong>Agentic &ne; 多智能体</strong>。
+              现场演示 Claude Code 多智能体协作——<em>没有人告诉它顺序，它自己读描述决定谁来做</em></li>
+          <li><strong>盲测</strong>：互换产品，把网络限速到 Slow 3G、CPU 降速、切到手机屏幕，然后完全无人指导地使用</li>
+          <li>修复真正会挡住用户的问题，然后 <strong>CODE FREEZE 代码冻结</strong>——之后不再加新功能</li>
+          <li>讲座：AI 的发展历程</li>
+          <li>叙事工作坊 + 路演训练：问题、用户、产品、证据、诉求</li>
+          <li>伦理案例写作工作坊（Marc Sanders 案例大赛）</li>
+        </ul>
+        <h4>诚实的结尾</h4>
+        <p>"刚才那件事用了四次模型调用，而一个智能体就能做完。<strong>更多的智能体意味着更贵、更慢、更多出错的地方。
+           真正的工程师，能用一个就不用两个。</strong>"</p>
+      </div>
+    </div>
+  </details>
+
+  <!-- ---------- DAY 7 ---------- -->
+  <details>
+    <summary>
+      <span class="day-no">DAY 7</span>
+      <span lang="en">Demo Day</span>
+      <span lang="zh">Demo Day 路演</span>
+      <span class="rung">Ship</span>
+    </summary>
+    <div class="day-body">
+      <div lang="en">
+        <h4>Objectives</h4>
+        <p>Ship it in public. You walk away with a live app, a Developer Log and an ethics case &mdash;
+           that is your <strong>portfolio</strong>.</p>
+        <h4>Process</h4>
+        <ul>
+          <li>Guest speaker: ethics and education</li>
+          <li>Technical rehearsal: a full timed run on the <strong>frozen</strong> build, with a screen recording as backup</li>
+          <li>Judges' hands-on test: judges use your product themselves and give feedback</li>
+          <li><strong>Demo Day showcase</strong>: 10-minute pitch + 5-minute Q&amp;A</li>
+          <li>Awards: <strong>Best Technical Architecture</strong> ($1,000 seed fund) and
+              <strong>Most Humanistic Care</strong> (Marc Sanders Case Prize pathway)</li>
+        </ul>
+      </div>
+      <div lang="zh">
+        <h4>今天的目标</h4>
+        <p>把作品公开发布出去。你带走的是：一个在线可访问的应用、一份《开发者日志》、一份伦理案例——
+           这就是你的<strong>作品集</strong>。</p>
+        <h4>流程</h4>
+        <ul>
+          <li>嘉宾分享：伦理与教育</li>
+          <li>技术彩排：在<strong>已冻结</strong>的版本上完整走一遍，并准备好录屏作为备份</li>
+          <li>评委实测：评委亲自使用你的产品并给出反馈</li>
+          <li><strong>Demo Day 路演</strong>：10 分钟展示 + 5 分钟问答</li>
+          <li>颁奖：<strong>最佳技术架构奖</strong>（$1,000 种子基金）、<strong>最具人文关怀奖</strong>（Marc Sanders 案例大赛通道）</li>
+        </ul>
+      </div>
+      <div class="note">
+        <div lang="en">
+          <strong>4:00&ndash;6:00 pm &middot; Closed-door session on university admissions</strong><br>
+          For all parents, students and guests. Featuring <strong>Jenny</strong>, a WeUp alum now at Harvard,
+          together with <strong>Zoey</strong> &mdash; on the path from current-affairs thinking to tech for good,
+          and from following your curiosity to a top university.
+        </div>
+        <div lang="zh">
+          <strong>下午 4:00&ndash;6:00 &middot; 升学闭门分享会</strong><br>
+          面向全体家长、学生与嘉宾。特邀 WeUp 学员、哈佛学姐 <strong>Jenny</strong> 与 <strong>Zoey 老师</strong>，
+          聊聊从时事思辨到科技向善、从兴趣探索到名校之路。
+        </div>
+      </div>
+      <div lang="en"><h4>The rule</h4><p>Fix the demo, not the product. The code is frozen.</p></div>
+      <div lang="zh"><h4>规则</h4><p>只修演示，不修产品。代码已经冻结了。</p></div>
+    </div>
+  </details>
+
+  <!-- ============ RESOURCES ============ -->
+  <h2 id="resources"><span lang="en">Resources</span><span lang="zh">课程资料</span></h2>
+  <table>
+    <tr>
+      <th><span lang="en">Resource</span><span lang="zh">资料</span></th>
+      <th><span lang="en">Used on</span><span lang="zh">用在</span></th>
+    </tr>
+    <tr>
+      <td><a href="resources/01-spec-worksheet.md">The seven questions &middot; 七个问题</a></td>
+      <td><span lang="en">Day 3 &mdash; writing your spec</span><span lang="zh">第三天 &mdash; 写你的产品规格</span></td>
+    </tr>
+    <tr>
+      <td><a href="resources/02-ai-interviewer-prompt.md">AI-interviewer prompt &middot; AI 采访官提示词</a></td>
+      <td><span lang="en">Day 3 &mdash; let the AI interview you</span><span lang="zh">第三天 &mdash; 让 AI 反过来采访你</span></td>
+    </tr>
+    <tr>
+      <td><a href="resources/03-sample-spec-and-constitution.md">Sample Spec &amp; Constitution &middot; 示例规格与宪法</a></td>
+      <td><span lang="en">Day 3 &mdash; a model to imitate, not copy</span><span lang="zh">第三天 &mdash; 照着学，不要照抄</span></td>
+    </tr>
+    <tr>
+      <td><a href="resources/04-glossary-SKILL.md">glossary-builder &middot; SKILL.md</a></td>
+      <td><span lang="en">Day 4 &mdash; the glossary feature</span><span lang="zh">第四天 &mdash; 生词表功能</span></td>
+    </tr>
+    <tr>
+      <td><a href="resources/05-backend-connection-card.md">Backend connection card &middot; 后端接入卡</a></td>
+      <td><span lang="en">Day 4 &mdash; connect and smoke-test</span><span lang="zh">第四天 &mdash; 连接与冒烟测试</span></td>
+    </tr>
+    <tr>
+      <td><a href="resources/06-done-bar-checklist.md">Done-bar checklist &middot; 验收清单</a></td>
+      <td><span lang="en">Day 5 &mdash; deciding when it's actually finished</span><span lang="zh">第五天 &mdash; 判断"做完了没有"</span></td>
+    </tr>
+    <tr>
+      <td><a href="resources/07-developer-log-template.md">Developer Log template &middot; 开发者日志模板</a></td>
+      <td><span lang="en">The last ten minutes of every day</span><span lang="zh">每天最后十分钟</span></td>
+    </tr>
+  </table>
+
+  <!-- ============ TEACHERS ============ -->
+  <h2><span lang="en">Teachers</span><span lang="zh">导师团队</span></h2>
+  <div class="card">
+    <div lang="en">
+      <p>This camp is run jointly by <strong>TKEthics</strong> (technology ethics for young people),
+         <strong>WeUp</strong> (current-affairs and critical thinking) and the
+         <strong>Zhong Gu Foundation</strong> (rural digital education).</p>
+      <p>On site: 3 instructors and 3 teaching assistants, 11 students, working in 3 teams.
+         TAs are there all week to unblock you technically &mdash; but they will not build your product for you.</p>
+    </div>
+    <div lang="zh">
+      <p>本次 Camp 由 <strong>TKEthics</strong>（青少年科技伦理思辨）、<strong>WeUp 时事思辨</strong>
+         与 <strong>众谷公益基金会</strong>（乡村信息化教育）联合发起。</p>
+      <p>营地配置：3 位讲师 + 3 位助教，11 名学员，分为 3 个小组。
+         助教全程在场解决技术卡点——但不替你写产品。</p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <span lang="en">AI Product Camp 2026 &middot; Reason in the service of technology for good</span>
+    <span lang="zh">AI Product Camp 2026 &middot; 让少年以理性践行科技向善</span><br>
+    <span style="font-family:var(--mono);font-size:12px">TKEthics &times; WeUp &times; Zhong Gu Foundation</span>
+  </div>
+</footer>
+
+<script>
+  function setLang(l){
+    document.body.className = 'lang-' + l;
+    document.documentElement.lang = (l === 'zh') ? 'zh-CN' : 'en';
+    document.getElementById('btnEn').classList.toggle('on', l === 'en');
+    document.getElementById('btnZh').classList.toggle('on', l === 'zh');
+    try { localStorage.setItem('campLang', l); } catch(e) {}
+  }
+  // restore last choice, or follow the browser's language on first visit
+  (function(){
+    var saved = null;
+    try { saved = localStorage.getItem('campLang'); } catch(e) {}
+    if (!saved) saved = (navigator.language || '').toLowerCase().indexOf('zh') === 0 ? 'zh' : 'en';
+    setLang(saved);
+  })();
+</script>
+
+</body>
+</html>
