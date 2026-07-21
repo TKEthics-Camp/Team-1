@@ -1,0 +1,17 @@
+{
+  "name": "Orbs · 星球",
+  "short_name": "Orbs",
+  "description": "一个安放热爱的私人小宇宙",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f3efe6",
+  "theme_color": "#f3efe6",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
