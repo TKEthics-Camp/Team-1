@@ -112,6 +112,23 @@
 .orb-meta { font-family: var(--mono); font-size: 11px; color: var(--dim); font-variant-numeric: tabular-nums; }
 .orb-meta .hot { color: var(--gold); }
 
+/* draft orbs while adding interests: a tidy grid, each with a corner ✕ badge.
+   (Not .orb-cell — that one is a centred row tuned for the floating home wall.) */
+.draft-wall { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px 12px; padding: 8px 0 2px; }
+.draft {
+  position: relative; background: none; border: none; padding: 0; cursor: pointer;
+  width: 92px; display: flex; flex-direction: column; align-items: center; gap: 7px;
+}
+.draft .orb-wrap { animation: none; }
+.draft-nm { font-family: var(--display); font-weight: 600; font-size: 13px; color: var(--ink); text-align: center; line-height: 1.25; }
+.draft .x {
+  position: absolute; top: -3px; right: 12px; width: 22px; height: 22px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 14px; line-height: 1; font-weight: 700;
+  background: var(--candy); color: #fff; border: 2px solid var(--sel);
+  box-shadow: 0 2px 6px rgba(0,0,0,.28); transition: transform .15s ease;
+}
+.draft:hover .x, .draft:focus-visible .x { transform: scale(1.12); }
+
 .add-orb .orb-wrap { display: flex; flex-direction: column; align-items: center; gap: 9px; }
 .add-orb .plus {
   width: 86px; height: 86px; border-radius: 50%;
@@ -120,3 +137,39 @@
   display: grid; place-items: center; font-size: 30px; font-family: var(--display);
 }
 .add-orb:hover .plus { border-color: var(--candy); color: var(--candy); background: rgba(255,255,255,.7); }
+
+/* ---------- trees (hobbies as living things) ---------- */
+.tree-wall { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 10px; padding: 6px 0 4px; align-items: end; }
+.tree-cell {
+  background: none; border: none; cursor: pointer; padding: 8px 4px 6px;
+  border-radius: 18px; display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.tree-cell:hover { background: var(--card); }
+.tree-svg { display: block; }
+.tree-cell .alive { animation: sway 6s ease-in-out infinite; transform-origin: 50% 90%; }
+@keyframes sway { 0%, 100% { transform: rotate(-1.2deg); } 50% { transform: rotate(1.2deg); } }
+.tree-name { font-family: var(--display); font-weight: 700; font-size: 14px; color: var(--ink); text-align: center; line-height: 1.2; }
+.tree-meta { font-family: var(--mono); font-size: 11px; color: var(--dim); font-variant-numeric: tabular-nums; }
+.tree-meta .hot { color: var(--gold); }
+.tree-meta .dead { color: var(--candy); font-family: var(--body); }
+.tree-add {
+  border: 2px dashed var(--line); background: var(--card);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  min-height: 132px;
+}
+.tree-add .plus { font-family: var(--display); font-size: 30px; color: var(--muted); line-height: 1; }
+.tree-add:hover { border-color: var(--candy); }
+.tree-add .tree-name { color: var(--muted); }
+
+/* the tree's status on its own page */
+.tree-status {
+  display: flex; gap: 14px; align-items: center;
+  background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 12px 14px;
+}
+.tree-status .info { flex: 1; min-width: 0; }
+.tree-status .st-stage { font-family: var(--display); font-weight: 700; font-size: 15px; color: var(--ink); }
+.tree-status .st-health { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.tree-status .st-note { font-size: 12px; color: var(--dim); margin-top: 4px; }
+.tree-status.dead { border-color: color-mix(in srgb, var(--candy) 45%, var(--line)); }
+.tree-status.dead .st-health { color: var(--candy); font-weight: 600; }
+.revive-btn { width: 100%; }

@@ -92,6 +92,8 @@
   box-shadow: 0 14px 34px -16px rgba(122,86,160,.65);
 }
 .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cover .cover-scene { position: absolute; inset: 0; }
+.cover .cover-scene svg { width: 100%; height: 100%; display: block; }
 .cover.blank {
   background: radial-gradient(circle at 28% 22%, rgba(255,255,255,.5) 0%, transparent 42%), var(--c);
   display: grid; place-items: center;
@@ -150,6 +152,21 @@
 .onb { flex: 1; display: flex; flex-direction: column; gap: 18px; }
 .onb h2 { font-family: var(--display); font-size: 25px; font-weight: 600; margin: 0; letter-spacing: -.015em; text-wrap: balance; }
 .onb p { margin: 0; color: var(--muted); font-size: 14px; max-width: 32ch; }
+/* individual vs organisation picker */
+.acct-choices { display: flex; flex-direction: column; gap: 12px; }
+.acct-card {
+  text-align: left; cursor: pointer; display: grid;
+  grid-template-columns: 44px 1fr; grid-template-rows: auto auto; column-gap: 12px;
+  background: var(--card); border: 1.5px solid var(--line); border-radius: 18px; padding: 16px;
+}
+.acct-card .acct-emoji { grid-row: 1 / 3; align-self: center; font-size: 30px; }
+.acct-label { font-family: var(--display); font-weight: 700; font-size: 16px; color: var(--ink); }
+.acct-note { font-size: 12.5px; color: var(--muted); line-height: 1.45; margin-top: 2px; }
+.acct-card[aria-pressed="true"] {
+  border-color: var(--candy);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--candy) 28%, transparent);
+}
+
 .setup-row { border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 9px; }
 .setup-row .who { display: flex; align-items: center; gap: 10px; }
 .setup-row .who .n { font-family: var(--display); font-weight: 600; font-size: 14.5px; }

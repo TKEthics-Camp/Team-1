@@ -124,3 +124,117 @@
   --gold:  #FFD45E;
   --candy: #FF8FC0;
 }
+
+/* ---- Ocean: aqua, teal, sky (light) ---- */
+.stage[data-theme="ocean"] {
+  --stage-bg:
+    radial-gradient(ellipse 60% 40% at 14% 8%,  rgba(120,225,220,.78), transparent 62%),
+    radial-gradient(ellipse 58% 42% at 88% 18%, rgba(140,190,255,.72), transparent 62%),
+    radial-gradient(ellipse 70% 45% at 80% 88%, rgba(150,214,255,.68), transparent 62%),
+    linear-gradient(165deg, #D6F6F2 0%, #D6ECF8 50%, #E2F2FF 100%);
+  --app-bg:
+    radial-gradient(ellipse 72% 34% at 16% 4%,  rgba(96,214,206,.82), transparent 62%),
+    radial-gradient(ellipse 66% 30% at 98% 26%, rgba(96,168,242,.78), transparent 62%),
+    radial-gradient(ellipse 70% 30% at 88% 70%, rgba(120,200,255,.74), transparent 62%),
+    radial-gradient(ellipse 86% 34% at 40% 104%, rgba(110,220,214,.82), transparent 66%),
+    linear-gradient(172deg, #E2F8F5 0%, #E0F0F8 46%, #EAF4FF 100%);
+  --cloud: rgba(250,255,255,.92);
+  --cast: rgba(40,120,140,.42);
+  --shelf: #F1FBFC;
+  --glass: rgba(248,255,255,.5);
+  --glass2: rgba(248,255,255,.6);
+  --sel: #fff;
+  --card:  rgba(246,255,255,.62);
+  --card-2:rgba(246,255,255,.88);
+  --line:  rgba(30,120,140,.18);
+  --ink:   #123A44;
+  --muted: #3E7580;
+  --dim:   #74A4AE;
+  --gold:  #0E7C86;
+  --candy: #FF7AA2;
+}
+
+/* ---- Berry: magenta, plum, pink (light) ---- */
+.stage[data-theme="berry"] {
+  --stage-bg:
+    radial-gradient(ellipse 60% 40% at 14% 8%,  rgba(255,150,205,.80), transparent 62%),
+    radial-gradient(ellipse 58% 42% at 88% 18%, rgba(190,140,242,.74), transparent 62%),
+    radial-gradient(ellipse 70% 45% at 80% 88%, rgba(255,170,214,.70), transparent 62%),
+    linear-gradient(165deg, #FCE0F2 0%, #F0DEFB 50%, #FCE2EE 100%);
+  --app-bg:
+    radial-gradient(ellipse 72% 34% at 16% 4%,  rgba(255,120,190,.82), transparent 62%),
+    radial-gradient(ellipse 66% 30% at 98% 26%, rgba(180,110,235,.78), transparent 62%),
+    radial-gradient(ellipse 70% 30% at 88% 70%, rgba(255,140,205,.76), transparent 62%),
+    radial-gradient(ellipse 86% 34% at 40% 104%, rgba(210,120,235,.80), transparent 66%),
+    linear-gradient(172deg, #FCE6F4 0%, #F2E2FC 46%, #FCE6F0 100%);
+  --cloud: rgba(255,250,254,.92);
+  --cast: rgba(150,60,130,.42);
+  --shelf: #FDF3FA;
+  --glass: rgba(255,250,254,.5);
+  --glass2: rgba(255,250,254,.6);
+  --sel: #fff;
+  --card:  rgba(255,248,253,.62);
+  --card-2:rgba(255,248,253,.88);
+  --line:  rgba(150,60,130,.18);
+  --ink:   #4A1F44;
+  --muted: #7E4E75;
+  --dim:   #A87EA0;
+  --gold:  #B31E8A;
+  --candy: #FF6FB0;
+}
+
+/* ---- Dusk: warm indigo with an orange horizon (dark) ---- */
+.stage[data-theme="dusk"] {
+  --stage-bg:
+    radial-gradient(ellipse 60% 44% at 16% 6%,  rgba(255,140,90,.28), transparent 62%),
+    radial-gradient(ellipse 60% 44% at 84% 90%, rgba(120,90,220,.32), transparent 62%),
+    linear-gradient(170deg, #1B1030 0%, #241338 50%, #14102A 100%);
+  --app-bg:
+    radial-gradient(ellipse 74% 34% at 18% 2%,  rgba(255,150,90,.34), transparent 60%),
+    radial-gradient(ellipse 70% 32% at 98% 22%, rgba(180,110,230,.34), transparent 60%),
+    radial-gradient(ellipse 70% 30% at 8% 60%,  rgba(255,110,150,.24), transparent 60%),
+    radial-gradient(ellipse 86% 36% at 50% 104%, rgba(120,100,230,.30), transparent 64%),
+    linear-gradient(175deg, #241536 0%, #2E1A42 46%, #180F2C 100%);
+  --cloud: rgba(255,190,150,.20);
+  --cast: rgba(0,0,0,.6);
+  --shelf: #241636;
+  --glass: rgba(40,26,58,.55);
+  --glass2: rgba(40,26,58,.62);
+  --sel: rgba(255,255,255,.16);
+  --card:  rgba(255,255,255,.07);
+  --card-2:rgba(255,255,255,.13);
+  --line:  rgba(255,255,255,.14);
+  --ink:   #FCEAE0;
+  --muted: #D2AEC0;
+  --dim:   #9A7E92;
+  --gold:  #FFB25E;
+  --candy: #FF8FA8;
+}
+
+/* ---- Forest: deep green with a teal glow (dark) ---- */
+.stage[data-theme="forest"] {
+  --stage-bg:
+    radial-gradient(ellipse 60% 44% at 16% 6%,  rgba(80,200,140,.28), transparent 62%),
+    radial-gradient(ellipse 60% 44% at 84% 90%, rgba(60,150,180,.30), transparent 62%),
+    linear-gradient(170deg, #0A1C14 0%, #0F241C 50%, #0A1A18 100%);
+  --app-bg:
+    radial-gradient(ellipse 74% 34% at 18% 2%,  rgba(90,214,160,.32), transparent 60%),
+    radial-gradient(ellipse 70% 32% at 98% 22%, rgba(63,176,192,.34), transparent 60%),
+    radial-gradient(ellipse 70% 30% at 8% 60%,  rgba(140,208,96,.22), transparent 60%),
+    radial-gradient(ellipse 86% 36% at 50% 104%, rgba(80,190,150,.30), transparent 64%),
+    linear-gradient(175deg, #102A20 0%, #143026 46%, #0C2018 100%);
+  --cloud: rgba(160,255,210,.18);
+  --cast: rgba(0,0,0,.6);
+  --shelf: #14301F;
+  --glass: rgba(22,48,36,.55);
+  --glass2: rgba(22,48,36,.62);
+  --sel: rgba(255,255,255,.16);
+  --card:  rgba(255,255,255,.07);
+  --card-2:rgba(255,255,255,.13);
+  --line:  rgba(255,255,255,.14);
+  --ink:   #E6F6EA;
+  --muted: #9FCBB2;
+  --dim:   #6E9682;
+  --gold:  #7FE0A0;
+  --candy: #4FD6C0;
+}
