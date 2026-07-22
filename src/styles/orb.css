@@ -1,0 +1,101 @@
+/* ---------- orbs ----------
+   They hang in the air rather than sitting in a grid: staggered columns,
+   each orb bobbing on its own clock so the wall never pulses in unison. */
+.orbwall {
+  display: flex; flex-wrap: wrap;
+  justify-content: center; align-items: flex-start;
+  gap: 4px 2px; padding: 26px 0 34px;
+}
+.orb-cell {
+  background: none; border: none; padding: 0; cursor: pointer;
+  width: 48%; display: flex; justify-content: center;
+}
+/* every other orb rides lower, so the two columns interlock */
+.orb-cell:nth-child(even) { margin-top: 34px; }
+.orb-cell:nth-child(4n+3) { margin-top: -10px; }
+
+.orb-wrap { animation: float var(--dur, 7s) ease-in-out infinite; will-change: transform; }
+.orb-cell:hover .orb { transform: scale(1.05); }
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33%      { transform: translate(4px, -11px) rotate(.8deg); }
+  66%      { transform: translate(-4px, -5px) rotate(-.8deg); }
+}
+
+.orb {
+  position: relative; display: grid; place-items: center; border-radius: 50%;
+  background-size: cover; background-position: center;
+  transition: transform .3s cubic-bezier(.2,.9,.3,1.2);
+  isolation: isolate; text-align: center;
+}
+/* photo sits under a soft scrim so white type always survives it */
+.orb .wash {
+  position: absolute; inset: 0; border-radius: 50%; z-index: 1;
+  background:
+    radial-gradient(circle at 50% 28%, transparent 0%, rgba(38,10,58,.30) 74%, rgba(38,10,58,.48) 100%),
+    linear-gradient(180deg, transparent 22%, rgba(28,8,44,.40) 100%);
+  opacity: .88;
+}
+/* glass: rim light, inner shading, specular hotspot */
+.orb .glass {
+  position: absolute; inset: 0; border-radius: 50%; z-index: 3; pointer-events: none;
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255,255,255,.62) 0%, rgba(255,255,255,.14) 20%, transparent 44%),
+    radial-gradient(circle at 70% 80%, rgba(255,255,255,.30) 0%, transparent 34%);
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255,255,255,.55),
+    inset -9px -13px 30px rgba(70,30,90,.35),
+    inset 8px 9px 24px rgba(255,255,255,.30);
+}
+.orb .spark {
+  position: absolute; top: 14%; left: 21%; width: 20%; height: 13%;
+  border-radius: 50%; z-index: 4; pointer-events: none;
+  background: rgba(255,255,255,.92); filter: blur(1.6px);
+}
+
+/* the caption lives INSIDE the sphere */
+.orb .orb-label {
+  position: relative; z-index: 5; padding: 0 16%;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  color: #fff; text-shadow: 0 1px 6px rgba(60,20,80,.55), 0 0 22px rgba(60,20,80,.35);
+}
+.orb .orb-label .nm {
+  font-family: var(--display); font-weight: 700; letter-spacing: -.01em;
+  line-height: 1.15; text-wrap: balance;
+}
+.orb .orb-label .hrs {
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-weight: 600; opacity: .95;
+}
+.orb .orb-label .flame { font-size: .78em; opacity: .95; }
+
+.orb-glow { position: relative; display: inline-block; }
+.orb-glow::before {
+  content: ""; position: absolute; inset: -20%; border-radius: 50%;
+  filter: blur(20px); opacity: .6; z-index: 0;
+  background: radial-gradient(circle, var(--c) 0%, transparent 66%);
+}
+/* the shadow it casts on the cloud floor, sold separately */
+.orb-glow::after {
+  content: ""; position: absolute; left: 12%; right: 12%; bottom: -14%;
+  height: 12%; border-radius: 50%; z-index: -1;
+  background: radial-gradient(ellipse, rgba(122,86,160,.30), transparent 70%);
+  filter: blur(6px);
+}
+
+.orb-name {
+  font-family: var(--display); font-size: 13.5px; font-weight: 600;
+  text-align: center; line-height: 1.3; color: var(--ink);
+}
+.orb-meta { font-family: var(--mono); font-size: 11px; color: var(--dim); font-variant-numeric: tabular-nums; }
+.orb-meta .hot { color: var(--gold); }
+
+.add-orb .orb-wrap { display: flex; flex-direction: column; align-items: center; gap: 9px; }
+.add-orb .plus {
+  width: 86px; height: 86px; border-radius: 50%;
+  border: 2px dashed rgba(122,86,160,.35); color: var(--muted);
+  background: rgba(255,255,255,.42);
+  display: grid; place-items: center; font-size: 30px; font-family: var(--display);
+}
+.add-orb:hover .plus { border-color: var(--candy); color: var(--candy); background: rgba(255,255,255,.7); }

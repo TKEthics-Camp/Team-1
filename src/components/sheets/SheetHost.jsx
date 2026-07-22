@@ -1,0 +1,13 @@
+import { useUI } from "../../ui/UIContext";
+import EntrySheet from "./EntrySheet";
+import PhotoSheet from "./PhotoSheet";
+import OrbSheet from "./OrbSheet";
+
+export default function SheetHost() {
+  const { sheet } = useUI();
+  if (!sheet) return null;
+  if (sheet.type === "entry") return <EntrySheet interestId={sheet.id} />;
+  if (sheet.type === "photo") return <PhotoSheet interestId={sheet.id} />;
+  if (sheet.type === "orb") return <OrbSheet interestId={sheet.id} />;
+  return null;
+}
