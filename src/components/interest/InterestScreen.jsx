@@ -29,7 +29,7 @@ export default function InterestScreen() {
 
   const ph = photosOf(photos, it.id);
   const en = entriesOf(entries, it.id);
-  const st = interestStreak(entries, it.id);
+  const st = interestStreak(entries, photos, it.id);
   // Cover: a coloured plate until there's a real photo, then the first one
   // they ever added — how this interest started, kept at the top of its page.
   const first = ph.length ? ph[ph.length - 1] : null;

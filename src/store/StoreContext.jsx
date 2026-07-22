@@ -1,5 +1,6 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { getAll, put, del, clearAll as dbClearAll } from "../db/db";
+import { COINS_PER_LOG, DECORATIONS } from "../lib/constants";
 
 const StoreCtx = createContext(null);
 
@@ -9,6 +10,12 @@ export function StoreProvider({ children }) {
   const [interests, setInterests] = useState([]);
   const [photos, setPhotos] = useState([]);
   const [entries, setEntries] = useState([]);
+
+  // buyDecoration/equipDecoration need to read+validate the *current* profile
+  // synchronously (to report success/failure back to the caller), which the
+  // setState-updater pattern used elsewhere here can't do.
+  const profileRef = useRef(profile);
+  useEffect(() => { profileRef.current = profile; }, [profile]);
 
   useEffect(() => {
     Promise.all([getAll("meta"), getAll("interests"), getAll("photos"), getAll("entries")])
@@ -30,7 +37,17 @@ export function StoreProvider({ children }) {
       });
   }, []);
 
-  const actions = useMemo(() => ({
+  const actions = useMemo(() => {
+    function bumpCoins(delta) {
+      setProfileState((p) => {
+        if (!p) return p;
+        const next = { ...p, coins: (p.coins || 0) + delta };
+        put("meta", next);
+        return next;
+      });
+    }
+
+    return {
     saveProfile(rec) {
       setProfileState(rec);
       put("meta", rec);
@@ -74,6 +91,7 @@ export function StoreProvider({ children }) {
     addPhoto(rec) {
       setPhotos((list) => [...list, rec]);
       put("photos", rec);
+      bumpCoins(COINS_PER_LOG);
     },
     deletePhoto(id) {
       setPhotos((list) => list.filter((x) => x.id !== id));
@@ -82,10 +100,33 @@ export function StoreProvider({ children }) {
     addEntry(rec) {
       setEntries((list) => [...list, rec]);
       put("entries", rec);
+      bumpCoins(COINS_PER_LOG);
     },
     deleteEntry(id) {
       setEntries((list) => list.filter((x) => x.id !== id));
       del("entries", id);
+    },
+    // Returns true/false so the market screen can tell the user why a
+    // purchase didn't go through (already owned vs. can't afford it).
+    buyDecoration(id) {
+      const p = profileRef.current;
+      if (!p) return false;
+      const deco = DECORATIONS.find((d) => d.id === id);
+      if (!deco) return false;
+      const owned = p.ownedDecorations || [];
+      if (owned.includes(id) || (p.coins || 0) < deco.price) return false;
+      const next = { ...p, coins: (p.coins || 0) - deco.price, ownedDecorations: [...owned, id] };
+      setProfileState(next);
+      put("meta", next);
+      return true;
+    },
+    equipDecoration(id) {
+      const p = profileRef.current;
+      if (!p) return;
+      if (id && !(p.ownedDecorations || []).includes(id)) return;
+      const next = { ...p, equippedDecoration: id || null };
+      setProfileState(next);
+      put("meta", next);
     },
     clearAllData() {
       dbClearAll();
@@ -94,7 +135,8 @@ export function StoreProvider({ children }) {
       setPhotos([]);
       setEntries([]);
     },
-  }), []);
+    };
+  }, []);
 
   const value = useMemo(
     () => ({ loading, profile, interests, photos, entries, ...actions }),

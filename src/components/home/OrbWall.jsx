@@ -19,7 +19,7 @@ export default function OrbWall({ interests, photos, entries }) {
         const ph = photosOf(photos, it.id)[0];
         const size = SIZES[i % SIZES.length];
         const minutes = minutesOf(entries, it.id);
-        const streak = interestStreak(entries, it.id);
+        const streak = interestStreak(entries, photos, it.id);
         return (
           <button
             key={it.id}

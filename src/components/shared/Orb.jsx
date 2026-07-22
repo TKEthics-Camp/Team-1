@@ -5,7 +5,7 @@ import { shade } from "../../lib/color";
 
 // The glowing sphere: replaces the original orbEl(). `label` shows the
 // interest's own name + hours + streak baked into the glass.
-export default function Orb({ interest, size, faceBlob = null, label = false, minutes = 0, streak = 0, style }) {
+export default function Orb({ interest, size, faceBlob = null, label = false, minutes = 0, streak = 0, decoration = null, style }) {
   const { nameOf } = useI18n();
   const url = useObjectURL(faceBlob);
 
@@ -32,6 +32,22 @@ export default function Orb({ interest, size, faceBlob = null, label = false, mi
         )}
         <span className="glass" />
         <span className="spark" />
+        {decoration && decoration.ring && (() => {
+          // A ring is a donut: paint the whole disc, then mask out everything
+          // but a thin band at the rim — the only way to get a *gradient*
+          // ring (painting's rainbow) since box-shadow can't take one.
+          const w = Math.max(3, Math.round(size * 0.06));
+          const cut = `radial-gradient(farthest-side, transparent calc(100% - ${w}px), #000 calc(100% - ${w}px))`;
+          return (
+            <span
+              className="orb-deco-ring"
+              style={{ background: decoration.ring, WebkitMask: cut, mask: cut }}
+            />
+          );
+        })()}
+        {decoration && decoration.badge && (
+          <span className="orb-deco-badge" style={{ fontSize: Math.round(size * 0.34) }}>{decoration.badge}</span>
+        )}
       </span>
     </span>
   );

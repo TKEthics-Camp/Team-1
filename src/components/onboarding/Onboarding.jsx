@@ -31,7 +31,10 @@ export default function Onboarding() {
   }
 
   function finish() {
-    saveProfile({ key: "profile", name: name.trim(), lang, color: PALETTE[0], theme: DEFAULT_THEME, createdAt: Date.now() });
+    saveProfile({
+      key: "profile", name: name.trim(), lang, color: PALETTE[0], theme: DEFAULT_THEME,
+      coins: 0, ownedDecorations: [], equippedDecoration: null, createdAt: Date.now(),
+    });
     drafts.forEach((d) => {
       addInterest({
         id: d.id, name: d.name, color: d.color, why: "", time: d.time, friends: d.friends,

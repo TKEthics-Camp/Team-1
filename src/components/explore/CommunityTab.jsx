@@ -1,6 +1,8 @@
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
+import { PALETTE } from "../../lib/constants";
 import { communityPosts } from "../../lib/community";
+import Orb from "../shared/Orb";
 import PostCard from "./PostCard";
 
 export default function CommunityTab() {
@@ -39,7 +41,23 @@ export default function CommunityTab() {
         </div>
       </div>
 
-      {posts.map((post) => <PostCard key={post.seed} post={post} style={style} />)}
+      {/* A live preview of the user's own choice — not other people's posts,
+          which always show named (see PostCard). */}
+      <div className="idea">
+        {style === "named" ? (
+          <div className="orb-wrap" style={{ flex: "none" }}>
+            <Orb interest={{ color: (profile && profile.color) || PALETTE[0] }} faceBlob={profile && profile.avatar} size={40} />
+          </div>
+        ) : (
+          <div className="avatar anon">🙂</div>
+        )}
+        <div className="grow">
+          <div className="idea-nm">{style === "named" ? profile && profile.name : t("someone")}</div>
+          <div className="idea-cat">{t("styleNote")}</div>
+        </div>
+      </div>
+
+      {posts.map((post) => <PostCard key={post.seed} post={post} />)}
     </>
   );
 }
