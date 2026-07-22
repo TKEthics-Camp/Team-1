@@ -25,12 +25,17 @@ export function streakOf(dates) {
   return n;
 }
 
-export function interestStreak(entries, id) {
-  return streakOf(entriesOf(entries, id).map((e) => e.date));
+// A day counts toward the streak whether it was logged with a journal entry
+// or a photo — either one is "showing up" for the interest that day.
+export function interestStreak(entries, photos, id) {
+  var dates = entriesOf(entries, id).map((e) => e.date)
+    .concat(photosOf(photos, id).map((p) => dateKey(new Date(p.createdAt))));
+  return streakOf(dates);
 }
 
-export function globalStreak(entries) {
-  return streakOf(entries.map((e) => e.date));
+export function globalStreak(entries, photos) {
+  var dates = entries.map((e) => e.date).concat(photos.map((p) => dateKey(new Date(p.createdAt))));
+  return streakOf(dates);
 }
 
 // Hours are the headline number on every orb, summed from what each entry logged.

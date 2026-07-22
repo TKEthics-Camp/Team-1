@@ -1,0 +1,12 @@
+/* ---------- market ---------- */
+.deco-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding-bottom: 4px; }
+.deco-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+  padding: 16px 10px 12px; display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.deco-card .orb-wrap { animation: none; }
+.deco-nm { font-family: var(--display); font-weight: 600; font-size: 13px; color: var(--ink); text-align: center; }
+.deco-card .btn2 { padding: 8px 10px; font-size: 12.5px; }
+.deco-card .btn2[aria-pressed="true"] {
+  background: linear-gradient(135deg,#FF8FC0,#FFAE7E); color: #4A2140; border-color: transparent; font-weight: 700;
+}

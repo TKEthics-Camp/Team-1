@@ -70,6 +70,12 @@
 }
 .orb .orb-label .flame { font-size: .78em; opacity: .95; }
 
+.orb .orb-deco-ring { position: absolute; inset: 0; border-radius: 50%; z-index: 5; pointer-events: none; }
+.orb .orb-deco-badge {
+  position: absolute; top: -8%; right: -8%; z-index: 6; line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(50,15,70,.4));
+}
+
 .orb-glow { position: relative; display: inline-block; }
 .orb-glow::before {
   content: ""; position: absolute; inset: -20%; border-radius: 50%;
@@ -82,6 +88,21 @@
   height: 12%; border-radius: 50%; z-index: -1;
   background: radial-gradient(ellipse, rgba(122,86,160,.30), transparent 70%);
   filter: blur(6px);
+}
+
+.avatar-btn {
+  position: relative; display: inline-block; padding: 0; border: none;
+  background: none; cursor: pointer; border-radius: 50%;
+}
+.coin-row { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 10px; }
+.coin-pill { font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 600; color: var(--gold); }
+
+.avatar-edit-badge {
+  position: absolute; right: -2px; bottom: -2px; z-index: 6;
+  width: 26px; height: 26px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 13px;
+  background: var(--candy); color: #fff;
+  box-shadow: 0 0 0 2px var(--shelf, #fff);
 }
 
 .orb-name {

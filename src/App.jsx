@@ -10,6 +10,7 @@ import HomeScreen from "./components/home/HomeScreen";
 import InterestScreen from "./components/interest/InterestScreen";
 import ExploreScreen from "./components/explore/ExploreScreen";
 import ProfileScreen from "./components/profile/ProfileScreen";
+import MarketScreen from "./components/market/MarketScreen";
 import SavedScreen from "./components/saved/SavedScreen";
 import BottomNav from "./components/shared/BottomNav";
 import SheetHost from "./components/sheets/SheetHost";
@@ -68,6 +69,7 @@ function RoutedShell() {
         <Route path="/interest/:id" element={<InterestScreen />} />
         <Route path="/explore" element={<ExploreScreen />} />
         <Route path="/profile" element={<ProfileScreen />} />
+        <Route path="/market" element={<MarketScreen />} />
         <Route path="/saved/:id" element={<SavedScreen />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

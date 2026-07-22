@@ -7,13 +7,15 @@
 .safe-note span:first-child { flex: none; }
 .ideas { display: flex; flex-direction: column; gap: 9px; }
 .idea {
-  display: flex; align-items: center; gap: 12px;
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
   background: var(--card); border: 1px solid var(--line);
   border-radius: 16px; padding: 10px 12px 10px 10px;
 }
+.idea:hover { border-color: var(--dim); }
 .idea .orb-wrap { animation: none; }
 .idea-nm { font-family: var(--display); font-weight: 600; font-size: 15px; color: var(--ink); }
 .idea-cat { font-size: 11.5px; color: var(--dim); letter-spacing: .03em; }
+.idea-desc { font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0; }
 .idea-add {
   flex: none; background: var(--sel); border: 1px solid var(--line); color: var(--ink);
   border-radius: 999px; padding: 8px 13px; font-size: 12.5px; font-weight: 600;

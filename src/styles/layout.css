@@ -24,7 +24,8 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  min-height: 720px;
+  /* Fixed device-shaped frame — content scrolls inside .view, the frame itself never grows. */
+  height: min(720px, calc(100vh - 64px));
   position: relative;
 }
 
@@ -63,7 +64,11 @@
   letter-spacing: -.01em; text-wrap: balance;
 }
 
-.view { flex: 1; padding: 20px 18px 24px; display: flex; flex-direction: column; gap: 20px; overflow: hidden; }
+.view {
+  flex: 1; min-height: 0; padding: 20px 18px 24px;
+  display: flex; flex-direction: column; gap: 20px;
+  overflow-y: auto; overflow-x: hidden;
+}
 
 .nav {
   display: flex; border-top: 1px solid var(--line);
@@ -138,7 +143,7 @@
 .label { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); font-weight: 700; }
 .empty { color: var(--muted); font-size: 14px; text-align: center; padding: 26px 14px; line-height: 1.7; }
 
-.scroll { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 16px; margin: 0 -18px; padding: 0 18px; }
+.scroll { overflow-y: auto; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; margin: 0 -18px; padding: 0 18px; }
 .scroll::-webkit-scrollbar { width: 0; }
 
 /* ---------- onboarding ---------- */

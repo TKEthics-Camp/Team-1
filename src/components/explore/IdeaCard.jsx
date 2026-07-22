@@ -13,7 +13,13 @@ export default function IdeaCard({ idea }) {
   const name = idea[lang === "en" ? 0 : 1];
 
   return (
-    <div className="idea">
+    <div
+      className="idea"
+      role="button"
+      tabIndex={0}
+      onClick={() => openSheet("idea", { idea })}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openSheet("idea", { idea }); }}
+    >
       <div className="orb-wrap" style={{ flex: "none" }}>
         <Orb interest={{ color, name }} size={52} />
       </div>
@@ -23,7 +29,10 @@ export default function IdeaCard({ idea }) {
       </div>
       <button
         className="idea-add"
-        onClick={() => openSheet("orb", { preset: { name: idea[0], nameZh: idea[1], color } })}
+        onClick={(e) => {
+          e.stopPropagation();
+          openSheet("orb", { preset: { name: idea[0], nameZh: idea[1], color } });
+        }}
       >
         {t("tryThis")}
       </button>

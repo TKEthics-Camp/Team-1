@@ -7,14 +7,14 @@ import { catLabel, hobbyName, haveHobby, ideaColor } from "../../lib/explore";
 import { scene, relTime } from "../../lib/community";
 import Avatar from "./Avatar";
 
-// A fabricated community moment: an illustrated scene, an (optionally
-// anonymised) author, and a button that always ends by sending the kid
-// offline — either logging their own or starting the hobby.
-export default function PostCard({ post, style }) {
+// A fabricated community moment: an illustrated scene, its author, and a
+// button that always ends by sending the kid offline — either logging their
+// own or starting the hobby. Always shown named: the anon/named toggle in
+// CommunityTab is about the user's *own* journal, not other people's posts.
+export default function PostCard({ post }) {
   const { t, lang } = useI18n();
   const { interests } = useStore();
   const { openSheet } = useUI();
-  const named = style === "named";
   const st = post.student;
   const has = haveHobby(interests, post.hobby);
 
@@ -31,9 +31,9 @@ export default function PostCard({ post, style }) {
       <div className="post-pic" dangerouslySetInnerHTML={{ __html: scene(post.cat, post.seed) }} />
       <div className="post-body">
         <div className="post-who">
-          {named ? <Avatar student={st} size={30} /> : <div className="avatar anon">🙂</div>}
+          <Avatar student={st} size={30} />
           <div>
-            <div className="post-nm">{named ? st.name[lang === "en" ? 0 : 1] : t("someone")}</div>
+            <div className="post-nm">{st.name[lang === "en" ? 0 : 1]}</div>
             <div className="post-sub">{catLabel(post.cat, lang) + " · " + relTime(post.daysAgo, lang, t)}</div>
           </div>
         </div>
