@@ -7,7 +7,7 @@ const UICtx = createContext(null);
 // any) is open, which photo is being viewed full-size, and which nudges the
 // user has waved off for today.
 export function UIProvider({ children }) {
-  const [sheet, setSheet] = useState(null); // { type: "entry"|"photo"|"orb", id? }
+  const [sheet, setSheet] = useState(null); // { type: "entry"|"photo"|"orb"|"student", id?, preset?, student? }
   const [viewer, setViewer] = useState(null); // photo id
   const [dismissed, setDismissed] = useState({}); // interestId -> dateKey
 
@@ -15,7 +15,9 @@ export function UIProvider({ children }) {
     sheet,
     viewer,
     dismissed,
-    openSheet: (type, id) => setSheet({ type, id }),
+    // A string second arg is an interest id; an object carries extra payload
+    // (an Explore preset, or the tapped student).
+    openSheet: (type, arg) => setSheet({ type, ...(typeof arg === "string" ? { id: arg } : arg) }),
     closeSheet: () => setSheet(null),
     openViewer: (id) => setViewer(id),
     closeViewer: () => setViewer(null),

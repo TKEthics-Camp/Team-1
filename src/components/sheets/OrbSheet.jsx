@@ -9,17 +9,21 @@ import { shade } from "../../lib/color";
 import Sheet from "../shared/Sheet";
 import Field from "../shared/Field";
 
-export default function OrbSheet({ interestId }) {
-  const { t } = useI18n();
+export default function OrbSheet({ interestId, preset = null }) {
+  const { t, lang } = useI18n();
   const { interests, addInterest, updateInterest, deleteInterest } = useStore();
   const { closeSheet } = useUI();
   const navigate = useNavigate();
 
   const editing = interestId ? interests.find((x) => x.id === interestId) : null;
 
-  const [name, setName] = useState(editing ? editing.name : "");
+  const [name, setName] = useState(
+    editing ? editing.name : preset ? (lang === "en" ? preset.name : preset.nameZh) : ""
+  );
   const [why, setWhy] = useState(editing ? editing.why || "" : "");
-  const [color, setColor] = useState(editing ? editing.color : PALETTE[interests.length % PALETTE.length]);
+  const [color, setColor] = useState(
+    editing ? editing.color : preset ? preset.color : PALETTE[interests.length % PALETTE.length]
+  );
   const [time, setTime] = useState(editing ? editing.time || "16:00" : "16:00");
   const [friendsText, setFriendsText] = useState(editing ? (editing.friends || []).join(", ") : "");
   const nameRef = useRef(null);

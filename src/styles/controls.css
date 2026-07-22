@@ -47,9 +47,9 @@ input[type="date"], input[type="time"] { font-family: var(--mono); color-scheme:
 .chip[aria-pressed="true"] { background: linear-gradient(135deg,#FF8FC0,#FFAE7E); color: #4A2140; border-color: transparent; font-weight: 700; }
 .chip.friend { color: var(--muted); }
 
-.tabs { display: flex; gap: 6px; background: rgba(255,255,255,.45); padding: 4px; border-radius: 14px; }
+.tabs { display: flex; gap: 6px; background: var(--glass); padding: 4px; border-radius: 14px; }
 .tabs button { flex: 1; background: none; border: none; padding: 9px; font-size: 13.5px; font-weight: 600; font-family: var(--display); color: var(--muted); border-radius: 11px; }
-.tabs button[aria-selected="true"] { background: #fff; color: var(--ink); box-shadow: 0 2px 8px -3px rgba(122,86,160,.4); }
+.tabs button[aria-selected="true"] { background: var(--sel); color: var(--ink); box-shadow: 0 2px 8px -3px rgba(0,0,0,.25); }
 
 .stats { display: flex; gap: 8px; }
 .stat { flex: 1; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 11px 10px; text-align: center; }

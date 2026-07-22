@@ -14,7 +14,7 @@ export default function JournalTab({ entries }) {
       {entries.map((e) => (
         <div className="entry" key={e.id}>
           <div>
-            <div className="d">{fmtDate(e.date, lang) + (e.isPinned ? "  ★" : "")}</div>
+            <div className="d">{fmtDate(e.date, lang) + (e.isPinned ? "  ★" : "") + (e.visibility === "public" ? "  🌐" : "")}</div>
             <div className="t">{e.text}</div>
           </div>
           <button className="icon" aria-label={t("del")} onClick={() => deleteEntry(e.id)}>×</button>

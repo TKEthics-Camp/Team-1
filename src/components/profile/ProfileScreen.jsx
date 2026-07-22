@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
-import { PALETTE } from "../../lib/constants";
+import { PALETTE, THEMES, DEFAULT_THEME } from "../../lib/constants";
 import { globalStreak } from "../../lib/derived";
 import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
@@ -9,9 +9,10 @@ import Stats from "../shared/Stats";
 import Orb from "../shared/Orb";
 
 export default function ProfileScreen() {
-  const { t, nOf } = useI18n();
-  const { profile, interests, photos, entries, clearAllData } = useStore();
+  const { t, lang, nOf } = useI18n();
+  const { profile, interests, photos, entries, clearAllData, updateProfile } = useStore();
   const [armed, setArmed] = useState(false);
+  const currentTheme = (profile && profile.theme) || DEFAULT_THEME;
   const [, bumpPermissionCheck] = useState(0);
 
   const granted = window.Notification && Notification.permission === "granted";
@@ -49,6 +50,24 @@ export default function ProfileScreen() {
           { n: photos.length, k: nOf(photos.length, "photos") },
           { n: entries.length, k: nOf(entries.length, "entries") },
         ]} />
+
+        <div className="label">{t("theme")}</div>
+        <div className="themes">
+          {THEMES.map((th) => (
+            <button
+              key={th.id}
+              className="theme-btn"
+              aria-pressed={th.id === currentTheme ? "true" : "false"}
+              onClick={() => updateProfile({ theme: th.id })}
+            >
+              <div className="band">
+                {th.sw.map((c, i) => <span key={i} style={{ background: c }} />)}
+              </div>
+              <div className="nm">{th.name[lang === "en" ? 0 : 1]}</div>
+            </button>
+          ))}
+        </div>
+        <div className="sub">{t("themeNote")}</div>
 
         <button className="btn2" disabled={granted} onClick={requestReminders}>
           {granted ? "✓ " + t("remindersOn") : t("turnOn")}

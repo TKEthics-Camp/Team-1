@@ -43,6 +43,14 @@ export function StoreProvider({ children }) {
         return next;
       });
     },
+    updateProfile(patch) {
+      setProfileState((p) => {
+        if (!p) return p;
+        const next = { ...p, ...patch };
+        put("meta", next);
+        return next;
+      });
+    },
     addInterest(rec) {
       setInterests((list) => [...list, rec]);
       put("interests", rec);

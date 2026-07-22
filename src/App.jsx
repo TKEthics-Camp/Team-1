@@ -4,9 +4,11 @@ import { useStore } from "./store/StoreContext";
 import { useI18n } from "./i18n/I18nContext";
 import { useReminderTimers } from "./lib/useReminderTimers";
 import { UIProvider, useUI } from "./ui/UIContext";
+import { DEFAULT_THEME } from "./lib/constants";
 import Onboarding from "./components/onboarding/Onboarding";
 import HomeScreen from "./components/home/HomeScreen";
 import InterestScreen from "./components/interest/InterestScreen";
+import ExploreScreen from "./components/explore/ExploreScreen";
 import ProfileScreen from "./components/profile/ProfileScreen";
 import SavedScreen from "./components/saved/SavedScreen";
 import BottomNav from "./components/shared/BottomNav";
@@ -30,7 +32,7 @@ export default function App() {
   if (loading) return null;
 
   return (
-    <div className="stage">
+    <div className="stage" data-theme={(profile && profile.theme) || DEFAULT_THEME}>
       <div className="app">
         {profile ? (
           <BrowserRouter>
@@ -64,6 +66,7 @@ function RoutedShell() {
       <Routes>
         <Route path="/" element={<HomeScreen />} />
         <Route path="/interest/:id" element={<InterestScreen />} />
+        <Route path="/explore" element={<ExploreScreen />} />
         <Route path="/profile" element={<ProfileScreen />} />
         <Route path="/saved/:id" element={<SavedScreen />} />
         <Route path="*" element={<Navigate to="/" replace />} />
