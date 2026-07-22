@@ -1,0 +1,23 @@
+/* Marshmallow land: a daydream you can hold. Everything is soft, lit, and airborne. */
+:root {
+  --sky-1: #FFE7F3;   /* cotton pink   */
+  --sky-2: #EDE4FF;   /* lavender      */
+  --sky-3: #DCF1FF;   /* pale blue     */
+  --sky-4: #FFF0DC;   /* warm peach    */
+  --mint:  #D6F6E6;
+
+  --shelf: #FFF7FC;
+  --card:  rgba(255,255,255,.62);
+  --card-2:rgba(255,255,255,.86);
+  --line:  rgba(122,86,160,.18);
+  --ink:   #4A3363;
+  --muted: #7D6B99;
+  --dim:   #9C8DB8;
+  --gold:  #C06A12;
+  --gold-on: #FFFFFF;
+  --candy: #FF8FBF;
+
+  --display: ui-rounded, "SF Pro Rounded", "Avenir Next", "Hiragino Maru Gothic ProN", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --body: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+}
