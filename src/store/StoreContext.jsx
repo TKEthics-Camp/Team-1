@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { getAll, put, del, clearAll as dbClearAll } from "../db/db";
-import { COINS_PER_LOG, DECORATIONS } from "../lib/constants";
+import { COINS_PER_LOG, DECORATIONS, REVIVE_COST } from "../lib/constants";
 
 const StoreCtx = createContext(null);
 
@@ -75,6 +75,22 @@ export function StoreProvider({ children }) {
     updateInterest(rec) {
       setInterests((list) => list.map((x) => (x.id === rec.id ? rec : x)));
       put("interests", rec);
+    },
+    // Bring a dead tree back for REVIVE_COST coins. Returns false (and changes
+    // nothing) if the user can't afford it. revivedAt resets the decay clock.
+    reviveInterest(id) {
+      const p = profileRef.current;
+      if (!p || (p.coins || 0) < REVIVE_COST) return false;
+      setInterests((list) => list.map((x) => {
+        if (x.id !== id) return x;
+        const next = { ...x, revivedAt: Date.now(), updatedAt: Date.now() };
+        put("interests", next);
+        return next;
+      }));
+      const np = { ...p, coins: (p.coins || 0) - REVIVE_COST };
+      setProfileState(np);
+      put("meta", np);
+      return true;
     },
     deleteInterest(id) {
       setPhotos((list) => {

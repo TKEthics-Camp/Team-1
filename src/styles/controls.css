@@ -15,6 +15,22 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visib
 .btn2:hover { background: var(--card-2); }
 .btn-danger { color: #D4456B; border-color: rgba(255,138,122,.3); }
 
+/* big either/or choice cards (onboarding) */
+.choice-list { display: flex; flex-direction: column; gap: 12px; }
+.choice {
+  display: flex; align-items: flex-start; gap: 13px; text-align: left; width: 100%;
+  background: var(--card); border: 1.5px solid var(--line); border-radius: 18px;
+  padding: 16px 15px; cursor: pointer;
+}
+.choice:hover { background: var(--card-2); }
+.choice[aria-pressed="true"] {
+  border-color: var(--candy);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--candy) 28%, transparent);
+}
+.choice .emoji { font-size: 26px; line-height: 1; flex: none; margin-top: 1px; }
+.choice .ct { display: block; font-family: var(--display); font-weight: 700; font-size: 16px; color: var(--ink); }
+.choice .cn { display: block; font-size: 13px; color: var(--muted); line-height: 1.5; margin-top: 2px; }
+
 .icon { background: none; border: none; color: var(--muted); padding: 6px 8px; font-size: 15px; line-height: 1; }
 .icon:hover { color: var(--ink); }
 

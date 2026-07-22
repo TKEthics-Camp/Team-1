@@ -40,6 +40,7 @@
 }
 .avatar.anon { width: 30px; height: 30px; background: var(--card-2); font-size: 16px; box-shadow: none; }
 .post {
+  flex: none;                 /* a direct child of the flex-column .scroll — don't let it squish */
   background: var(--card); border: 1px solid var(--line);
   border-radius: 18px; overflow: hidden;
 }
@@ -53,8 +54,19 @@
 .post-foot { display: flex; align-items: center; gap: 10px; }
 .post-min { flex: 1; font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
 
+/* section heading — separates "For you" from the full grab-bag */
+.section-head { display: flex; align-items: baseline; gap: 8px; padding: 6px 2px 0; }
+.section-head .h {
+  font-family: var(--display); font-weight: 700; font-size: 16px; color: var(--ink);
+  letter-spacing: -.01em;
+}
+.section-head .why { font-size: 12px; color: var(--dim); }
+.section-head .spacer { flex: 1; }
+.section-rule { height: 1px; background: var(--line); margin: 2px 2px 0; }
+
 /* the school web */
 .web {
+  flex: none;
   position: relative; width: 100%; aspect-ratio: 1; max-width: 320px;
   margin: 4px auto 0;
 }

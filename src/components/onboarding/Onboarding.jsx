@@ -7,6 +7,7 @@ import { askNotifications } from "../../lib/useReminderTimers";
 import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
 import WelcomeStep from "./WelcomeStep";
+import AccountTypeStep from "./AccountTypeStep";
 import NameStep from "./NameStep";
 import InterestsStep from "./InterestsStep";
 import ScheduleStep from "./ScheduleStep";
@@ -15,6 +16,7 @@ export default function Onboarding() {
   const { t, lang } = useI18n();
   const { saveProfile, addInterest } = useStore();
   const [step, setStep] = useState(0);
+  const [accountType, setAccountType] = useState(null);
   const [name, setName] = useState("");
   const [drafts, setDrafts] = useState([]);
 
@@ -33,6 +35,7 @@ export default function Onboarding() {
   function finish() {
     saveProfile({
       key: "profile", name: name.trim(), lang, color: PALETTE[0], theme: DEFAULT_THEME,
+      accountType: accountType || "individual",
       coins: 0, ownedDecorations: [], equippedDecoration: null, createdAt: Date.now(),
     });
     drafts.forEach((d) => {
@@ -53,11 +56,12 @@ export default function Onboarding() {
       <div className="view">
         <div className="onb">
           {step === 0 && <WelcomeStep onBegin={() => setStep(1)} />}
-          {step === 1 && <NameStep name={name} setName={setName} onNext={() => setStep(2)} />}
-          {step === 2 && (
-            <InterestsStep drafts={drafts} addDraft={addDraft} removeDraft={removeDraft} onNext={() => setStep(3)} />
+          {step === 1 && <AccountTypeStep value={accountType} setType={setAccountType} onNext={() => setStep(2)} />}
+          {step === 2 && <NameStep name={name} setName={setName} onNext={() => setStep(3)} />}
+          {step === 3 && (
+            <InterestsStep drafts={drafts} addDraft={addDraft} removeDraft={removeDraft} onNext={() => setStep(4)} />
           )}
-          {step === 3 && <ScheduleStep drafts={drafts} updateDraft={updateDraft} onEnter={finish} />}
+          {step === 4 && <ScheduleStep drafts={drafts} updateDraft={updateDraft} onEnter={finish} />}
         </div>
       </div>
     </>

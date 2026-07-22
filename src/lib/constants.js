@@ -8,12 +8,19 @@ export const THEMES = [
   { id: "marshmallow", name: ["Marshmallow", "棉花糖"], sw: ["#FFB6D6", "#B4CDFF", "#FFD6BE"] },
   { id: "sunset",      name: ["Sunset", "日落"],       sw: ["#FF966E", "#FF7896", "#FFC460"] },
   { id: "meadow",      name: ["Meadow", "草地"],       sw: ["#78D6A8", "#8CC8FF", "#D2E878"] },
+  { id: "ocean",       name: ["Ocean", "海洋"],        sw: ["#6FE0D8", "#5AA8F2", "#9BD6FF"] },
+  { id: "berry",       name: ["Berry", "莓果"],        sw: ["#FF8FC8", "#C08CF2", "#FFB0D8"] },
   { id: "midnight",    name: ["Midnight", "午夜"],     sw: ["#50C8BE", "#786EFF", "#D26EDC"] },
+  { id: "dusk",        name: ["Dusk", "黄昏"],         sw: ["#FF9E6E", "#B06EE0", "#6E7EE0"] },
+  { id: "forest",      name: ["Forest", "森林"],       sw: ["#5AD6A0", "#3FB0C0", "#8CD060"] },
 ];
 export const DEFAULT_THEME = "marshmallow";
 
 // Coins: earned by logging real activity, spent on purely cosmetic avatar gear.
 export const COINS_PER_LOG = 5;
+
+// Reviving a tree that has died from neglect costs coins (a "life").
+export const REVIVE_COST = 20;
 
 // A conic gradient reads as a painter's rainbow ring — no single "hobby colour" fits painting.
 const RAINBOW_RING = "conic-gradient(from 0deg, #FF3B30, #FF9500, #FFCC00, #34C759, #32ADE6, #5E5CE6, #AF52DE, #FF3B30)";

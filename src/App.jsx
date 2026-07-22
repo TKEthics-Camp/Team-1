@@ -17,11 +17,11 @@ import SheetHost from "./components/sheets/SheetHost";
 import PhotoViewer from "./components/interest/PhotoViewer";
 
 export default function App() {
-  const { loading, profile, interests } = useStore();
+  const { loading, profile, interests, entries, photos } = useStore();
   const { lang, setLang, nameOf, t } = useI18n();
   const syncedLang = useRef(false);
 
-  useReminderTimers(interests, lang, nameOf, t);
+  useReminderTimers(interests, entries, photos, lang, nameOf, t);
 
   useEffect(() => {
     if (!syncedLang.current && profile && profile.lang) {
