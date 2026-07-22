@@ -1,0 +1,84 @@
+/* ---------- explore ---------- */
+.safe-note {
+  display: flex; gap: 9px; align-items: flex-start;
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+  padding: 10px 12px; font-size: 12px; color: var(--muted); line-height: 1.5;
+}
+.safe-note span:first-child { flex: none; }
+.ideas { display: flex; flex-direction: column; gap: 9px; }
+.idea {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 16px; padding: 10px 12px 10px 10px;
+}
+.idea .orb-wrap { animation: none; }
+.idea-nm { font-family: var(--display); font-weight: 600; font-size: 15px; color: var(--ink); }
+.idea-cat { font-size: 11.5px; color: var(--dim); letter-spacing: .03em; }
+.idea-add {
+  flex: none; background: var(--sel); border: 1px solid var(--line); color: var(--ink);
+  border-radius: 999px; padding: 8px 13px; font-size: 12.5px; font-weight: 600;
+  font-family: var(--display); white-space: nowrap;
+}
+.idea-add:hover { border-color: var(--candy); color: var(--candy); }
+.recs-because { padding: 2px 2px 4px; }
+
+/* private / public segmented control */
+.seg { display: flex; gap: 6px; background: var(--glass); padding: 4px; border-radius: 12px; }
+.seg button {
+  flex: 1; background: none; border: none; padding: 9px; border-radius: 9px;
+  font-size: 13.5px; font-weight: 600; font-family: var(--display); color: var(--muted);
+}
+.seg button[aria-pressed="true"] { background: var(--sel); color: var(--ink); box-shadow: 0 2px 8px -3px rgba(0,0,0,.25); }
+
+/* community post cards (fake, illustrated) */
+.avatar {
+  border-radius: 50%; flex: none; display: grid; place-items: center;
+  color: #fff; font-family: var(--display); font-weight: 700;
+  box-shadow: inset -2px -3px 6px rgba(0,0,0,.28), inset 2px 2px 5px rgba(255,255,255,.35);
+}
+.avatar.anon { width: 30px; height: 30px; background: var(--card-2); font-size: 16px; box-shadow: none; }
+.post {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 18px; overflow: hidden;
+}
+.post-pic { width: 100%; aspect-ratio: 16 / 7; overflow: hidden; }
+.post-pic svg { width: 100%; height: 100%; display: block; }
+.post-body { padding: 11px 13px 12px; display: flex; flex-direction: column; gap: 9px; }
+.post-who { display: flex; align-items: center; gap: 9px; }
+.post-nm { font-family: var(--display); font-weight: 600; font-size: 13.5px; color: var(--ink); }
+.post-sub { font-size: 11px; color: var(--dim); }
+.post-cap { font-size: 14px; color: var(--ink); line-height: 1.5; overflow-wrap: anywhere; }
+.post-foot { display: flex; align-items: center; gap: 10px; }
+.post-min { flex: 1; font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+
+/* the school web */
+.web {
+  position: relative; width: 100%; aspect-ratio: 1; max-width: 320px;
+  margin: 4px auto 0;
+}
+.web-lines { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.web-link { stroke: var(--candy); stroke-width: .7; stroke-opacity: .5; stroke-dasharray: 2 2; }
+.web-node {
+  position: absolute; transform: translate(-50%, -50%);
+  background: none; border: none; padding: 0; cursor: pointer;
+  filter: drop-shadow(0 4px 10px var(--cast));
+}
+.web-node.me { pointer-events: none; }
+.web-node.linked .avatar { box-shadow: 0 0 0 3px color-mix(in srgb, var(--candy) 55%, transparent), inset -2px -3px 6px rgba(0,0,0,.28); }
+.web-node:hover { transform: translate(-50%, -50%) scale(1.08); }
+
+/* ---------- theme picker ---------- */
+.themes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.theme-btn {
+  position: relative; border: 1.5px solid var(--line); border-radius: 16px;
+  padding: 0; overflow: hidden; cursor: pointer; background: none;
+  display: flex; flex-direction: column; gap: 0; text-align: left;
+}
+.theme-btn .band { height: 46px; display: flex; }
+.theme-btn .band span { flex: 1; }
+.theme-btn .nm {
+  padding: 8px 12px; font-family: var(--display); font-weight: 600; font-size: 13.5px;
+  color: var(--ink); background: var(--card-2); backdrop-filter: blur(6px);
+}
+.theme-btn[aria-pressed="true"] { border-color: var(--candy); box-shadow: 0 0 0 3px color-mix(in srgb, var(--candy) 30%, transparent); }
+.theme-btn[aria-pressed="true"] .nm::after { content: " ✓"; color: var(--candy); }

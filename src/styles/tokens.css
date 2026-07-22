@@ -1,12 +1,34 @@
-/* Marshmallow land: a daydream you can hold. Everything is soft, lit, and airborne. */
+/* A skin is just a set of tokens on .stage[data-theme]. Everything else draws
+   from these, so a new theme is a colour recipe, not new markup.
+   Defaults here = Marshmallow, the theme when no data-theme is set. */
 :root {
-  --sky-1: #FFE7F3;   /* cotton pink   */
-  --sky-2: #EDE4FF;   /* lavender      */
-  --sky-3: #DCF1FF;   /* pale blue     */
-  --sky-4: #FFF0DC;   /* warm peach    */
-  --mint:  #D6F6E6;
+  --gold-on: #FFFFFF;
+  --display: ui-rounded, "SF Pro Rounded", "Avenir Next", "Hiragino Maru Gothic ProN", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --body: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+}
 
+/* ---- Marshmallow (default) ---- */
+.stage, .stage[data-theme="marshmallow"] {
+  --stage-bg:
+    radial-gradient(ellipse 60% 40% at 12% 8%,  rgba(255,183,214,.75), transparent 62%),
+    radial-gradient(ellipse 55% 40% at 88% 18%, rgba(186,205,255,.70), transparent 62%),
+    radial-gradient(ellipse 70% 45% at 78% 82%, rgba(255,214,178,.70), transparent 62%),
+    radial-gradient(ellipse 60% 45% at 18% 92%, rgba(190,240,220,.65), transparent 62%),
+    linear-gradient(170deg, #FFE7F3 0%, #EDE4FF 45%, #DCF1FF 100%);
+  --app-bg:
+    radial-gradient(ellipse 70% 34% at 16% 6%,   rgba(255,170,214,.80), transparent 62%),
+    radial-gradient(ellipse 66% 30% at 96% 22%,  rgba(168,190,255,.78), transparent 62%),
+    radial-gradient(ellipse 60% 26% at 6% 46%,   rgba(178,232,255,.70), transparent 62%),
+    radial-gradient(ellipse 70% 30% at 92% 66%,  rgba(255,206,168,.75), transparent 62%),
+    radial-gradient(ellipse 86% 34% at 46% 102%, rgba(170,238,206,.80), transparent 66%),
+    linear-gradient(172deg, #FFE9F6 0%, #EFE6FF 40%, #E2F1FF 72%, #EAFBF2 100%);
+  --cloud: rgba(255,255,255,.92);
+  --cast: rgba(112,74,150,.45);
   --shelf: #FFF7FC;
+  --glass: rgba(255,255,255,.5);
+  --glass2: rgba(255,255,255,.6);
+  --sel: #fff;
   --card:  rgba(255,255,255,.62);
   --card-2:rgba(255,255,255,.86);
   --line:  rgba(122,86,160,.18);
@@ -14,10 +36,91 @@
   --muted: #7D6B99;
   --dim:   #9C8DB8;
   --gold:  #C06A12;
-  --gold-on: #FFFFFF;
   --candy: #FF8FBF;
+}
 
-  --display: ui-rounded, "SF Pro Rounded", "Avenir Next", "Hiragino Maru Gothic ProN", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
-  --body: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+/* ---- Sunset: warm coral, peach, gold ---- */
+.stage[data-theme="sunset"] {
+  --stage-bg:
+    radial-gradient(ellipse 60% 40% at 14% 8%,  rgba(255,176,120,.80), transparent 62%),
+    radial-gradient(ellipse 60% 42% at 86% 20%, rgba(255,150,170,.72), transparent 62%),
+    radial-gradient(ellipse 70% 45% at 80% 88%, rgba(255,200,110,.70), transparent 62%),
+    linear-gradient(165deg, #FFE3CE 0%, #FFD3D0 48%, #FBE0B8 100%);
+  --app-bg:
+    radial-gradient(ellipse 72% 34% at 16% 4%,  rgba(255,150,110,.82), transparent 62%),
+    radial-gradient(ellipse 66% 30% at 98% 26%, rgba(255,120,150,.78), transparent 62%),
+    radial-gradient(ellipse 70% 30% at 88% 70%, rgba(255,196,96,.80), transparent 62%),
+    radial-gradient(ellipse 86% 34% at 40% 104%, rgba(255,168,120,.82), transparent 66%),
+    linear-gradient(170deg, #FFEAD8 0%, #FFDCCF 42%, #FFE7C4 100%);
+  --cloud: rgba(255,250,240,.92);
+  --cast: rgba(180,90,70,.45);
+  --shelf: #FFF6EE;
+  --glass: rgba(255,252,246,.52);
+  --glass2: rgba(255,252,246,.62);
+  --sel: #fff;
+  --card:  rgba(255,250,244,.62);
+  --card-2:rgba(255,250,244,.88);
+  --line:  rgba(170,90,60,.18);
+  --ink:   #5A2E28;
+  --muted: #93655A;
+  --dim:   #B58C7E;
+  --gold:  #B85B0E;
+  --candy: #FF7A6B;
+}
+
+/* ---- Meadow: mint, sage, sky ---- */
+.stage[data-theme="meadow"] {
+  --stage-bg:
+    radial-gradient(ellipse 60% 40% at 12% 8%,  rgba(150,225,190,.78), transparent 62%),
+    radial-gradient(ellipse 58% 42% at 88% 18%, rgba(168,214,255,.70), transparent 62%),
+    radial-gradient(ellipse 70% 45% at 80% 88%, rgba(224,240,150,.66), transparent 62%),
+    linear-gradient(165deg, #DEF6E6 0%, #DCF0F6 50%, #EAF6D8 100%);
+  --app-bg:
+    radial-gradient(ellipse 72% 34% at 16% 4%,  rgba(120,214,168,.80), transparent 62%),
+    radial-gradient(ellipse 66% 30% at 98% 26%, rgba(140,200,255,.74), transparent 62%),
+    radial-gradient(ellipse 70% 30% at 88% 70%, rgba(210,232,120,.72), transparent 62%),
+    radial-gradient(ellipse 86% 34% at 40% 104%, rgba(150,224,182,.82), transparent 66%),
+    linear-gradient(172deg, #E4F7EC 0%, #E2F2F6 44%, #EFF7DE 100%);
+  --cloud: rgba(252,255,250,.92);
+  --cast: rgba(60,140,110,.42);
+  --shelf: #F2FBF4;
+  --glass: rgba(250,255,251,.5);
+  --glass2: rgba(250,255,251,.6);
+  --sel: #fff;
+  --card:  rgba(248,255,250,.62);
+  --card-2:rgba(248,255,250,.88);
+  --line:  rgba(50,130,95,.18);
+  --ink:   #234A38;
+  --muted: #4E7A64;
+  --dim:   #7EA791;
+  --gold:  #2E7D46;
+  --candy: #37B98A;
+}
+
+/* ---- Midnight: deep indigo with an aurora ---- */
+.stage[data-theme="midnight"] {
+  --stage-bg:
+    radial-gradient(ellipse 60% 44% at 16% 6%,  rgba(90,120,255,.30), transparent 62%),
+    radial-gradient(ellipse 60% 44% at 84% 90%, rgba(120,90,200,.30), transparent 62%),
+    linear-gradient(170deg, #0B0A1E 0%, #131033 50%, #0C1226 100%);
+  --app-bg:
+    radial-gradient(ellipse 74% 34% at 18% 2%,  rgba(80,200,190,.34), transparent 60%),
+    radial-gradient(ellipse 70% 32% at 98% 22%, rgba(120,110,255,.36), transparent 60%),
+    radial-gradient(ellipse 70% 30% at 8% 60%,  rgba(210,110,220,.26), transparent 60%),
+    radial-gradient(ellipse 86% 36% at 50% 104%, rgba(90,150,255,.30), transparent 64%),
+    linear-gradient(175deg, #14122E 0%, #1A1740 46%, #101028 100%);
+  --cloud: rgba(150,180,255,.22);
+  --cast: rgba(0,0,0,.6);
+  --shelf: #191636;
+  --glass: rgba(28,24,58,.55);
+  --glass2: rgba(28,24,58,.62);
+  --sel: rgba(255,255,255,.16);
+  --card:  rgba(255,255,255,.07);
+  --card-2:rgba(255,255,255,.13);
+  --line:  rgba(255,255,255,.14);
+  --ink:   #ECEEFF;
+  --muted: #A6ADD8;
+  --dim:   #7C82AE;
+  --gold:  #FFD45E;
+  --candy: #FF8FC0;
 }

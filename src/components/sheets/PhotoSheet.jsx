@@ -8,6 +8,7 @@ import { downscale, useObjectURL } from "../../lib/image";
 import Sheet from "../shared/Sheet";
 import Field from "../shared/Field";
 import Chip from "../shared/Chip";
+import VisRow from "../shared/VisRow";
 
 export default function PhotoSheet({ interestId }) {
   const { t, nameOf } = useI18n();
@@ -19,6 +20,7 @@ export default function PhotoSheet({ interestId }) {
   const fileRef = useRef(null);
   const [blob, setBlob] = useState(null);
   const [caption, setCaption] = useState("");
+  const [visibility, setVisibility] = useState("private");
   const [pinned, setPinned] = useState(false);
   const previewUrl = useObjectURL(blob);
 
@@ -34,7 +36,7 @@ export default function PhotoSheet({ interestId }) {
     if (!blob) return;
     const rec = {
       id: uid(), interestId: it.id, blob, caption: caption.trim(),
-      isPinned: pinned, createdAt: Date.now(),
+      visibility, isPinned: pinned, createdAt: Date.now(),
     };
     addPhoto(rec);
     closeSheet();
@@ -56,6 +58,7 @@ export default function PhotoSheet({ interestId }) {
           onChange={(e) => setCaption(e.target.value)}
         />
       </Field>
+      <VisRow value={visibility} onChange={setVisibility} />
       <div className="chips">
         <Chip pressed={pinned} onClick={() => setPinned((p) => !p)}>
           {(pinned ? "★ " : "☆ ") + t("pin")}

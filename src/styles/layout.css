@@ -1,13 +1,9 @@
 * { box-sizing: border-box; }
 
 .stage {
-  background:
-    radial-gradient(ellipse 60% 40% at 12% 8%,  rgba(255,183,214,.75), transparent 62%),
-    radial-gradient(ellipse 55% 40% at 88% 18%, rgba(186,205,255,.70), transparent 62%),
-    radial-gradient(ellipse 70% 45% at 78% 82%, rgba(255,214,178,.70), transparent 62%),
-    radial-gradient(ellipse 60% 45% at 18% 92%, rgba(190,240,220,.65), transparent 62%),
-    linear-gradient(170deg, var(--sky-1) 0%, var(--sky-2) 45%, var(--sky-3) 100%);
+  background: var(--stage-bg);
   color: var(--ink);
+  transition: background .5s ease, color .5s ease;
   font-family: var(--body);
   line-height: 1.5;
   min-height: 100vh;
@@ -20,16 +16,11 @@
 .app {
   width: 100%;
   max-width: 400px;
-  background:
-    radial-gradient(ellipse 70% 34% at 16% 6%,   rgba(255,170,214,.80), transparent 62%),
-    radial-gradient(ellipse 66% 30% at 96% 22%,  rgba(168,190,255,.78), transparent 62%),
-    radial-gradient(ellipse 60% 26% at 6% 46%,   rgba(178,232,255,.70), transparent 62%),
-    radial-gradient(ellipse 70% 30% at 92% 66%,  rgba(255,206,168,.75), transparent 62%),
-    radial-gradient(ellipse 86% 34% at 46% 102%, rgba(170,238,206,.80), transparent 66%),
-    linear-gradient(172deg, #FFE9F6 0%, #EFE6FF 40%, #E2F1FF 72%, #EAFBF2 100%);
-  border: 1px solid rgba(255,255,255,.7);
+  background: var(--app-bg);
+  border: 1px solid rgba(255,255,255,.28);
   border-radius: 32px;
-  box-shadow: 0 40px 90px -34px rgba(112,74,150,.45), 0 0 0 1px rgba(255,255,255,.5) inset;
+  box-shadow: 0 40px 90px -34px var(--cast), 0 0 0 1px rgba(255,255,255,.28) inset;
+  transition: background .5s ease;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -44,12 +35,12 @@
 }
 .app::before {
   width: 260px; height: 130px; left: -70px; top: 190px;
-  background: radial-gradient(ellipse, rgba(255,255,255,.95), rgba(255,255,255,0) 70%);
+  background: radial-gradient(ellipse, var(--cloud), transparent 70%);
   animation: drift 26s ease-in-out infinite;
 }
 .app::after {
   width: 300px; height: 150px; right: -110px; bottom: 130px;
-  background: radial-gradient(ellipse, rgba(255,255,255,.9), rgba(255,255,255,0) 70%);
+  background: radial-gradient(ellipse, var(--cloud), transparent 70%);
   animation: drift 34s ease-in-out infinite reverse;
 }
 @keyframes drift {
@@ -63,7 +54,7 @@
   display: flex; align-items: center; gap: 8px;
   padding: 15px 16px; min-height: 58px;
   border-bottom: 1px solid var(--line);
-  background: rgba(255,255,255,.5);
+  background: var(--glass);
   backdrop-filter: blur(10px);
 }
 .topbar h1 {
@@ -76,7 +67,7 @@
 
 .nav {
   display: flex; border-top: 1px solid var(--line);
-  background: rgba(255,255,255,.6);
+  background: var(--glass2);
   backdrop-filter: blur(10px);
 }
 .nav button {

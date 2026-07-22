@@ -8,6 +8,7 @@ import { today } from "../../lib/dates";
 import Sheet from "../shared/Sheet";
 import Field from "../shared/Field";
 import Chip from "../shared/Chip";
+import VisRow from "../shared/VisRow";
 
 const DURATIONS = [15, 30, 45, 60, 90, 120];
 
@@ -21,6 +22,7 @@ export default function EntrySheet({ interestId }) {
   const [date, setDate] = useState(today());
   const [minutes, setMinutes] = useState(30);
   const [text, setText] = useState("");
+  const [visibility, setVisibility] = useState("private");
   const [pinned, setPinned] = useState(false);
   const textRef = useRef(null);
 
@@ -33,7 +35,7 @@ export default function EntrySheet({ interestId }) {
     if (!txt) { textRef.current?.focus(); return; }
     const rec = {
       id: uid(), interestId: it.id, date: date || today(), text: txt,
-      minutes, isPinned: pinned, createdAt: Date.now(), updatedAt: Date.now(),
+      minutes, visibility, isPinned: pinned, createdAt: Date.now(), updatedAt: Date.now(),
     };
     addEntry(rec);
     closeSheet();
@@ -62,6 +64,7 @@ export default function EntrySheet({ interestId }) {
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
+      <VisRow value={visibility} onChange={setVisibility} />
       <div className="chips">
         <Chip pressed={pinned} onClick={() => setPinned((p) => !p)}>
           {(pinned ? "★ " : "☆ ") + t("pin")}

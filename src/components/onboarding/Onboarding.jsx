@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
-import { PALETTE } from "../../lib/constants";
+import { PALETTE, DEFAULT_THEME } from "../../lib/constants";
 import { uid } from "../../lib/id";
 import { askNotifications } from "../../lib/useReminderTimers";
 import TopBar from "../shared/TopBar";
@@ -31,7 +31,7 @@ export default function Onboarding() {
   }
 
   function finish() {
-    saveProfile({ key: "profile", name: name.trim(), lang, color: PALETTE[0], createdAt: Date.now() });
+    saveProfile({ key: "profile", name: name.trim(), lang, color: PALETTE[0], theme: DEFAULT_THEME, createdAt: Date.now() });
     drafts.forEach((d) => {
       addInterest({
         id: d.id, name: d.name, color: d.color, why: "", time: d.time, friends: d.friends,
