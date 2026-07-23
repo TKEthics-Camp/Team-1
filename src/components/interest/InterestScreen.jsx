@@ -134,7 +134,7 @@ export default function InterestScreen() {
           <button aria-selected={tab === "journal"} onClick={() => setTab("journal")}>{t("journal")}</button>
         </div>
 
-        <div className="scroll">
+        <div className="tabpane">
           {tab === "album" ? (
             <AlbumTab photos={ph} onOpenPhoto={openViewer} />
           ) : (

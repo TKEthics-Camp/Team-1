@@ -114,6 +114,60 @@ export async function pullUserRow(userId) {
   return data;
 }
 
+export async function updateDiscovery(userId, enabled) {
+  const { error } = await supabase.from("users").update({ discovery_enabled: enabled }).eq("id", userId);
+  if (error) console.error("Sync (discovery) failed:", error);
+}
+
+export async function updateDisplayName(userId, name) {
+  const { error } = await supabase.from("users").update({ display_name: name }).eq("id", userId);
+  if (error) console.error("Sync (display name) failed:", error);
+}
+
+// RLS (users_select) already restricts what comes back to: this user's own
+// row, plus rows with discovery_enabled = true where neither side has
+// blocked the other — so there's nothing left to filter client-side.
+export async function searchUsers(query, excludeUserId) {
+  const q = String(query || "").trim();
+  if (!q) return [];
+  const { data, error } = await supabase
+    .from("users")
+    .select("id, display_name, account_type")
+    .ilike("display_name", `%${q}%`)
+    .neq("id", excludeUserId)
+    .limit(20);
+  if (error) {
+    console.error("Sync (search users) failed:", error);
+    return [];
+  }
+  return data || [];
+}
+
+// Another user's public garden: only their public interests, and only the
+// entries under those interests (RLS's entries_select already enforces the
+// entry itself being public too, on top of its parent interest). Photos
+// aren't included — they're still local-only (see the note up top), so
+// there's nothing remote to fetch yet for someone else's album.
+export async function pullPublicProfile(userId) {
+  const { data: interestRows, error: intErr } = await supabase
+    .from("interests").select("*").eq("user_id", userId).eq("visibility", "public");
+  if (intErr) {
+    console.error("Sync (pull public profile) failed:", intErr);
+    return { interests: [], entries: [] };
+  }
+  const ids = (interestRows || []).map((r) => r.id);
+  let entryRows = [];
+  if (ids.length) {
+    const { data, error } = await supabase.from("entries").select("*").in("interest_id", ids);
+    if (error) console.error("Sync (pull public entries) failed:", error);
+    else entryRows = data || [];
+  }
+  return {
+    interests: (interestRows || []).map(rowToInterest),
+    entries: entryRows.map(rowToEntry),
+  };
+}
+
 export async function pullMine(userId) {
   const { data: interestRows, error: intErr } = await supabase
     .from("interests").select("*").eq("user_id", userId);

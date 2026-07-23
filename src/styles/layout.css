@@ -148,6 +148,12 @@
 .scroll { overflow-y: auto; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; margin: 0 -18px; padding: 0 18px; }
 .scroll::-webkit-scrollbar { width: 0; }
 
+/* Unlike .scroll (an independently-scrolling region for screens with a short,
+   pinned header), the interest screen's header above the Album/Journal tabs
+   can grow tall enough on its own to starve a nested flex:1 scroller down to
+   zero height. This just flows with the rest of .view's own scroll instead. */
+.tabpane { display: flex; flex-direction: column; gap: 16px; }
+
 /* ---------- onboarding ---------- */
 .onb { flex: 1; display: flex; flex-direction: column; gap: 18px; }
 .onb h2 { font-family: var(--display); font-size: 25px; font-weight: 600; margin: 0; letter-spacing: -.015em; text-wrap: balance; }

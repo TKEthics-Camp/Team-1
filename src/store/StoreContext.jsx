@@ -4,7 +4,7 @@ import { COINS_PER_LOG, DECORATIONS, REVIVE_COST, PALETTE, DEFAULT_THEME, HAIR_S
 import { useAuth } from "./AuthContext";
 import {
   pushInterest, deleteRemoteInterest, pushEntry, deleteRemoteEntry,
-  deleteAllMine, pullMine, pullUserRow,
+  deleteAllMine, pullMine, pullUserRow, updateDiscovery, updateDisplayName,
 } from "../lib/remote";
 
 const StoreCtx = createContext(null);
@@ -73,8 +73,8 @@ export function StoreProvider({ children }) {
       // only ever set once onboarding finishes, so a non-empty value there
       // means "this account already exists" and its profile can be rebuilt
       // straight from that row instead.
+      const userRow = await pullUserRow(user.id);
       if (!profileRef.current) {
-        const userRow = await pullUserRow(user.id);
         if (userRow && userRow.display_name) {
           const rebuilt = {
             key: "profile",
@@ -83,6 +83,7 @@ export function StoreProvider({ children }) {
             color: PALETTE[0],
             theme: DEFAULT_THEME,
             accountType: userRow.account_type || "individual",
+            discoverable: !!userRow.discovery_enabled,
             coins: 0,
             ownedDecorations: [],
             equippedDecoration: null,
@@ -90,6 +91,24 @@ export function StoreProvider({ children }) {
           };
           setProfileState(rebuilt);
           put("meta", rebuilt);
+        }
+      } else if (userRow) {
+        // Picks up a discoverable change made from another device/session —
+        // the local profile cache doesn't otherwise learn about remote-only
+        // updates.
+        if (!!profileRef.current.discoverable !== !!userRow.discovery_enabled) {
+          const next = { ...profileRef.current, discoverable: !!userRow.discovery_enabled };
+          setProfileState(next);
+          put("meta", next);
+        }
+        // A local profile that predates this sign-in (built while offline,
+        // or from a device that used the app before creating an account)
+        // never went through Onboarding's own push of display_name — that
+        // only fires once, at the end of onboarding. Local `name` is the
+        // only place it's ever edited, so it's always the source of truth
+        // here; push it across whenever the two disagree.
+        if (profileRef.current.name && userRow.display_name !== profileRef.current.name) {
+          updateDisplayName(user.id, profileRef.current.name);
         }
       }
 
@@ -158,6 +177,18 @@ export function StoreProvider({ children }) {
         put("meta", next);
         return next;
       });
+    },
+    // Opts this account into (or out of) Explore's user search. Off by
+    // default (see the users_select RLS policy) — this is the only place
+    // that flips it on.
+    setDiscoverable(enabled) {
+      setProfileState((p) => {
+        if (!p) return p;
+        const next = { ...p, discoverable: enabled };
+        put("meta", next);
+        return next;
+      });
+      if (userRef.current) updateDiscovery(userRef.current.id, enabled);
     },
     addInterest(rec) {
       setInterests((list) => [...list, rec]);

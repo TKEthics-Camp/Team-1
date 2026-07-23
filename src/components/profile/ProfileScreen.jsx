@@ -13,7 +13,7 @@ import PersonAvatar from "../shared/PersonAvatar";
 
 export default function ProfileScreen() {
   const { t, lang, nOf } = useI18n();
-  const { profile, interests, photos, entries, clearAllData, updateProfile } = useStore();
+  const { profile, interests, photos, entries, clearAllData, updateProfile, setDiscoverable } = useStore();
   const { signOut } = useAuth();
   const { openSheet } = useUI();
   const navigate = useNavigate();
@@ -23,6 +23,7 @@ export default function ProfileScreen() {
   const [, bumpPermissionCheck] = useState(0);
   const coins = (profile && profile.coins) || 0;
   const equippedDecoration = DECORATIONS.find((d) => d.id === (profile && profile.equippedDecoration)) || null;
+  const discoverable = !!(profile && profile.discoverable);
 
   const permission = window.Notification ? Notification.permission : "unsupported";
   const granted = permission === "granted";
@@ -97,6 +98,17 @@ export default function ProfileScreen() {
           {granted ? "✓ " + t("remindersOn") : blocked ? t("remindersBlocked") : t("turnOn")}
         </button>
         <div className="sub">{t("remindNote")}</div>
+
+        <div className="label">{t("discoverableLabel")}</div>
+        <div className="seg">
+          <button type="button" aria-pressed={!discoverable ? "true" : "false"} onClick={() => setDiscoverable(false)}>
+            {t("discoverableOff")}
+          </button>
+          <button type="button" aria-pressed={discoverable ? "true" : "false"} onClick={() => setDiscoverable(true)}>
+            {t("discoverableOn")}
+          </button>
+        </div>
+        <div className="sub">{t("discoverableNote")}</div>
 
         {isOrg ? (
           <div className="sub">{t("joinedClass")}</div>

@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
@@ -14,7 +13,6 @@ export default function PhotoSheet({ interestId }) {
   const { t, nameOf } = useI18n();
   const { interests, addPhoto } = useStore();
   const { closeSheet } = useUI();
-  const navigate = useNavigate();
   const it = interests.find((x) => x.id === interestId);
 
   const fileRef = useRef(null);
@@ -40,7 +38,6 @@ export default function PhotoSheet({ interestId }) {
     };
     addPhoto(rec);
     closeSheet();
-    navigate(`/saved/${it.id}`);
   }
 
   return (

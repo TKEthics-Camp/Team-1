@@ -1,3 +1,13 @@
+/* ---------- explore: user search ---------- */
+.user-search { display: flex; flex-direction: column; gap: 8px; }
+.user-search-input {
+  width: 100%; background: var(--card); border: 1px solid var(--line); color: var(--ink);
+  border-radius: 14px; padding: 11px 14px; font-size: 14px; font-family: inherit;
+}
+.user-search-input::placeholder { color: var(--dim); }
+.user-search-input:focus { outline: none; border-color: var(--candy); }
+.user-search-results { display: flex; flex-direction: column; gap: 8px; }
+
 /* ---------- explore ---------- */
 .safe-note {
   display: flex; gap: 9px; align-items: flex-start;
