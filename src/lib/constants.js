@@ -22,6 +22,27 @@ export const COINS_PER_LOG = 5;
 // Reviving a tree that has died from neglect costs coins (a "life").
 export const REVIVE_COST = 20;
 
+// Avatar customization — replaces the old photo-upload avatar. Skin tones and
+// colours are always free (identity shouldn't be paywalled); hair/outfit
+// *styles* beyond the basics cost coins, same currency the hobby decorations
+// below use.
+export const SKIN_TONES = ["#FFDFC0", "#F3C79A", "#D9A56C", "#B87F4E", "#8C5A34", "#5C3A22"];
+export const HAIR_COLORS = ["#3B2A20", "#7A4B27", "#D9B24C", "#C0504D", "#6E6E6E", "#B8CFEA", "#F2A6D6"];
+export const HAIR_STYLES = [
+  { id: "bald",  name: ["Bald", "光头"], price: 0 },
+  { id: "short", name: ["Short", "短发"], price: 0 },
+  { id: "curly", name: ["Curly", "卷发"], price: 20 },
+  { id: "long",  name: ["Long", "长发"], price: 20 },
+  { id: "spiky", name: ["Spiky", "刺头"], price: 30 },
+];
+export const OUTFIT_STYLES = [
+  { id: "tee",      name: ["T-shirt", "T恤"], price: 0 },
+  { id: "hoodie",   name: ["Hoodie", "连帽衫"], price: 20 },
+  { id: "overalls", name: ["Overalls", "背带裤"], price: 30 },
+];
+export const OUTFIT_COLORS = ["#FFFFFF", "#4A4E69", "#E07A5F", "#3D9970", "#5AA8F2", "#B48CF2", "#FFD45E"];
+export const DEFAULT_AVATAR = { skin: SKIN_TONES[0], hair: "short", hairColor: HAIR_COLORS[0], outfit: "tee", outfitColor: OUTFIT_COLORS[0] };
+
 // A conic gradient reads as a painter's rainbow ring — no single "hobby colour" fits painting.
 const RAINBOW_RING = "conic-gradient(from 0deg, #FF3B30, #FF9500, #FFCC00, #34C759, #32ADE6, #5E5CE6, #AF52DE, #FF3B30)";
 
@@ -44,22 +65,22 @@ export const DECORATIONS = [
 // [name, nameZh, palette index, category (drives recommendations), descEn, descZh].
 export const IDEAS = [
   ["Basketball", "篮球", 4, "sport",
-    "A team sport where you shoot a ball through a hoop — great for speed, teamwork, and stamina.",
+    "A team sport where you shoot a ball through a hoop — great for speed, teamwork, and energy.",
     "把球投进篮筐的团队运动，能锻炼速度、团队配合和耐力。"],
   ["Football", "足球", 3, "sport",
-    "Kick a ball into the other team's goal — builds footwork, endurance, and quick thinking.",
+    "Kick a ball into the other team's goal — builds footwork, energy, and quick thinking.",
     "把球踢进对方球门的运动，锻炼脚法、耐力和快速判断。"],
   ["Badminton", "羽毛球", 1, "sport",
-    "A fast racket sport played over a net with a lightweight shuttlecock.",
+    "A fast racket sport played over a net with a light birdie.",
     "隔网用球拍击打羽毛球的运动，节奏快、讲究反应。"],
   ["Table tennis", "乒乓球", 5, "sport",
-    "A quick indoor racket sport played on a small table — sharp reflexes required.",
+    "A quick indoor racket sport played on a small table — fast reactions needed.",
     "在小球台上进行的快节奏运动，考验反应速度。"],
   ["Running", "跑步", 7, "sport",
-    "Just you, your legs, and the road — builds endurance and clears your head.",
+    "Just you, your legs, and the road — builds energy and clears your head.",
     "只需要双腿和一条路，能锻炼耐力，也能让头脑清醒。"],
   ["Cycling", "骑车", 1, "sport",
-    "Ride a bike for fun or distance — a gentle way to explore and build stamina.",
+    "Ride a bike for fun or distance — an easy way to explore and build energy.",
     "骑自行车探索周围、锻炼耐力的轻松方式。"],
   ["Swimming", "游泳", 1, "sport",
     "A full-body workout in the water — good for strength and breath control.",
@@ -71,13 +92,13 @@ export const IDEAS = [
     "Put what's in your head onto paper with a pencil — no equipment needed.",
     "只用一支笔就能把脑子里的东西画到纸上。"],
   ["Watercolor", "水彩", 6, "art",
-    "Paint with water and pigment — loose, flowing colours that are hard to fully control.",
+    "Paint with water and colour — loose, flowing colours that are hard to fully control.",
     "用水和颜料作画，色彩流动、很难完全掌控，也是它的乐趣所在。"],
   ["Calligraphy", "书法", 0, "art",
     "Write characters with a brush and ink — a slow, focused art form.",
     "用毛笔和墨写字，是一种讲究专注和耐心的艺术。"],
   ["Paper cutting", "剪纸", 4, "art",
-    "Cut intricate patterns out of paper — a traditional folk art.",
+    "Cut fancy patterns out of paper — a traditional folk art.",
     "用剪刀剪出精美图案的传统民间艺术。"],
   ["Photography", "摄影", 5, "art",
     "Capture moments and scenes with a camera or phone.",
@@ -172,6 +193,11 @@ export const CATS = {
   mind: ["Mind", "静心"], food: ["Food & grow", "美食"], outdoor: ["Outdoors", "户外"], dance: ["Movement", "律动"],
 };
 
+// Demo class codes — this app has no server, so there's no real class
+// roster to check against. Any code here "joins" the one fake school
+// (STUDENTS below); anything else is rejected. Case/space-insensitive.
+export const CLASS_CODES = ["PINE2024", "PINECITY"];
+
 // Fake classmates. Hobby names reuse IDEAS so "shared with you" resolves.
 export const STUDENTS = [
   { name: ["Lin", "小林"], color: 4, orbs: [["Basketball", "篮球", "sport", 760], ["Running", "跑步", "sport", 300]] },
@@ -184,10 +210,10 @@ export const STUDENTS = [
 
 export const CAPTIONS = {
   sport:  [["Finally landed a jump shot after school.", "放学后终于投进了一个跳投。"], ["Ran to the river and back. Legs dead, felt great.", "跑到河边又跑回来。腿废了，但很爽。"]],
-  art:    [["Painted the persimmon tree out back.", "画了后院那棵柿子树。"], ["Hands came out wrong again, but the eyes are right.", "手又画歪了，不过眼睛画对了。"]],
+  art:    [["Painted the old tree out back.", "画了后院那棵柿子树。"], ["Hands came out wrong again, but the eyes are right.", "手又画歪了，不过眼睛画对了。"]],
   music:  [["Got through the whole piece without stopping!", "整首曲子一次弹完，没停！"], ["Fingers hurt but the chords finally sound clean.", "手指很疼，但和弦终于干净了。"]],
   mind:   [["Finished the book under the big tree.", "在大树下把书看完了。"], ["Lost twice, won once. Good afternoon.", "输了两盘赢了一盘。不错的下午。"]],
   food:   [["Burned the first batch, second came out golden.", "第一锅糊了，第二锅金黄。"], ["Grandma showed me how to fold the dumplings.", "奶奶教我包饺子。"]],
-  outdoor:[["Saw three kingfishers by the water.", "在水边看到三只翠鸟。"], ["Kite went so high I lost sight of it.", "风筝飞得太高，我都看不见了。"]],
+  outdoor:[["Saw three bright birds by the water.", "在水边看到三只翠鸟。"], ["Kite went so high I lost sight of it.", "风筝飞得太高，我都看不见了。"]],
   dance:  [["Nailed the turn on the tenth try.", "第十次终于转成功了。"], ["Practiced in the yard till the light went.", "在院子里练到天黑。"]],
 };

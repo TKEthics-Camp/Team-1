@@ -6,7 +6,7 @@ import { fmtHours } from "../../lib/derived";
 import { haveHobby, ideaColor } from "../../lib/explore";
 import { studentShared } from "../../lib/community";
 import Sheet from "../shared/Sheet";
-import Orb from "../shared/Orb";
+import Tree from "../shared/Tree";
 import Avatar from "../explore/Avatar";
 
 // Tap a classmate: their (fake) orbs and what you share. No message button —
@@ -42,8 +42,8 @@ export default function StudentSheet({ student }) {
           const name = o[lang === "en" ? 0 : 1];
           return (
             <div className="idea" key={o[0]}>
-              <div className="orb-wrap" style={{ flex: "none" }}>
-                <Orb interest={{ color: PALETTE[student.color], name }} size={46} />
+              <div style={{ flex: "none" }}>
+                <Tree interest={{ color: PALETTE[student.color], name }} size={46} stage={3} health="healthy" />
               </div>
               <div className="grow">
                 <div className="idea-nm">{name}</div>

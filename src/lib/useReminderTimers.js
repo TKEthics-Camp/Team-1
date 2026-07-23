@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { parseTime, minutesNow, nudgeText, dueNudges } from "./reminders";
+import { parseTime, minutesNow, nudgeText, dueNudges, isScheduledToday } from "./reminders";
 import { treeHealth } from "./tree";
 import { today } from "./dates";
 
@@ -46,6 +46,7 @@ export function useReminderTimers(interests, entries, photos, lang, nameOf, t) {
     const timers = [];
     const now = minutesNow();
     interests.forEach((it) => {
+      if (!isScheduledToday(it)) return;
       const mins = parseTime(it.time);
       if (mins === null) return;
       const delay = (mins - 15 - now) * 60000;

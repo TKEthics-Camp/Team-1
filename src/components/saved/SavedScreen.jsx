@@ -3,14 +3,15 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { photosOf } from "../../lib/derived";
+import { treeStage, treeHealth } from "../../lib/tree";
 import TopBar from "../shared/TopBar";
-import Orb from "../shared/Orb";
+import Tree from "../shared/Tree";
 
 export default function SavedScreen() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useI18n();
-  const { interests, photos } = useStore();
+  const { interests, photos, entries } = useStore();
 
   const it = interests.find((x) => x.id === id) || interests[0];
 
@@ -20,7 +21,8 @@ export default function SavedScreen() {
 
   if (!it) return null;
 
-  const firstPhoto = photosOf(photos, it.id)[0];
+  const stage = treeStage(it, entries, photos);
+  const health = treeHealth(it, entries, photos);
 
   return (
     <>
@@ -28,9 +30,7 @@ export default function SavedScreen() {
       <div className="view">
         <div className="onb center">
           <div className="grow" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
-            <div className="orb-wrap">
-              <Orb interest={it} size={92} faceBlob={firstPhoto ? firstPhoto.blob : null} />
-            </div>
+            <Tree interest={it} size={110} stage={stage} health={health} className={health === "healthy" ? "alive" : ""} />
             <h2>{t("done")}</h2>
             <p style={{ margin: "0 auto" }}>{t("putDown")}</p>
           </div>
