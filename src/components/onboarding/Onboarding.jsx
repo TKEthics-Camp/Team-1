@@ -6,6 +6,7 @@ import { uid } from "../../lib/id";
 import { askNotifications } from "../../lib/useReminderTimers";
 import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
+import ProgressBar from "../shared/ProgressBar";
 import WelcomeStep from "./WelcomeStep";
 import NameStep from "./NameStep";
 import InterestsStep from "./InterestsStep";
@@ -44,7 +45,7 @@ export default function Onboarding() {
   return (
     <>
       <TopBar>
-        <h1>{t("appName")}</h1>
+        <span className="eyebrow">{t("appName")}</span>
         <LangToggle />
       </TopBar>
       <div className="view">
@@ -56,6 +57,7 @@ export default function Onboarding() {
           )}
           {step === 3 && <ScheduleStep drafts={drafts} updateDraft={updateDraft} onEnter={finish} />}
         </div>
+        <ProgressBar step={step} total={4} />
       </div>
     </>
   );

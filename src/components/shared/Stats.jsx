@@ -1,6 +1,6 @@
-export default function Stats({ items }) {
+export default function Stats({ items, layout }) {
   return (
-    <div className="stats">
+    <div className={layout === "grid" ? "stats grid" : "stats"}>
       {items.map((it, i) => (
         <div key={i} className={it.flame ? "stat flame" : "stat"}>
           <span className="n">{it.n}</span>

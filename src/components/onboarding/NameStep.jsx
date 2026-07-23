@@ -19,6 +19,7 @@ export default function NameStep({ name, setName, onNext }) {
         onChange={(e) => setName(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter" && name.trim()) onNext(); }}
       />
+      <p className="sub">{t("savedLocallyNote")}</p>
       <div className="grow" />
       <button className="btn" disabled={!name.trim()} onClick={() => name.trim() && onNext()}>{t("next")}</button>
     </>

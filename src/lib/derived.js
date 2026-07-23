@@ -25,10 +25,6 @@ export function streakOf(dates) {
   return n;
 }
 
-export function interestStreak(entries, id) {
-  return streakOf(entriesOf(entries, id).map((e) => e.date));
-}
-
 export function globalStreak(entries) {
   return streakOf(entries.map((e) => e.date));
 }
@@ -36,6 +32,19 @@ export function globalStreak(entries) {
 // Hours are the headline number on every orb, summed from what each entry logged.
 export function minutesOf(entries, id) {
   return entriesOf(entries, id).reduce((n, e) => n + (e.minutes || 0), 0);
+}
+
+// Distinct days (not necessarily consecutive) an interest was journaled in
+// the current calendar month — the stat line under an interest's title.
+export function journaledDaysThisMonth(entries, id) {
+  var now = new Date();
+  var y = now.getFullYear(), m = now.getMonth();
+  var seen = new Set();
+  entriesOf(entries, id).forEach((e) => {
+    var d = new Date(e.date + "T00:00:00");
+    if (d.getFullYear() === y && d.getMonth() === m) seen.add(e.date);
+  });
+  return seen.size;
 }
 
 export function fmtHours(mins) {

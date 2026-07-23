@@ -5,7 +5,6 @@ import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
 import { uid } from "../../lib/id";
 import { PALETTE } from "../../lib/constants";
-import { shade } from "../../lib/color";
 import Sheet from "../shared/Sheet";
 import Field from "../shared/Field";
 
@@ -64,7 +63,7 @@ export default function OrbSheet({ interestId }) {
               className="swatch"
               aria-pressed={c === color}
               aria-label={c}
-              style={{ "--c": c, background: `radial-gradient(circle at 34% 30%, ${c} 40%, ${shade(c, -50)} 100%)` }}
+              style={{ "--c": c }}
               onClick={() => setColor(c)}
             />
           ))}

@@ -2,6 +2,7 @@ import { useUI } from "../../ui/UIContext";
 import EntrySheet from "./EntrySheet";
 import PhotoSheet from "./PhotoSheet";
 import OrbSheet from "./OrbSheet";
+import EditProfileSheet from "./EditProfileSheet";
 
 export default function SheetHost() {
   const { sheet } = useUI();
@@ -9,5 +10,6 @@ export default function SheetHost() {
   if (sheet.type === "entry") return <EntrySheet interestId={sheet.id} />;
   if (sheet.type === "photo") return <PhotoSheet interestId={sheet.id} />;
   if (sheet.type === "orb") return <OrbSheet interestId={sheet.id} />;
+  if (sheet.type === "profile") return <EditProfileSheet />;
   return null;
 }

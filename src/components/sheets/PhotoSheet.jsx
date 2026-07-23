@@ -43,7 +43,7 @@ export default function PhotoSheet({ interestId }) {
 
   return (
     <Sheet onClose={closeSheet}>
-      <h2>{t("addPhoto") + " · " + nameOf(it)}</h2>
+      <h2>{t("addToOrb").replace("{name}", nameOf(it))}</h2>
       <button className="btn2" onClick={() => fileRef.current?.click()}>{t("choosePhoto")}</button>
       <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={onFileChange} />
       {blob && <img src={previewUrl} alt="" style={{ maxWidth: 150, borderRadius: 12 }} />}

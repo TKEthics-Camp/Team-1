@@ -24,13 +24,11 @@ export default function SavedScreen() {
 
   return (
     <>
-      <TopBar><h1>{t("appName")}</h1></TopBar>
+      <TopBar><span className="eyebrow">{t("appName")}</span></TopBar>
       <div className="view">
         <div className="onb center">
           <div className="grow" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
-            <div className="orb-wrap">
-              <Orb interest={it} size={92} faceBlob={firstPhoto ? firstPhoto.blob : null} />
-            </div>
+            <Orb interest={it} size={92} faceBlob={firstPhoto ? firstPhoto.blob : null} />
             <h2>{t("done")}</h2>
             <p style={{ margin: "0 auto" }}>{t("putDown")}</p>
           </div>

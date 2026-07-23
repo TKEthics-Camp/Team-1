@@ -48,9 +48,7 @@ export default function InterestsStep({ drafts, addDraft, removeDraft, onNext })
         <div className="orbwall">
           {drafts.map((d, i) => (
             <button key={d.id} className="orb-cell" aria-label={t("del") + " " + d.name} onClick={() => removeDraft(i)}>
-              <div className="orb-wrap" style={{ animationDelay: `${i * 0.9}s` }}>
-                <Orb interest={d} size={58} />
-              </div>
+              <Orb interest={d} size={58} />
               <div className="orb-name">{d.name}</div>
               <div className="orb-meta">{t("del")}</div>
             </button>

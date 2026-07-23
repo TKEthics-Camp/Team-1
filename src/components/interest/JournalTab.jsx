@@ -1,6 +1,7 @@
+import { X } from "lucide-react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
-import { fmtDate } from "../../lib/dates";
+import { fmtEntryDate } from "../../lib/dates";
 import EmptyState from "../shared/EmptyState";
 
 export default function JournalTab({ entries }) {
@@ -11,15 +12,21 @@ export default function JournalTab({ entries }) {
 
   return (
     <>
-      {entries.map((e) => (
-        <div className="entry" key={e.id}>
-          <div>
-            <div className="d">{fmtDate(e.date, lang) + (e.isPinned ? "  ★" : "")}</div>
+      {entries.map((e) => {
+        const { day, weekday } = fmtEntryDate(e.date, lang);
+        return (
+          <div className="journal-card" key={e.id}>
+            <div className="head">
+              <span className="d">{day + (e.isPinned ? " ★" : "")}</span>
+              <span className="wd">{weekday}</span>
+            </div>
             <div className="t">{e.text}</div>
+            <button className="icon del" aria-label={t("del")} onClick={() => deleteEntry(e.id)}>
+              <X size={15} />
+            </button>
           </div>
-          <button className="icon" aria-label={t("del")} onClick={() => deleteEntry(e.id)}>×</button>
-        </div>
-      ))}
+        );
+      })}
     </>
   );
 }

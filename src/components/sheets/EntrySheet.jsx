@@ -8,6 +8,7 @@ import { today } from "../../lib/dates";
 import Sheet from "../shared/Sheet";
 import Field from "../shared/Field";
 import Chip from "../shared/Chip";
+import DateField from "../shared/DateField";
 
 const DURATIONS = [15, 30, 45, 60, 90, 120];
 
@@ -42,10 +43,8 @@ export default function EntrySheet({ interestId }) {
 
   return (
     <Sheet onClose={closeSheet}>
-      <h2>{t("addEntry") + " · " + nameOf(it)}</h2>
-      <Field label={t("date")}>
-        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-      </Field>
+      <h2>{t("addToOrb").replace("{name}", nameOf(it))}</h2>
+      <DateField value={date} onChange={setDate} />
       <Field label={t("howLong")}>
         <div className="chips">
           {DURATIONS.map((m) => (
@@ -67,7 +66,7 @@ export default function EntrySheet({ interestId }) {
           {(pinned ? "★ " : "☆ ") + t("pin")}
         </Chip>
       </div>
-      <button className="btn" onClick={save}>{t("save")}</button>
+      <button className="btn" onClick={save}>{t("saveMemory")}</button>
       <button className="btn2" onClick={closeSheet}>{t("cancel")}</button>
     </Sheet>
   );

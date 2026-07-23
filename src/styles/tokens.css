@@ -1,21 +1,23 @@
-/* Marshmallow land: a daydream you can hold. Everything is soft, lit, and airborne. */
+/* Calm sanctuary: warm paper and coral light. Flat, grounded, unhurried. */
 :root {
-  --sky-1: #FFE7F3;   /* cotton pink   */
-  --sky-2: #EDE4FF;   /* lavender      */
-  --sky-3: #DCF1FF;   /* pale blue     */
-  --sky-4: #FFF0DC;   /* warm peach    */
-  --mint:  #D6F6E6;
+  --bg:      #F6F1E7;   /* warm cream page background */
+  --shelf:   #FBF7EF;
 
-  --shelf: #FFF7FC;
-  --card:  rgba(255,255,255,.62);
-  --card-2:rgba(255,255,255,.86);
-  --line:  rgba(122,86,160,.18);
-  --ink:   #4A3363;
-  --muted: #7D6B99;
-  --dim:   #9C8DB8;
-  --gold:  #C06A12;
-  --gold-on: #FFFFFF;
-  --candy: #FF8FBF;
+  --card:    #FFFDF8;
+  --card-2:  #FFF8ED;
+  --tint:    #FDECE3;   /* soft coral tint, e.g. streak card */
+
+  --line:    rgba(43,33,24,.10);
+  --ink:     #2B2116;
+  --muted:   #8A7A68;
+  --dim:     #B7A997;
+
+  --coral:    #FF7A55;
+  --coral-2:  #FFA463;
+  --coral-on: #FFFFFF;
+  --flame:    #F0522E;
+
+  --ring-1: #FF7A55; /* default orb ring / palette anchors reused from lib/constants.js */
 
   --display: ui-rounded, "SF Pro Rounded", "Avenir Next", "Hiragino Maru Gothic ProN", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
   --body: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;

@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useI18n } from "../../i18n/I18nContext";
 import { useUI } from "../../ui/UIContext";
 import { useObjectURL } from "../../lib/image";
-import { fmtDate } from "../../lib/dates";
+import { fmtRelative } from "../../lib/dates";
 import Orb from "../shared/Orb";
 
 export default function MemoryBanner({ memory }) {
@@ -17,18 +17,21 @@ export default function MemoryBanner({ memory }) {
         className="memory"
         onClick={() => navigate(`/interest/${memory.interest.id}?tab=${memory.blob ? "album" : "journal"}`)}
       >
-        {memory.blob ? (
-          <img src={photoUrl} alt="" />
-        ) : (
-          <div style={{ flex: "none" }}><Orb interest={memory.interest} size={54} /></div>
-        )}
-        <div className="body">
+        <div className="memory-head">
           <span className="kicker">
             {memory.quietDays ? t("quietDays").replace("{n}", memory.quietDays) : t("remember")}
           </span>
-          <div className="text">{memory.text || nameOf(memory.interest)}</div>
-          <div className="when">
-            {nameOf(memory.interest) + " · " + (memory.quietDays ? t("quietSub") : fmtDate(memory.date, lang))}
+          <span className="when">{fmtRelative(memory.at, lang)}</span>
+        </div>
+        <div className="memory-body">
+          {memory.blob ? (
+            <img src={photoUrl} alt="" />
+          ) : (
+            <Orb interest={memory.interest} size={54} />
+          )}
+          <div className="body">
+            <div className="text">{memory.text || nameOf(memory.interest)}</div>
+            <div className="quote">{"“" + nameOf(memory.interest) + "”"}</div>
           </div>
         </div>
       </button>
