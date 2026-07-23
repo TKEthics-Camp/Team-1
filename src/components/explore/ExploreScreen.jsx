@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
+import { useAuth } from "../../store/AuthContext";
 import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
 import IdeasTab from "./IdeasTab";
 import CommunityTab from "./CommunityTab";
 import SchoolTab from "./SchoolTab";
+import UserSearch from "./UserSearch";
 
 const ALL_TABS = [
   ["ideas", "tabIdeas"],
@@ -16,6 +18,7 @@ const ALL_TABS = [
 export default function ExploreScreen() {
   const { t } = useI18n();
   const { profile } = useStore();
+  const { user } = useAuth();
 
   // Organisations get the classmate web but not the solo idea browser;
   // individuals get ideas but no school. Community is shared by both.
@@ -31,6 +34,7 @@ export default function ExploreScreen() {
         <LangToggle />
       </TopBar>
       <div className="view">
+        {user && <UserSearch />}
         <div className="tabs">
           {TABS.map(([key, label]) => (
             <button key={key} aria-selected={tab === key} onClick={() => setTab(key)}>

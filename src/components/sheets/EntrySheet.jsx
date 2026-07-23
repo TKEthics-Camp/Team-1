@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
@@ -16,7 +15,6 @@ export default function EntrySheet({ interestId }) {
   const { t, nameOf } = useI18n();
   const { interests, addEntry } = useStore();
   const { closeSheet } = useUI();
-  const navigate = useNavigate();
   const it = interests.find((x) => x.id === interestId);
 
   const [date, setDate] = useState(today());
@@ -39,7 +37,6 @@ export default function EntrySheet({ interestId }) {
     };
     addEntry(rec);
     closeSheet();
-    navigate(`/saved/${it.id}`);
   }
 
   return (
