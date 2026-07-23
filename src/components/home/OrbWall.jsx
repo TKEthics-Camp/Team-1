@@ -62,5 +62,5 @@ export default function OrbWall({ interests, photos, entries }) {
         </div>
       )}
     </div>
-z  );
+  );
 }
