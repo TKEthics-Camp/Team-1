@@ -3,7 +3,7 @@ import Orb from "../shared/Orb";
 import Field from "../shared/Field";
 
 export default function ScheduleStep({ drafts, updateDraft, onEnter }) {
-  const { t } = useI18n();
+  const { t, nameOf } = useI18n();
 
   return (
     <>
@@ -15,7 +15,7 @@ export default function ScheduleStep({ drafts, updateDraft, onEnter }) {
           <div key={d.id} className="setup-row">
             <div className="who">
               <Orb interest={d} size={30} />
-              <span className="n">{d.name}</span>
+              <span className="n">{nameOf(d)}</span>
             </div>
             <Field label={t("timeLabel")}>
               <input type="time" value={d.time} onChange={(e) => updateDraft(i, { time: e.target.value })} />

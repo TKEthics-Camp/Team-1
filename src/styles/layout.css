@@ -145,7 +145,13 @@
 .label { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); font-weight: 700; }
 .empty { color: var(--muted); font-size: 14px; text-align: center; padding: 26px 14px; line-height: 1.7; }
 
-.scroll { overflow-y: auto; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; margin: 0 -18px; padding: 0 18px; }
+/* flex:1 with min-height:0 lets this shrink to fit whatever's left in .view —
+   but when the fixed stuff above it (a cover photo, stats, tabs...) is
+   already tall enough to fill the page on its own, "what's left" rounds down
+   to 0 and the whole list becomes invisible and unscrollable. The min-height
+   floor guarantees a real scrollable window no matter how tall that chrome
+   gets; .view's own overflow then covers whatever spills past that. */
+.scroll { overflow-y: auto; flex: 1; min-height: 160px; display: flex; flex-direction: column; gap: 16px; margin: 0 -18px; padding: 0 18px; }
 .scroll::-webkit-scrollbar { width: 0; }
 
 /* ---------- onboarding ---------- */

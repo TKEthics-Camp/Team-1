@@ -1,4 +1,4 @@
-import { dateKey, today } from "./dates";
+import { dateKey, keyDays, today } from "./dates";
 
 export function photosOf(photos, id) {
   return photos.filter((p) => p.interestId === id).sort(byNewest);
@@ -25,17 +25,25 @@ export function streakOf(dates) {
   return n;
 }
 
-// A day counts toward the streak whether it was logged with a journal entry
-// or a photo — either one is "showing up" for the interest that day.
-export function interestStreak(entries, photos, id) {
+// The most recent local day this interest was shown up for — what the push
+// server compares "today" against to know whether a streak reminder is due.
+export function lastLoggedDay(entries, photos, id) {
   var dates = entriesOf(entries, id).map((e) => e.date)
     .concat(photosOf(photos, id).map((p) => dateKey(new Date(p.createdAt))));
-  return streakOf(dates);
+  return dates.length ? dates.reduce((a, b) => (a > b ? a : b)) : null;
 }
 
 export function globalStreak(entries, photos) {
   var dates = entries.map((e) => e.date).concat(photos.map((p) => dateKey(new Date(p.createdAt))));
   return streakOf(dates);
+}
+
+// How many full days it's been since this hobby was planted — shown at the
+// top of its own page instead of a per-hobby streak (see globalStreak, which
+// is the one streak now, shared across every hobby).
+export function daysSincePlanted(interest) {
+  var plantedKey = dateKey(new Date(interest.createdAt || Date.now()));
+  return keyDays(today()) - keyDays(plantedKey);
 }
 
 // Hours are the headline number on every orb, summed from what each entry logged.

@@ -4,13 +4,13 @@ import { SUGGESTIONS } from "../../i18n/strings";
 import Tree from "../shared/Tree";
 
 export default function InterestsStep({ drafts, addDraft, removeDraft, onNext }) {
-  const { t, lang } = useI18n();
+  const { t, lang, nameOf } = useI18n();
   const [value, setValue] = useState("");
   const inputRef = useRef(null);
   useEffect(() => { inputRef.current?.focus(); }, []);
 
-  function submit(name) {
-    addDraft(name !== undefined ? name : value);
+  function submit(name, nameZh) {
+    addDraft(name !== undefined ? name : value, nameZh);
     setValue("");
   }
 
@@ -39,7 +39,7 @@ export default function InterestsStep({ drafts, addDraft, removeDraft, onNext })
         {SUGGESTIONS.map((s) => {
           const label = s[lang === "en" ? 0 : 1];
           return (
-            <button key={label} className="chip" onClick={() => submit(label)}>{"+ " + label}</button>
+            <button key={label} className="chip" onClick={() => submit(s[0], s[1])}>{"+ " + label}</button>
           );
         })}
       </div>
@@ -47,10 +47,10 @@ export default function InterestsStep({ drafts, addDraft, removeDraft, onNext })
       {drafts.length > 0 && (
         <div className="draft-wall">
           {drafts.map((d, i) => (
-            <button key={d.id} className="draft" aria-label={t("del") + " " + d.name} onClick={() => removeDraft(i)}>
+            <button key={d.id} className="draft" aria-label={t("del") + " " + nameOf(d)} onClick={() => removeDraft(i)}>
               <span className="x" aria-hidden="true">✕</span>
               <Tree interest={d} size={72} stage={1} health="healthy" />
-              <div className="draft-nm">{d.name}</div>
+              <div className="draft-nm">{nameOf(d)}</div>
             </button>
           ))}
         </div>

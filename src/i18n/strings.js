@@ -22,6 +22,8 @@ export const STR = {
   setupTitle:   ["When do you usually do it?", "你一般什么时候做？"],
   setupSub:     ["We'll remind you shortly before — and name the person you do it with, so it feels like a friend asking, not an app nagging.", "我们会提前一点提醒你，并带上一起玩的人的名字 —— 像朋友在叫你，而不是应用在唠叨。"],
   timeLabel:    ["Usual time", "常用时间"],
+  everyDay:     ["Every day", "每天"],
+  onlyDays:     ["Only on the days you picked", "只在你选的这几天"],
   friendsLabel: ["Who's usually with you?", "通常和谁一起？"],
   friendsPh:    ["Names, separated by commas", "名字，用逗号分隔"],
   enter:        ["Enter", "进入"],
@@ -48,6 +50,8 @@ export const STR = {
   entry1:       ["entry", "篇日记"],
   photo1:       ["photo", "张照片"],
   orb1:         ["tree", "棵树"],
+  plantedDays:  ["days since you planted this tree", "天前种下这棵树"],
+  plantedDay1:  ["day since you planted this tree", "天前种下这棵树"],
   quietDays:    ["Untouched for {n} days", "已经 {n} 天没碰了"],
   quietSub:     ["You loved this once. Pick it up again today?", "你曾经很喜欢它。今天再拿起来？"],
   pickItUp:     ["Log it now", "现在记录"],
@@ -63,6 +67,7 @@ export const STR = {
   friends:      ["With", "一起的人"],
   reminder:     ["Reminder", "提醒"],
   editOrb:      ["Edit tree", "编辑这棵树"],
+  viewEntries:  ["Open the album & journal", "打开相册和日记"],
   deleteOrb:    ["Cut down this tree and everything in it", "砍掉这棵树和里面的一切"],
   // sheets
   date:         ["Date", "日期"],
@@ -90,8 +95,8 @@ export const STR = {
   totalStreak:  ["day streak", "天连续"],
   remindersOn:  ["Reminders are on", "提醒已开启"],
   turnOn:       ["Turn on reminders", "开启提醒"],
-  remindNote:   ["Reminders fire while this app is open in your browser. Nothing is sent to a server.", "提醒会在浏览器打开本应用时触发，不会发送到任何服务器。"],
-  dataNote:     ["Everything lives on this device. No account, no cloud, no one else can see it.", "所有内容都存在这台设备上。没有账号，没有云端，别人看不到。"],
+  remindNote:   ["Reminders show up as real banners on your phone, even with the app closed. To make that possible, each tree's name and usual time (never your photos or journal) is sent to a small notification server.", "提醒会像真正的手机通知一样弹出，就算没打开应用也一样。为了做到这一点，每棵树的名字和常用时间（不包括照片和日记内容）会发送到一个小型通知服务器。"],
+  dataNote:     ["Your photos and journal entries live only on this device — no account, no cloud, no one else can see them.", "你的照片和日记只存在这台设备上 —— 没有账号，没有云端，别人看不到。"],
   clearAll:     ["Clear all data", "清除所有数据"],
   confirmClear: ["Tap again to erase everything", "再点一次，全部清除"],
   done:         ["Done — now go do it.", "好了 —— 去做吧。"],
@@ -122,6 +127,9 @@ export const STR = {
   hlBare:       ["Losing its leaves", "叶子在掉"],
   hlDead:       ["This tree has died", "这棵树枯死了"],
   grewNote:     ["Log time and it grows a little more.", "记录一次，它就长大一点。"],
+  growProgress: ["{n} more to grow", "还差 {n} 次就能长大"],
+  fullyGrown:   ["Fully grown", "已经长成"],
+  speciesLabel: ["Species", "树种"],
   reviveBtn:    ["Revive for {n} coins", "花 {n} 金币复活"],
   reviveHint:   ["You have enough coins to bring it back.", "你的金币够让它复活。"],
   reviveNeed:   ["Earn {n} coins by logging to revive it.", "记录攒够 {n} 金币就能复活它。"],
@@ -158,4 +166,9 @@ export const SUGGESTIONS = [
   ["Basketball", "篮球"], ["Drawing", "画画"], ["Piano", "钢琴"],
   ["Swimming", "游泳"], ["Guitar", "吉他"], ["Reading", "读书"],
   ["Football", "足球"], ["Cooking", "做饭"],
+];
+
+// Short day labels, index 0 = Sunday .. 6 = Saturday (matches Date#getDay()).
+export const WEEKDAY_LABELS = [
+  ["S", "日"], ["M", "一"], ["T", "二"], ["W", "三"], ["T", "四"], ["F", "五"], ["S", "六"],
 ];

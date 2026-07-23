@@ -19,7 +19,7 @@ export default function InterestCover({ interest, firstPhoto }) {
       {firstPhoto ? (
         <img src={url} alt={t("coverAlt")} />
       ) : cat ? (
-        <div className="cover-scene" aria-hidden="true" dangerouslySetInnerHTML={{ __html: scene(cat, 0) }} />
+        <div className="cover-scene" aria-hidden="true" dangerouslySetInnerHTML={{ __html: scene(interest.name, cat, 0) }} />
       ) : (
         <span className="mono" aria-hidden="true">{nameOf(interest).slice(0, 1).toUpperCase()}</span>
       )}

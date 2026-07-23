@@ -28,7 +28,7 @@ export default function PostCard({ post }) {
 
   return (
     <div className="post">
-      <div className="post-pic" dangerouslySetInnerHTML={{ __html: scene(post.cat, post.seed) }} />
+      <div className="post-pic" dangerouslySetInnerHTML={{ __html: scene(post.hobby[0], post.cat, post.seed) }} />
       <div className="post-body">
         <div className="post-who">
           <Avatar student={st} size={30} />

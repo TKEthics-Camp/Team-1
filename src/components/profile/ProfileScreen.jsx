@@ -5,6 +5,7 @@ import { useStore } from "../../store/StoreContext";
 import { PALETTE, THEMES, DEFAULT_THEME, DECORATIONS } from "../../lib/constants";
 import { globalStreak } from "../../lib/derived";
 import { downscale } from "../../lib/image";
+import { registerPush } from "../../lib/push";
 import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
 import Stats from "../shared/Stats";
@@ -25,7 +26,13 @@ export default function ProfileScreen() {
 
   function requestReminders() {
     if (window.Notification) {
-      Notification.requestPermission().then(() => bumpPermissionCheck((n) => n + 1));
+      Notification.requestPermission().then((perm) => {
+        bumpPermissionCheck((n) => n + 1);
+        // Only once permission is actually granted do we register a real
+        // push subscription — this is what lets reminders show up as a
+        // banner outside the app, even once it's fully closed.
+        if (perm === "granted") registerPush(lang);
+      });
     }
   }
 

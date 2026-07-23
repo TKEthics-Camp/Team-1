@@ -1,62 +1,49 @@
 import { useEffect, useState } from "react";
-import { parseTime, minutesNow, nudgeText, dueNudges } from "./reminders";
-import { treeHealth } from "./tree";
-import { today } from "./dates";
+import { registerPush, syncSchedule } from "./push";
 
-// Fire-once-per-day guard, module-scoped so it survives re-renders.
-const fired = new Set();
-function once(key, fn) {
-  if (fired.has(key)) return;
-  fired.add(key);
-  fn();
-}
-function notify(title, body) {
-  if (window.Notification && Notification.permission === "granted") {
-    try { new Notification(title, { body }); } catch (e) { /* ignore */ }
-  }
-}
-
-// Drives every notification the app can send (all while the tab is open — a
-// no-server web app can't push in the background):
-//   • reminders around each tree's usual time,
-//   • a heads-up when a tree is drying out or has died.
-// Also nudges a re-render so the in-app banner reflects the live state.
-export function useReminderTimers(interests, entries, photos, lang, nameOf, t) {
+// Real "outside the app" banners (30 min before, at the set time, and the
+// 7pm/8am wither warnings) are now sent by the push server in /server, which
+// runs independently of this tab — see server/src/scheduler.js. All this
+// hook does locally is:
+//   • keep the server's copy of each interest's schedule + last-logged day
+//     in sync whenever local data changes, and
+//   • force a re-render at the moment a nudge becomes due, so the in-app
+//     banner (NudgeBanner) appears without needing a manual refresh.
+// It does NOT itself fire any OS notification — a page-open tab isn't a
+// reliable delivery mechanism, which is exactly what the push server fixes.
+export function useReminderTimers(interests, entries, photos, lang) {
   const [, forceTick] = useState(0);
 
   useEffect(() => {
-    const day = today();
+    if (window.Notification && Notification.permission === "granted") {
+      // registerPush reuses any existing subscription, so calling it again
+      // here is cheap — it's what makes sure a subscription exists even when
+      // permission was granted during onboarding rather than from the
+      // Profile screen's button (which also calls it directly on grant).
+      registerPush(lang);
+      syncSchedule(interests, entries, photos, lang);
+    }
+  }, [interests, entries, photos, lang]);
 
-    // 1) trees that are due right now → notify immediately (once/day)
-    dueNudges(interests, entries, {}).forEach((it) => {
-      once(`due:${it.id}:${day}`, () => notify(t("appName"), nudgeText(it, lang, nameOf, t)));
-    });
-
-    // 2) trees drying out or dead → a gentle heads-up (once/day each)
-    interests.forEach((it) => {
-      const h = treeHealth(it, entries, photos);
-      if (h === "wilting" || h === "bare") {
-        once(`dry:${it.id}:${day}`, () => notify(t("appName"), `${nameOf(it)} — ${t("hlWilting")}`));
-      } else if (h === "dead") {
-        once(`dead:${it.id}:${day}`, () => notify(t("appName"), `${nameOf(it)} — ${t("hlDead")}`));
-      }
-    });
-
-    // 3) schedule reminders still ahead today (15 min before the usual time)
+  useEffect(() => {
+    // Wake the in-app banner up right when each due window opens, so it
+    // doesn't wait on some unrelated re-render to notice.
     const timers = [];
-    const now = minutesNow();
+    const now = new Date();
     interests.forEach((it) => {
-      const mins = parseTime(it.time);
-      if (mins === null) return;
-      const delay = (mins - 15 - now) * 60000;
+      if (!it.time) return;
+      const [hh, mm] = it.time.split(":").map(Number);
+      if (Number.isNaN(hh) || Number.isNaN(mm)) return;
+      const due = new Date(now);
+      due.setHours(hh, mm, 0, 0);
+      due.setMinutes(due.getMinutes() - 90); // dueNudges' own window opens 90 min out
+      const delay = due - now;
       if (delay <= 0 || delay > 12 * 3600000) return;
-      timers.push(setTimeout(() => {
-        once(`sched:${it.id}:${day}`, () => notify(t("appName"), nudgeText(it, lang, nameOf, t)));
-        forceTick((n) => n + 1);
-      }, delay));
+      timers.push(setTimeout(() => forceTick((n) => n + 1), delay));
     });
     return () => timers.forEach(clearTimeout);
-  }, [interests, entries, photos, lang]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [interests]);
 }
 
 export function askNotifications() {

@@ -20,10 +20,10 @@ export default function Onboarding() {
   const [name, setName] = useState("");
   const [drafts, setDrafts] = useState([]);
 
-  function addDraft(raw) {
+  function addDraft(raw, rawZh) {
     const nm = (raw || "").trim();
     if (!nm) return;
-    setDrafts((d) => [...d, { id: uid(), name: nm, color: PALETTE[d.length % PALETTE.length], time: "16:00", friends: [] }]);
+    setDrafts((d) => [...d, { id: uid(), name: nm, nameZh: rawZh, color: PALETTE[d.length % PALETTE.length], time: "16:00", friends: [] }]);
   }
   function removeDraft(i) {
     setDrafts((d) => d.filter((_, idx) => idx !== i));
@@ -40,7 +40,7 @@ export default function Onboarding() {
     });
     drafts.forEach((d) => {
       addInterest({
-        id: d.id, name: d.name, color: d.color, why: "", time: d.time, friends: d.friends,
+        id: d.id, name: d.name, nameZh: d.nameZh, color: d.color, why: "", time: d.time, friends: d.friends,
         createdAt: Date.now(), updatedAt: Date.now(),
       });
     });

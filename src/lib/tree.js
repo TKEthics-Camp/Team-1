@@ -27,14 +27,33 @@ export function daysIdle(interest, entries, photos) {
   return keyDays(today()) - lastActiveDay(interest, entries, photos);
 }
 
-// 0 seed → 4 full tree, by how many times you've shown up (entries + photos).
+// GROWTH RULE: a tree levels up every time its total "showed up" count
+// (journal entries + photos, added together — either counts) crosses one of
+// these thresholds. Index = stage, value = activities needed to reach it.
+// Stage 0 is a bare seed; stage 4 is the full tree (see GEO/LEAF_COUNT in
+// components/shared/Tree.jsx for what each stage actually looks like).
+export const STAGE_THRESHOLDS = [0, 1, 3, 6, 12];
+
+export function activityCount(interest, entries, photos) {
+  return entriesOf(entries, interest.id).length + photosOf(photos, interest.id).length;
+}
+
 export function treeStage(interest, entries, photos) {
-  const acts = entriesOf(entries, interest.id).length + photosOf(photos, interest.id).length;
-  if (acts >= 12) return 4;
-  if (acts >= 6) return 3;
-  if (acts >= 3) return 2;
-  if (acts >= 1) return 1;
-  return 0;
+  const acts = activityCount(interest, entries, photos);
+  let stage = 0;
+  for (let s = STAGE_THRESHOLDS.length - 1; s >= 0; s--) {
+    if (acts >= STAGE_THRESHOLDS[s]) { stage = s; break; }
+  }
+  return stage;
+}
+
+// How many more logged entries/photos this tree needs to reach the next
+// stage — null once it's already fully grown (stage 4, nothing further).
+export function actsToNextStage(interest, entries, photos) {
+  const acts = activityCount(interest, entries, photos);
+  const stage = treeStage(interest, entries, photos);
+  if (stage >= STAGE_THRESHOLDS.length - 1) return null;
+  return STAGE_THRESHOLDS[stage + 1] - acts;
 }
 
 export function treeHealth(interest, entries, photos) {

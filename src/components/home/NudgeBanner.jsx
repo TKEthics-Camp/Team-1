@@ -18,7 +18,7 @@ export default function NudgeBanner({ interest }) {
         </div>
       </div>
       <div className="row">
-        <button className="btn" onClick={() => navigate(`/interest/${interest.id}?tab=journal`)}>{t("goDoIt")}</button>
+        <button className="btn" onClick={() => navigate(`/interest/${interest.id}/entries?tab=journal`)}>{t("goDoIt")}</button>
         <button className="btn2" style={{ width: "auto", whiteSpace: "nowrap" }} onClick={() => dismissNudge(interest.id)}>
           {t("later")}
         </button>

@@ -12,11 +12,14 @@ export function parseTime(hhmm) {
 }
 
 // A nudge is due in the 90 minutes before the chosen time, if nothing was
-// logged for that orb today and the user hasn't waved it off.
+// logged for that orb today, today is one of its chosen days (missing/empty
+// `days` has always meant every day), and the user hasn't waved it off.
 export function dueNudges(interests, entries, dismissed) {
   var now = minutesNow();
+  var dow = new Date().getDay();
   return interests.filter((it) => {
     if (!it.time || dismissed[it.id] === today()) return false;
+    if (it.days && it.days.length && !it.days.includes(dow)) return false;
     var mins = parseTime(it.time);
     if (mins === null) return false;
     var lead = mins - now;

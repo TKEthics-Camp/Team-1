@@ -8,6 +8,7 @@ import { DEFAULT_THEME } from "./lib/constants";
 import Onboarding from "./components/onboarding/Onboarding";
 import HomeScreen from "./components/home/HomeScreen";
 import InterestScreen from "./components/interest/InterestScreen";
+import InterestEntriesScreen from "./components/interest/InterestEntriesScreen";
 import ExploreScreen from "./components/explore/ExploreScreen";
 import ProfileScreen from "./components/profile/ProfileScreen";
 import MarketScreen from "./components/market/MarketScreen";
@@ -18,10 +19,10 @@ import PhotoViewer from "./components/interest/PhotoViewer";
 
 export default function App() {
   const { loading, profile, interests, entries, photos } = useStore();
-  const { lang, setLang, nameOf, t } = useI18n();
+  const { lang, setLang } = useI18n();
   const syncedLang = useRef(false);
 
-  useReminderTimers(interests, entries, photos, lang, nameOf, t);
+  useReminderTimers(interests, entries, photos, lang);
 
   useEffect(() => {
     if (!syncedLang.current && profile && profile.lang) {
@@ -67,6 +68,7 @@ function RoutedShell() {
       <Routes>
         <Route path="/" element={<HomeScreen />} />
         <Route path="/interest/:id" element={<InterestScreen />} />
+        <Route path="/interest/:id/entries" element={<InterestEntriesScreen />} />
         <Route path="/explore" element={<ExploreScreen />} />
         <Route path="/profile" element={<ProfileScreen />} />
         <Route path="/market" element={<MarketScreen />} />

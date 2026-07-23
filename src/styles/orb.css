@@ -146,11 +146,14 @@
 }
 .tree-cell:hover { background: var(--card); }
 .tree-svg { display: block; }
-.tree-cell .alive { animation: sway 6s ease-in-out infinite; transform-origin: 50% 90%; }
+/* the whole tree leans gently in the wind... */
+.tree-sway { animation: sway 6s ease-in-out infinite; }
 @keyframes sway { 0%, 100% { transform: rotate(-1.2deg); } 50% { transform: rotate(1.2deg); } }
+/* ...while each leaf flutters on its own clock, so the canopy never moves as one flat piece */
+.leaf-sway { animation: leaf-flutter 2.6s ease-in-out infinite; }
+@keyframes leaf-flutter { 0%, 100% { transform: rotate(-7deg); } 50% { transform: rotate(7deg); } }
 .tree-name { font-family: var(--display); font-weight: 700; font-size: 14px; color: var(--ink); text-align: center; line-height: 1.2; }
 .tree-meta { font-family: var(--mono); font-size: 11px; color: var(--dim); font-variant-numeric: tabular-nums; }
-.tree-meta .hot { color: var(--gold); }
 .tree-meta .dead { color: var(--candy); font-family: var(--body); }
 .tree-add {
   border: 2px dashed var(--line); background: var(--card);
@@ -168,8 +171,57 @@
 }
 .tree-status .info { flex: 1; min-width: 0; }
 .tree-status .st-stage { font-family: var(--display); font-weight: 700; font-size: 15px; color: var(--ink); }
+.tree-status .st-species { font-size: 12px; color: var(--dim); margin-top: 1px; }
 .tree-status .st-health { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
 .tree-status .st-note { font-size: 12px; color: var(--dim); margin-top: 4px; }
 .tree-status.dead { border-color: color-mix(in srgb, var(--candy) 45%, var(--line)); }
 .tree-status.dead .st-health { color: var(--candy); font-weight: 600; }
 .revive-btn { width: 100%; }
+
+/* ---------- a hobby's own page: just its tree, standing there ---------- */
+.tree-page { align-items: center; }
+/* Themed to match whichever skin is active (--candy is always a light/mid
+   accent tone in every theme, so a fixed dark ink stays legible on it —
+   unlike --gold, which swings from light to quite dark theme to theme). */
+.streak-pill {
+  display: inline-flex; align-items: center; gap: 6px; align-self: center;
+  background: linear-gradient(135deg, var(--candy), color-mix(in srgb, var(--candy) 65%, black));
+  color: #2B1B33;
+  font-family: var(--display); font-weight: 700; font-size: 13.5px;
+  padding: 7px 16px; border-radius: 999px;
+  box-shadow: 0 8px 18px -8px color-mix(in srgb, var(--candy) 70%, transparent);
+}
+.streak-pill .flame { font-size: 1.05em; }
+.btn.tree-cta {
+  background: linear-gradient(135deg, var(--candy), color-mix(in srgb, var(--candy) 65%, black));
+  color: #2B1B33;
+  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--candy) 70%, transparent);
+}
+.tree-stage-wrap {
+  width: 100%; display: flex; justify-content: center; align-items: flex-end;
+  padding: 22px 0 10px; position: relative;
+  background: radial-gradient(ellipse 70% 60% at 50% 78%, color-mix(in srgb, var(--candy) 12%, transparent), transparent 72%);
+  border-radius: 24px;
+}
+/* a brief burst of light when a dead tree is brought back to life */
+.tree-stage-wrap.reviving::before {
+  content: ""; position: absolute; inset: 0; border-radius: 24px; pointer-events: none;
+  background: radial-gradient(ellipse 55% 55% at 50% 70%, rgba(159,224,112,.85), rgba(255,229,140,.4) 45%, transparent 72%);
+  animation: revive-glow 1.4s ease-out forwards;
+}
+.tree-stage-wrap.reviving .tree-hero { animation: revive-bounce 1.4s ease-out; }
+@keyframes revive-glow {
+  0%   { opacity: 0; transform: scale(.6); }
+  30%  { opacity: 1; transform: scale(1.15); }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+@keyframes revive-bounce {
+  0%, 100% { transform: scale(1); }
+  35% { transform: scale(1.12); }
+  55% { transform: scale(0.97); }
+  75% { transform: scale(1.04); }
+}
+.tree-status.solo {
+  width: 100%; flex-direction: column; text-align: center; gap: 2px;
+}
+.tree-status.solo .info { flex: none; }

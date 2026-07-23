@@ -1,25 +1,25 @@
-import { useEffect } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
-import { photosOf, entriesOf, interestStreak } from "../../lib/derived";
-import { treeStage, treeHealth, STAGE_KEY, HEALTH_KEY, REVIVE_COST } from "../../lib/tree";
+import { daysSincePlanted } from "../../lib/derived";
+import { treeStage, treeHealth, actsToNextStage, STAGE_KEY, HEALTH_KEY, REVIVE_COST } from "../../lib/tree";
+import { speciesOf } from "../../lib/species";
 import TopBar from "../shared/TopBar";
-import Stats from "../shared/Stats";
 import Tree from "../shared/Tree";
-import InterestCover from "./InterestCover";
-import AlbumTab from "./AlbumTab";
-import JournalTab from "./JournalTab";
 
+// A hobby's home: just its tree, standing on its own, with how long ago it
+// was planted shown right at the top (the one streak that matters lives on
+// the Me page now, shared across every hobby). Photos and journal entries
+// live one tap deeper, on the entries page.
 export default function InterestScreen() {
   const { id } = useParams();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const tab = searchParams.get("tab") === "journal" ? "journal" : "album";
   const navigate = useNavigate();
-  const { t, nameOf, nOf } = useI18n();
+  const { t, lang, nameOf, nOf } = useI18n();
   const { interests, photos, entries, profile, reviveInterest } = useStore();
-  const { openSheet, openViewer } = useUI();
+  const { openSheet } = useUI();
+  const [reviving, setReviving] = useState(false);
 
   const it = interests.find((x) => x.id === id);
 
@@ -29,20 +29,18 @@ export default function InterestScreen() {
 
   if (!it) return null;
 
-  const ph = photosOf(photos, it.id);
-  const en = entriesOf(entries, it.id);
-  const st = interestStreak(entries, photos, it.id);
-  // Cover: a coloured plate until there's a real photo, then the first one
-  // they ever added — how this interest started, kept at the top of its page.
-  const first = ph.length ? ph[ph.length - 1] : null;
-
+  const planted = daysSincePlanted(it);
   const stage = treeStage(it, entries, photos);
   const health = treeHealth(it, entries, photos);
+  const species = speciesOf(it.species);
+  const toNext = actsToNextStage(it, entries, photos);
   const coins = (profile && profile.coins) || 0;
   const canRevive = coins >= REVIVE_COST;
 
-  function setTab(next) {
-    setSearchParams(next === "album" ? {} : { tab: next });
+  function revive() {
+    reviveInterest(it.id);
+    setReviving(true);
+    setTimeout(() => setReviving(false), 1400);
   }
 
   return (
@@ -52,18 +50,27 @@ export default function InterestScreen() {
         <h1>{nameOf(it)}</h1>
         <button className="icon" aria-label={t("editOrb")} onClick={() => openSheet("orb", it.id)}>⋯</button>
       </TopBar>
-      <div className="view">
-        <InterestCover interest={it} firstPhoto={first} />
+      <div className="view tree-page">
+        <div className="streak-pill" aria-label={`${planted} ${t("plantedDays")}`}>
+          <span className="flame" aria-hidden="true">🌱</span>
+          <span>{planted} {nOf(planted, "plantedDays")}</span>
+        </div>
 
-        <div className={"tree-status" + (health === "dead" ? " dead" : "")}>
-          <Tree interest={it} size={84} stage={stage} health={health} />
+        <div className={"tree-stage-wrap" + (reviving ? " reviving" : "")}>
+          <Tree interest={it} size={220} stage={stage} health={health} className="tree-hero" />
+        </div>
+
+        <div className={"tree-status solo" + (health === "dead" ? " dead" : "")}>
           <div className="info">
             <div className="st-stage">{t(STAGE_KEY[stage])}</div>
+            <div className="st-species">{t("speciesLabel")}: {species.name[lang === "en" ? 0 : 1]}</div>
             <div className="st-health">{t(HEALTH_KEY[health])}</div>
             {health === "dead" ? (
               <div className="st-note">{canRevive ? t("reviveHint") : t("reviveNeed").replace("{n}", REVIVE_COST)}</div>
+            ) : toNext !== null ? (
+              <div className="st-note">{t("growProgress").replace("{n}", toNext)}</div>
             ) : (
-              <div className="st-note">{t("grewNote")}</div>
+              <div className="st-note">{t("fullyGrown")}</div>
             )}
           </div>
         </div>
@@ -72,41 +79,14 @@ export default function InterestScreen() {
           <button
             className="btn revive-btn"
             disabled={!canRevive}
-            onClick={() => reviveInterest(it.id)}
+            onClick={revive}
           >
             {t("reviveBtn").replace("{n}", REVIVE_COST)}
           </button>
         )}
 
-        <Stats items={[
-          { n: st, k: t("dayStreak"), flame: true },
-          { n: ph.length, k: nOf(ph.length, "photos") },
-          { n: en.length, k: nOf(en.length, "entries") },
-        ]} />
-
-        {it.why && <div className="sub">{`“${it.why}”`}</div>}
-        {(it.time || (it.friends || []).length > 0) && (
-          <div className="chips">
-            {it.time && <span className="chip friend">{"🔔 " + it.time}</span>}
-            {(it.friends || []).map((f) => <span key={f} className="chip friend">{"@" + f}</span>)}
-          </div>
-        )}
-
-        <div className="tabs">
-          <button aria-selected={tab === "album"} onClick={() => setTab("album")}>{t("album")}</button>
-          <button aria-selected={tab === "journal"} onClick={() => setTab("journal")}>{t("journal")}</button>
-        </div>
-
-        <div className="scroll">
-          {tab === "album" ? (
-            <AlbumTab photos={ph} onOpenPhoto={openViewer} />
-          ) : (
-            <JournalTab entries={en} />
-          )}
-        </div>
-
-        <button className="btn" onClick={() => openSheet(tab === "album" ? "photo" : "entry", it.id)}>
-          {tab === "album" ? t("addPhoto") : t("addEntry")}
+        <button className="btn tree-cta" onClick={() => navigate(`/interest/${it.id}/entries`)}>
+          {t("viewEntries")}
         </button>
       </div>
     </>

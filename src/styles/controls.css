@@ -53,9 +53,22 @@ input[type="date"], input[type="time"] { font-family: var(--mono); color-scheme:
 .row { display: flex; gap: 10px; align-items: center; }
 .grow { flex: 1; }
 
-.swatches { display: flex; gap: 9px; flex-wrap: wrap; }
-.swatch { width: 32px; height: 32px; border-radius: 50%; padding: 0; border: 2px solid transparent; }
-.swatch[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 12px var(--c); }
+.species-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.species-option {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 8px 4px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card);
+  font-family: var(--display); font-size: 11.5px; font-weight: 600; color: var(--muted);
+}
+.species-option:hover { border-color: var(--dim); }
+.species-option[aria-pressed="true"] { border-color: var(--candy); background: color-mix(in srgb, var(--candy) 10%, var(--card)); color: var(--ink); }
+
+.day-picker { display: flex; gap: 6px; margin-top: 8px; }
+.day-chip {
+  flex: 1; aspect-ratio: 1; border-radius: 50%; border: 1px solid var(--line);
+  background: var(--card); font-family: var(--display); font-weight: 700; font-size: 12.5px; color: var(--muted);
+}
+.day-chip:hover { border-color: var(--dim); }
+.day-chip[aria-pressed="true"] { background: linear-gradient(135deg,#FF8FC0,#FFAE7E); color: #4A2140; border-color: transparent; }
 
 .chips { display: flex; gap: 7px; flex-wrap: wrap; }
 .chip { background: var(--card); border: 1px solid var(--line); padding: 7px 12px; font-size: 13px; border-radius: 999px; }
