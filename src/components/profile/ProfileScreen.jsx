@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
+import { useAuth } from "../../store/AuthContext";
 import { PALETTE, THEMES, DEFAULT_THEME, DECORATIONS } from "../../lib/constants";
 import { globalStreak } from "../../lib/derived";
 import { downscale } from "../../lib/image";
@@ -13,6 +14,7 @@ import Orb from "../shared/Orb";
 export default function ProfileScreen() {
   const { t, lang, nOf } = useI18n();
   const { profile, interests, photos, entries, clearAllData, updateProfile } = useStore();
+  const { signOut } = useAuth();
   const navigate = useNavigate();
   const [armed, setArmed] = useState(false);
   const currentTheme = (profile && profile.theme) || DEFAULT_THEME;
@@ -38,7 +40,7 @@ export default function ProfileScreen() {
 
   function handleClear() {
     if (!armed) { setArmed(true); return; }
-    clearAllData();
+    clearAllData(true);
   }
 
   return (
@@ -112,6 +114,7 @@ export default function ProfileScreen() {
         <button className="btn2 btn-danger" onClick={handleClear}>
           {armed ? t("confirmClear") : t("clearAll")}
         </button>
+        <button className="btn2" onClick={signOut}>{t("logOut")}</button>
       </div>
     </>
   );

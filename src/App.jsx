@@ -1,10 +1,12 @@
 import { useEffect, useRef } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useStore } from "./store/StoreContext";
+import { useAuth } from "./store/AuthContext";
 import { useI18n } from "./i18n/I18nContext";
 import { useReminderTimers } from "./lib/useReminderTimers";
 import { UIProvider, useUI } from "./ui/UIContext";
 import { DEFAULT_THEME } from "./lib/constants";
+import AuthScreen from "./components/auth/AuthScreen";
 import Onboarding from "./components/onboarding/Onboarding";
 import HomeScreen from "./components/home/HomeScreen";
 import InterestScreen from "./components/interest/InterestScreen";
@@ -17,9 +19,11 @@ import SheetHost from "./components/sheets/SheetHost";
 import PhotoViewer from "./components/interest/PhotoViewer";
 
 export default function App() {
-  const { loading, profile, interests, entries, photos } = useStore();
+  const { loading, profile, interests, entries, photos, clearAllData } = useStore();
+  const { session, loading: authLoading, user } = useAuth();
   const { lang, setLang, nameOf, t } = useI18n();
   const syncedLang = useRef(false);
+  const lastUserId = useRef(null);
 
   useReminderTimers(interests, entries, photos, lang, nameOf, t);
 
@@ -30,12 +34,23 @@ export default function App() {
     }
   }, [profile, setLang]);
 
-  if (loading) return null;
+  // A device's local cache belongs to whoever's signed in. If someone signs
+  // out (shared computer, different student next), wipe the local cache so
+  // the next login on this device doesn't inherit the previous user's data —
+  // there's no per-user sync yet, so this is the only thing preventing a leak.
+  useEffect(() => {
+    if (lastUserId.current && !user) clearAllData();
+    lastUserId.current = user ? user.id : null;
+  }, [user, clearAllData]);
+
+  if (loading || authLoading) return null;
 
   return (
     <div className="stage" data-theme={(profile && profile.theme) || DEFAULT_THEME}>
       <div className="app">
-        {profile ? (
+        {!session ? (
+          <AuthScreen />
+        ) : profile ? (
           <BrowserRouter>
             <UIProvider>
               <RoutedShell />

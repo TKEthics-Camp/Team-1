@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
+import { useAuth } from "../../store/AuthContext";
+import { supabase } from "../../lib/supabase";
 import { PALETTE, DEFAULT_THEME } from "../../lib/constants";
 import { uid } from "../../lib/id";
 import { askNotifications } from "../../lib/useReminderTimers";
@@ -15,6 +17,7 @@ import ScheduleStep from "./ScheduleStep";
 export default function Onboarding() {
   const { t, lang } = useI18n();
   const { saveProfile, addInterest } = useStore();
+  const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [accountType, setAccountType] = useState(null);
   const [name, setName] = useState("");
@@ -33,8 +36,9 @@ export default function Onboarding() {
   }
 
   function finish() {
+    const trimmedName = name.trim();
     saveProfile({
-      key: "profile", name: name.trim(), lang, color: PALETTE[0], theme: DEFAULT_THEME,
+      key: "profile", name: trimmedName, lang, color: PALETTE[0], theme: DEFAULT_THEME,
       accountType: accountType || "individual",
       coins: 0, ownedDecorations: [], equippedDecoration: null, createdAt: Date.now(),
     });
@@ -45,6 +49,17 @@ export default function Onboarding() {
       });
     });
     askNotifications();
+
+    // The `users` row already exists (created by the on_auth_user_created
+    // trigger the moment this account signed up) — this just fills in the
+    // display name and account type collected during onboarding.
+    if (user) {
+      supabase
+        .from("users")
+        .update({ display_name: trimmedName, account_type: accountType || "individual" })
+        .eq("id", user.id)
+        .then(({ error }) => { if (error) console.error("Failed to sync profile:", error); });
+    }
   }
 
   return (
