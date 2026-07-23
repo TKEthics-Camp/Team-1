@@ -3,7 +3,7 @@ import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { PALETTE, DECORATIONS } from "../../lib/constants";
 import TopBar from "../shared/TopBar";
-import Orb from "../shared/Orb";
+import PersonAvatar from "../shared/PersonAvatar";
 
 export default function MarketScreen() {
   const { t, lang } = useI18n();
@@ -32,9 +32,7 @@ export default function MarketScreen() {
               const isEquipped = equipped === deco.id;
               return (
                 <div key={deco.id} className="deco-card">
-                  <div className="orb-wrap">
-                    <Orb interest={{ color: PALETTE[0] }} decoration={deco} size={64} />
-                  </div>
+                  <PersonAvatar color={PALETTE[0]} decoration={deco} size={64} />
                   <div className="deco-nm">{deco.name[lang === "en" ? 0 : 1]}</div>
                   {isOwned ? (
                     <button

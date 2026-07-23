@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useStore } from "./store/StoreContext";
 import { useAuth } from "./store/AuthContext";
 import { useI18n } from "./i18n/I18nContext";
@@ -66,8 +66,19 @@ export default function App() {
 
 function RoutedShell() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { sheet, viewer, closeSheet, closeViewer } = useUI();
   const showNav = !location.pathname.startsWith("/saved");
+
+  // RoutedShell only mounts once per "login" — on first load with an
+  // existing profile, or right after onboarding finishes. Whatever the
+  // address bar happened to be showing (a leftover route from before the
+  // page reloaded, or from onboarding running with no router underneath
+  // it to control), always land on Home instead of wherever that was.
+  useEffect(() => {
+    navigate("/", { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Navigating between screens always drops any open sheet/viewer, matching
   // the original app's go() helper.

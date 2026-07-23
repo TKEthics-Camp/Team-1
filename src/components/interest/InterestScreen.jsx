@@ -1,10 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
-import { photosOf, entriesOf, interestStreak } from "../../lib/derived";
-import { treeStage, treeHealth, STAGE_KEY, HEALTH_KEY, REVIVE_COST } from "../../lib/tree";
+import { photosOf, entriesOf, globalStreak } from "../../lib/derived";
+import { treeStage, treeHealth, daysPlanted, STAGE_KEY, HEALTH_KEY, REVIVE_COST } from "../../lib/tree";
 import TopBar from "../shared/TopBar";
 import Stats from "../shared/Stats";
 import Tree from "../shared/Tree";
@@ -22,6 +22,9 @@ export default function InterestScreen() {
   const { openSheet, openViewer } = useUI();
 
   const it = interests.find((x) => x.id === id);
+  // Preview: instantly see what this tree looks like at any stage/health,
+  // without waiting for real activity or real neglect.
+  const [preview, setPreview] = useState(null); // { stage, health } | null
 
   useEffect(() => {
     if (!it) navigate("/", { replace: true });
@@ -31,13 +34,16 @@ export default function InterestScreen() {
 
   const ph = photosOf(photos, it.id);
   const en = entriesOf(entries, it.id);
-  const st = interestStreak(entries, photos, it.id);
+  const st = globalStreak(entries, photos);
   // Cover: a coloured plate until there's a real photo, then the first one
   // they ever added — how this interest started, kept at the top of its page.
   const first = ph.length ? ph[ph.length - 1] : null;
 
-  const stage = treeStage(it, entries, photos);
-  const health = treeHealth(it, entries, photos);
+  const realStage = treeStage(it, entries, photos);
+  const realHealth = treeHealth(it, entries, photos);
+  const stage = preview ? preview.stage : realStage;
+  const health = preview ? preview.health : realHealth;
+  const planted = daysPlanted(it);
   const coins = (profile && profile.coins) || 0;
   const canRevive = coins >= REVIVE_COST;
 
@@ -55,6 +61,10 @@ export default function InterestScreen() {
       <div className="view">
         <InterestCover interest={it} firstPhoto={first} />
 
+        <div className="planted-label center-label">
+          {planted === 0 ? t("plantedToday") : t("plantedDays").replace("{n}", planted)}
+        </div>
+
         <div className={"tree-status" + (health === "dead" ? " dead" : "")}>
           <Tree interest={it} size={84} stage={stage} health={health} />
           <div className="info">
@@ -68,7 +78,7 @@ export default function InterestScreen() {
           </div>
         </div>
 
-        {health === "dead" && (
+        {realHealth === "dead" && (
           <button
             className="btn revive-btn"
             disabled={!canRevive}
@@ -78,8 +88,35 @@ export default function InterestScreen() {
           </button>
         )}
 
+        <div className="label">{t("previewLabel")}</div>
+        <div className="preview-row">
+          {[0, 1, 2, 3, 4].map((s) => (
+            <button
+              key={s}
+              className="chip"
+              aria-pressed={stage === s && health === "healthy" && !!preview}
+              onClick={() => setPreview({ stage: s, health: "healthy" })}
+            >
+              {s}
+            </button>
+          ))}
+          {["wilting", "bare", "dead"].map((h) => (
+            <button
+              key={h}
+              className="chip"
+              aria-pressed={preview?.health === h}
+              onClick={() => setPreview({ stage: realStage, health: h })}
+            >
+              {t(HEALTH_KEY[h])}
+            </button>
+          ))}
+          {preview && (
+            <button className="chip" onClick={() => setPreview(null)}>{"↺ " + t("close")}</button>
+          )}
+        </div>
+
         <Stats items={[
-          { n: st, k: t("dayStreak"), flame: true },
+          { n: st, k: t("yourStreak"), flame: true },
           { n: ph.length, k: nOf(ph.length, "photos") },
           { n: en.length, k: nOf(en.length, "entries") },
         ]} />

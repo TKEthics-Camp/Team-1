@@ -3,7 +3,7 @@ import { useI18n } from "../../i18n/I18nContext";
 import { useUI } from "../../ui/UIContext";
 import { useObjectURL } from "../../lib/image";
 import { fmtDate } from "../../lib/dates";
-import Orb from "../shared/Orb";
+import Tree from "../shared/Tree";
 
 export default function MemoryBanner({ memory }) {
   const { t, lang, nameOf } = useI18n();
@@ -20,7 +20,7 @@ export default function MemoryBanner({ memory }) {
         {memory.blob ? (
           <img src={photoUrl} alt="" />
         ) : (
-          <div style={{ flex: "none" }}><Orb interest={memory.interest} size={54} /></div>
+          <div style={{ flex: "none" }}><Tree interest={memory.interest} size={54} stage={3} health="healthy" /></div>
         )}
         <div className="body">
           <span className="kicker">
