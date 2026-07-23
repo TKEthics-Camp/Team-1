@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { getAll, put, del, clearAll as dbClearAll } from "../db/db";
-import { COINS_PER_LOG, DECORATIONS, REVIVE_COST, PALETTE, DEFAULT_THEME } from "../lib/constants";
+import { COINS_PER_LOG, DECORATIONS, REVIVE_COST, PALETTE, DEFAULT_THEME, HAIR_STYLES, OUTFIT_STYLES } from "../lib/constants";
 import { useAuth } from "./AuthContext";
 import {
   pushInterest, deleteRemoteInterest, pushEntry, deleteRemoteEntry,
@@ -245,6 +245,29 @@ export function StoreProvider({ children }) {
       const next = { ...p, equippedDecoration: id || null };
       setProfileState(next);
       put("meta", next);
+    },
+    // Unlocks a hair/outfit style for coins, then equips it. Free styles
+    // (price 0) just equip straight away. Returns false if it can't afford
+    // an unowned style — the sheet uses that to show "not enough coins".
+    buyAndEquipAvatarPart(kind, id) {
+      const p = profileRef.current;
+      if (!p) return false;
+      const list = kind === "hair" ? HAIR_STYLES : OUTFIT_STYLES;
+      const item = list.find((x) => x.id === id);
+      if (!item) return false;
+      const ownedKey = kind === "hair" ? "ownedHair" : "ownedOutfits";
+      const owned = p[ownedKey] || [];
+      const alreadyOwned = item.price === 0 || owned.includes(id);
+      if (!alreadyOwned && (p.coins || 0) < item.price) return false;
+      const next = {
+        ...p,
+        [kind]: id,
+        coins: alreadyOwned ? p.coins || 0 : (p.coins || 0) - item.price,
+        [ownedKey]: alreadyOwned ? owned : [...owned, id],
+      };
+      setProfileState(next);
+      put("meta", next);
+      return true;
     },
     // `alsoRemote` distinguishes "wipe this device's cache" (sign-out, on a
     // shared computer — the account's data must survive for next login)

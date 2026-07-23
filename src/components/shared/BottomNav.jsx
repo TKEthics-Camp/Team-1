@@ -15,7 +15,7 @@ export default function BottomNav() {
   }
 
   return (
-    <div className="nav">
+    <div className="nav" data-tour="nav">
       {ITEMS.map(([path, key]) => (
         <button
           key={path}
