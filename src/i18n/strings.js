@@ -91,9 +91,10 @@ export const STR = {
   remindersOn:  ["Reminders are on", "提醒已开启"],
   turnOn:       ["Turn on reminders", "开启提醒"],
   remindNote:   ["Reminders fire while this app is open in your browser. Nothing is sent to a server.", "提醒会在浏览器打开本应用时触发，不会发送到任何服务器。"],
-  dataNote:     ["Everything lives on this device. No account, no cloud, no one else can see it.", "所有内容都存在这台设备上。没有账号，没有云端，别人看不到。"],
+  dataNote:     ["Your garden is cached on this device. Signing in ties it to your account.", "你的花园缓存在这台设备上。登录后会关联到你的账号。"],
   clearAll:     ["Clear all data", "清除所有数据"],
   confirmClear: ["Tap again to erase everything", "再点一次，全部清除"],
+  logOut:       ["Log out", "退出登录"],
   done:         ["Done — now go do it.", "好了 —— 去做吧。"],
   savedIn:      ["Saved to ", "已保存到"],
   savedIn2:     ["", ""],
@@ -152,6 +153,17 @@ export const STR = {
   ago:          [" ago", "前"],
   dLabel:       ["d", "天"],
   hLabel:       ["h", "小时"],
+  // auth
+  authSignIn:   ["Log in", "登录"],
+  authSignUp:   ["Sign up", "注册"],
+  authEmail:    ["Email", "邮箱"],
+  authEmailPh:  ["you@example.com", "you@example.com"],
+  authPassword: ["Password", "密码"],
+  authPasswordPh: ["At least 6 characters", "至少6个字符"],
+  authSwitchToSignUp: ["New here? Create an account", "第一次来？创建账号"],
+  authSwitchToSignIn: ["Already have an account? Log in", "已有账号？登录"],
+  authConfirmSent: ["Check your email for a confirmation link, then log in.", "请查收邮箱中的确认链接，然后登录。"],
+  authWorking:  ["Working…", "处理中…"],
 };
 
 export const SUGGESTIONS = [
