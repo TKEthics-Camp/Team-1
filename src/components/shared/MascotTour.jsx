@@ -6,12 +6,22 @@ import Mascot from "./Mascot";
 
 // Five stops across all three tabs — Home, Explore, and Me — so the tour
 // actually covers the app instead of just the screen you land on first.
-// `path` is optional; omit it to stay on the current screen.
-const STEPS = [
+// `path` is optional; omit it to stay on the current screen. Org accounts
+// land on the educator dashboard instead of the tree garden, so their Home
+// steps point at the same data-tour anchors (reused by EducatorDashboard)
+// but with copy about the class code and roster instead of streaks/trees.
+const STEPS_STUDENT = [
   { path: "/", selector: '[data-tour="streak"]', textKey: "tourStreak" },
   { path: "/", selector: '[data-tour="trees"]', textKey: "tourTrees" },
   { path: "/", selector: '[data-tour="nav"]', textKey: "tourNav" },
   { path: "/explore", selector: '[data-tour="exploreTabs"]', textKey: "tourExplore" },
+  { path: "/profile", selector: '[data-tour="yearReview"]', textKey: "tourProfile" },
+];
+const STEPS_ORG = [
+  { path: "/", selector: '[data-tour="streak"]', textKey: "tourClassCode" },
+  { path: "/", selector: '[data-tour="trees"]', textKey: "tourRoster" },
+  { path: "/", selector: '[data-tour="nav"]', textKey: "tourNavOrg" },
+  { path: "/explore", selector: '[data-tour="exploreTabs"]', textKey: "tourExploreOrg" },
   { path: "/profile", selector: '[data-tour="yearReview"]', textKey: "tourProfile" },
 ];
 
@@ -24,7 +34,7 @@ const REVEAL_DELAY = 1500;
 // of getting tapped past.
 export default function MascotTour({ onDone }) {
   const { t } = useI18n();
-  const { updateProfile } = useStore();
+  const { profile, updateProfile } = useStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [stepIndex, setStepIndex] = useState(0);
@@ -34,6 +44,7 @@ export default function MascotTour({ onDone }) {
   const bubbleRef = useRef(null);
   const [bubbleH, setBubbleH] = useState(150); // measured after first paint; a sane guess until then
 
+  const STEPS = profile && profile.accountType === "org" ? STEPS_ORG : STEPS_STUDENT;
   const step = STEPS[stepIndex];
   const onTargetScreen = !step || !step.path || location.pathname === step.path;
 
@@ -65,12 +76,15 @@ export default function MascotTour({ onDone }) {
 
   // Keep the measured bubble height current — its text length varies step
   // to step, so a fixed guess isn't enough to reliably clamp placement.
+  // Re-measures only on the actual triggers (a new step's text, or a
+  // language switch changing that text's length) rather than every render.
   useLayoutEffect(() => {
     if (bubbleRef.current) setBubbleH(bubbleRef.current.offsetHeight);
-  });
+  }, [stepIndex, t]);
 
   function finish() {
     updateProfile({ tourSeen: true });
+    if (location.pathname !== "/") navigate("/");
     onDone && onDone();
   }
 

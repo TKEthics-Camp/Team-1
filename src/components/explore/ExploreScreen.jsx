@@ -20,12 +20,21 @@ export default function ExploreScreen() {
   const { profile } = useStore();
   const { user } = useAuth();
 
-  // Organisations get the classmate web but not the solo idea browser;
-  // individuals get ideas but no school. Community is shared by both.
+  // Org accounts get the classmate web but not the solo idea browser;
+  // everyone else keeps Ideas, and gains School once they're in a class
+  // (their own classCode — set at org onboarding or via Me → Join a class).
   const isOrg = profile && profile.accountType === "org";
-  const TABS = ALL_TABS.filter(([key]) => (isOrg ? key !== "ideas" : key !== "school"));
+  const inClass = !!(profile && profile.classCode);
+  const TABS = ALL_TABS.filter(([key]) => {
+    if (key === "ideas") return !isOrg;
+    if (key === "school") return isOrg || inClass;
+    return true;
+  });
 
   const [tab, setTab] = useState(TABS[0][0]);
+  // If the tab list changes while mounted (e.g. accountType/classCode flips),
+  // a stale selection could name a tab that no longer exists — fall back.
+  const activeTab = TABS.some(([key]) => key === tab) ? tab : TABS[0][0];
 
   return (
     <>
@@ -37,16 +46,16 @@ export default function ExploreScreen() {
         {user && <UserSearch />}
         <div className="tabs" data-tour="exploreTabs">
           {TABS.map(([key, label]) => (
-            <button key={key} aria-selected={tab === key} onClick={() => setTab(key)}>
+            <button key={key} aria-selected={activeTab === key} onClick={() => setTab(key)}>
               {t(label)}
             </button>
           ))}
         </div>
 
         <div className="scroll">
-          {tab === "ideas" && <IdeasTab />}
-          {tab === "community" && <CommunityTab />}
-          {tab === "school" && <SchoolTab />}
+          {activeTab === "ideas" && <IdeasTab />}
+          {activeTab === "community" && <CommunityTab />}
+          {activeTab === "school" && <SchoolTab />}
         </div>
       </div>
     </>

@@ -6,10 +6,10 @@ import { isValidClassCode } from "../../lib/community";
 import Sheet from "../shared/Sheet";
 import Field from "../shared/Field";
 
-// Lets an "individual" account join a class after the fact — the same
-// class-code check as onboarding's ClassCodeStep, just reachable later
-// from Me. Success flips accountType to "org", which unlocks the School
-// tab in Explore (ExploreScreen already keys off that field).
+// Lets an "individual" account join a class with the code their teacher's
+// org account generated at onboarding. Only sets classCode, never accountType: joining a class doesn't
+// make a student an org account, so it must not swap out their Ideas tab —
+// ExploreScreen unlocks the School tab off classCode directly.
 export default function JoinClassSheet() {
   const { t } = useI18n();
   const { updateProfile } = useStore();
@@ -22,7 +22,7 @@ export default function JoinClassSheet() {
 
   function join() {
     if (!valid) { setTried(true); return; }
-    updateProfile({ accountType: "org", classCode: code.trim().toUpperCase() });
+    updateProfile({ classCode: code.trim().toUpperCase() });
     closeSheet();
   }
 

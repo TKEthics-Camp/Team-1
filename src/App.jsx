@@ -9,12 +9,12 @@ import { DEFAULT_THEME } from "./lib/constants";
 import AuthScreen from "./components/auth/AuthScreen";
 import Onboarding from "./components/onboarding/Onboarding";
 import HomeScreen from "./components/home/HomeScreen";
+import EducatorDashboard from "./components/home/EducatorDashboard";
 import InterestScreen from "./components/interest/InterestScreen";
 import PublicInterestScreen from "./components/interest/PublicInterestScreen";
 import ExploreScreen from "./components/explore/ExploreScreen";
 import ProfileScreen from "./components/profile/ProfileScreen";
 import MarketScreen from "./components/market/MarketScreen";
-import SavedScreen from "./components/saved/SavedScreen";
 import BottomNav from "./components/shared/BottomNav";
 import SheetHost from "./components/sheets/SheetHost";
 import PhotoViewer from "./components/interest/PhotoViewer";
@@ -28,7 +28,11 @@ export default function App() {
   const syncedLang = useRef(false);
   const lastUserId = useRef(null);
 
-  useReminderTimers(interests, entries, photos, lang, nameOf, t);
+  // Demo trees carry a real reminder time ("16:00") same as any other —
+  // without excluding them, a planted demo garden could fire a genuine OS
+  // push notification for a tree that doesn't exist for the user.
+  const realInterests = interests.some((x) => x.isDemo) ? interests.filter((x) => !x.isDemo) : interests;
+  useReminderTimers(realInterests, entries, photos, lang, nameOf, t);
 
   useEffect(() => {
     if (!syncedLang.current && profile && profile.lang) {
@@ -72,7 +76,6 @@ function RoutedShell() {
   const navigate = useNavigate();
   const { profile } = useStore();
   const { sheet, viewer, closeSheet, closeViewer } = useUI();
-  const showNav = !location.pathname.startsWith("/saved");
 
   // Escape closes whatever's open, the same as tapping the backdrop —
   // useful on a keyboard/desktop where there's no "outside" to tap.
@@ -107,16 +110,15 @@ function RoutedShell() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<HomeScreen />} />
+        <Route path="/" element={profile.accountType === "org" ? <EducatorDashboard /> : <HomeScreen />} />
         <Route path="/interest/:id" element={<InterestScreen />} />
         <Route path="/user/:userId/interest/:interestId" element={<PublicInterestScreen />} />
         <Route path="/explore" element={<ExploreScreen />} />
         <Route path="/profile" element={<ProfileScreen />} />
         <Route path="/market" element={<MarketScreen />} />
-        <Route path="/saved/:id" element={<SavedScreen />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      {showNav && <BottomNav />}
+      <BottomNav />
       {sheet && <SheetHost />}
       {viewer && <PhotoViewer />}
       <UndoToast />

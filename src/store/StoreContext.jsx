@@ -25,8 +25,11 @@ export function StoreProvider({ children }) {
 
   // Actions read this instead of `user` directly so the memoized action
   // functions below don't need `user` in their dep array to stay fresh.
+  // The debug skip-auth user is deliberately excluded: it isn't a real
+  // Supabase session, so every push/delete against the real project would
+  // just fail RLS and spam the console.
   const userRef = useRef(user);
-  useEffect(() => { userRef.current = user; }, [user]);
+  useEffect(() => { userRef.current = user && user.isDebug ? null : user; }, [user]);
 
   useEffect(() => {
     Promise.all([getAll("meta"), getAll("interests"), getAll("photos"), getAll("entries")])
@@ -62,7 +65,7 @@ export function StoreProvider({ children }) {
     if (!user) reconciledForRef.current = null;
   }, [user]);
   useEffect(() => {
-    if (loading || !user || reconciledForRef.current === user.id) return;
+    if (loading || !user || user.isDebug || reconciledForRef.current === user.id) return;
     reconciledForRef.current = user.id;
 
     (async () => {
@@ -149,8 +152,12 @@ export function StoreProvider({ children }) {
         getAll("interests"), getAll("entries"), pullMine(user.id),
       ]);
 
+      // Demo-garden data (isDemo) is a local-only showcase — never claimed
+      // by the account. Without this filter, signing in after planting one
+      // uploaded the 5 sample trees as real data (and, since the demo tag
+      // doesn't survive the trip, they came back permanent after removal).
       const remoteIntIds = new Set(remote.interests.map((i) => i.id));
-      const toPush = localInterests.filter((i) => !remoteIntIds.has(i.id));
+      const toPush = localInterests.filter((i) => !i.isDemo && !remoteIntIds.has(i.id));
       await Promise.all(toPush.map((rec) => pushInterest(rec, user.id)));
 
       const localIntIds = new Set(localInterests.map((i) => i.id));
@@ -158,7 +165,7 @@ export function StoreProvider({ children }) {
       await Promise.all(toAdopt.map((rec) => put("interests", rec)));
 
       const remoteEntryIds = new Set(remote.entries.map((e) => e.id));
-      const entriesToPush = localEntries.filter((e) => !remoteEntryIds.has(e.id));
+      const entriesToPush = localEntries.filter((e) => !e.isDemo && !remoteEntryIds.has(e.id));
       await Promise.all(entriesToPush.map((rec) => pushEntry(rec)));
 
       const localEntryIds = new Set(localEntries.map((e) => e.id));
@@ -379,10 +386,25 @@ export function StoreProvider({ children }) {
       put("entries", rec);
       if (userRef.current) pushEntry(rec);
     },
+    // Same optimistic-hide-then-commit-or-restore shape as deletePhoto —
+    // entries were the only deletable thing without an undo window.
     deleteEntry(id) {
-      setEntries((list) => list.filter((x) => x.id !== id));
-      del("entries", id);
-      if (userRef.current) deleteRemoteEntry(id);
+      let removed = null;
+      setEntries((list) => {
+        removed = list.find((e) => e.id === id) || null;
+        return list.filter((x) => x.id !== id);
+      });
+      return {
+        record: removed,
+        commit() {
+          del("entries", id);
+          if (userRef.current) deleteRemoteEntry(id);
+        },
+        restore() {
+          if (!removed) return;
+          setEntries((list) => (list.some((e) => e.id === id) ? list : [...list, removed]));
+        },
+      };
     },
     // Returns true/false so the market screen can tell the user why a
     // purchase didn't go through (already owned vs. can't afford it).

@@ -29,16 +29,21 @@ export const REVIVE_COST = 20;
 export const SKIN_TONES = ["#FFDFC0", "#F3C79A", "#D9A56C", "#B87F4E", "#8C5A34", "#5C3A22"];
 export const HAIR_COLORS = ["#3B2A20", "#7A4B27", "#D9B24C", "#C0504D", "#6E6E6E", "#B8CFEA", "#F2A6D6"];
 export const HAIR_STYLES = [
-  { id: "bald",  name: ["Bald", "光头"], price: 0 },
-  { id: "short", name: ["Short", "短发"], price: 0 },
-  { id: "curly", name: ["Curly", "卷发"], price: 20 },
-  { id: "long",  name: ["Long", "长发"], price: 20 },
-  { id: "spiky", name: ["Spiky", "刺头"], price: 30 },
+  { id: "bald",     name: ["Bald", "光头"], price: 0 },
+  { id: "short",    name: ["Short", "短发"], price: 0 },
+  { id: "long",     name: ["Long", "长发"], price: 0 },
+  { id: "curly",    name: ["Curly", "卷发"], price: 20 },
+  { id: "ponytail", name: ["Ponytail", "马尾"], price: 20 },
+  { id: "bun",      name: ["Bun", "丸子头"], price: 20 },
+  { id: "spiky",    name: ["Spiky", "刺头"], price: 30 },
+  { id: "afro",     name: ["Afro", "爆炸头"], price: 30 },
 ];
 export const OUTFIT_STYLES = [
   { id: "tee",      name: ["T-shirt", "T恤"], price: 0 },
   { id: "hoodie",   name: ["Hoodie", "连帽衫"], price: 20 },
+  { id: "collared", name: ["Polo", "Polo衫"], price: 20 },
   { id: "overalls", name: ["Overalls", "背带裤"], price: 30 },
+  { id: "vest",     name: ["Vest", "背心"], price: 30 },
 ];
 export const OUTFIT_COLORS = ["#FFFFFF", "#4A4E69", "#E07A5F", "#3D9970", "#5AA8F2", "#B48CF2", "#FFD45E"];
 export const DEFAULT_AVATAR = { skin: SKIN_TONES[0], hair: "short", hairColor: HAIR_COLORS[0], outfit: "tee", outfitColor: OUTFIT_COLORS[0] };

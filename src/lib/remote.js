@@ -4,7 +4,7 @@ import { supabase } from "./supabase";
 // pullPublicProfile serve one fixture "friend" instead of hitting Supabase,
 // so the search -> view-another-user's-orb flow can be tested without a
 // second real account. Never set outside local dev.
-const DEBUG_MOCK = import.meta.env.VITE_DEBUG_SKIP_AUTH === "true";
+const DEBUG_MOCK = import.meta.env.DEV && import.meta.env.VITE_DEBUG_SKIP_AUTH === "true";
 const DEBUG_FRIEND_ID = "00000000-0000-0000-0000-000000000099";
 const DEBUG_FRIEND = { id: DEBUG_FRIEND_ID, display_name: "Debug Friend", account_type: "individual" };
 const DEBUG_INTEREST_ROW = {
@@ -48,8 +48,21 @@ function toMs(iso) {
   return new Date(iso).getTime();
 }
 
-export function interestToRow(rec, userId) {
+// The columns added by 20260725000000_interest_appearance_columns.sql —
+// without them, adopting a tree on a second device silently lost its
+// reminder weekdays, chosen species/leaf colour, and revival time.
+// pushInterest retries without them if the migration isn't applied yet.
+function appearanceColumns(rec) {
   return {
+    days: rec.days || [],
+    species: rec.species || null,
+    leaf_color: rec.leafColor || null,
+    revived_at: rec.revivedAt ? toIso(rec.revivedAt) : null,
+  };
+}
+
+export function interestToRow(rec, userId, legacy = false) {
+  const row = {
     id: rec.id,
     user_id: userId,
     name: rec.name,
@@ -63,6 +76,7 @@ export function interestToRow(rec, userId) {
     created_at: toIso(rec.createdAt),
     updated_at: toIso(rec.updatedAt || rec.createdAt),
   };
+  return legacy ? row : { ...row, ...appearanceColumns(rec) };
 }
 
 export function rowToInterest(row) {
@@ -76,6 +90,10 @@ export function rowToInterest(row) {
     visibility: row.visibility,
     category: row.category,
     inspiredBy: row.inspired_by,
+    days: row.days || [],
+    species: row.species || null,
+    leafColor: row.leaf_color || null,
+    revivedAt: row.revived_at ? toMs(row.revived_at) : undefined,
     createdAt: toMs(row.created_at),
     updatedAt: toMs(row.updated_at),
   };
@@ -115,7 +133,13 @@ export function rowToEntry(row) {
 // stays the source of truth until the next successful sync.
 
 export async function pushInterest(rec, userId) {
-  const { error } = await supabase.from("interests").upsert(interestToRow(rec, userId));
+  let { error } = await supabase.from("interests").upsert(interestToRow(rec, userId));
+  // PGRST204 = unknown column: the appearance-columns migration isn't applied
+  // to this project yet. Retry with the original column set so sync still
+  // works (losing only the new fields, as before) instead of failing whole.
+  if (error && error.code === "PGRST204") {
+    ({ error } = await supabase.from("interests").upsert(interestToRow(rec, userId, true)));
+  }
   if (error) console.error("Sync (interest) failed:", error);
 }
 

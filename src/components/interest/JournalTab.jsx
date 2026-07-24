@@ -7,7 +7,12 @@ import EmptyState from "../shared/EmptyState";
 export default function JournalTab({ entries, readOnly }) {
   const { t, lang } = useI18n();
   const { deleteEntry } = useStore();
-  const { openSheet } = useUI();
+  const { openSheet, offerUndo } = useUI();
+
+  function remove(id) {
+    const { restore, commit } = deleteEntry(id);
+    offerUndo(t("entryDeleted"), restore, commit);
+  }
 
   if (!entries.length) return <EmptyState text={t(readOnly ? "noEntriesPublic" : "noEntries")} />;
 
@@ -28,7 +33,7 @@ export default function JournalTab({ entries, readOnly }) {
               >
                 ✎
               </button>
-              <button className="icon" aria-label={t("del")} onClick={() => deleteEntry(e.id)}>×</button>
+              <button className="icon" aria-label={t("del")} onClick={() => remove(e.id)}>×</button>
             </>
           )}
         </div>
