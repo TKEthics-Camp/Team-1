@@ -251,19 +251,40 @@ export function StoreProvider({ children }) {
       put("meta", np);
       return true;
     },
+    // Removes the tree from view immediately, but doesn't actually delete
+    // anything yet — returns `commit` (the real, permanent delete) and
+    // `restore` (put everything back) so the caller can offer an Undo
+    // window before calling `commit`. See UIContext's offerUndo.
     deleteInterest(id) {
-      setPhotos((list) => {
-        list.filter((p) => p.interestId === id).forEach((p) => del("photos", p.id));
-        return list.filter((p) => p.interestId !== id);
+      let removedInterest = null, removedEntries = [], removedPhotos = [];
+      setInterests((list) => {
+        removedInterest = list.find((x) => x.id === id) || null;
+        return list.filter((x) => x.id !== id);
       });
       setEntries((list) => {
-        list.filter((e) => e.interestId === id).forEach((e) => del("entries", e.id));
+        removedEntries = list.filter((e) => e.interestId === id);
         return list.filter((e) => e.interestId !== id);
       });
-      setInterests((list) => list.filter((x) => x.id !== id));
-      del("interests", id);
-      // Deleting the interest remotely cascades to its entries/photos server-side.
-      if (userRef.current) deleteRemoteInterest(id);
+      setPhotos((list) => {
+        removedPhotos = list.filter((p) => p.interestId === id);
+        return list.filter((p) => p.interestId !== id);
+      });
+      return {
+        record: removedInterest,
+        commit() {
+          del("interests", id);
+          removedEntries.forEach((e) => del("entries", e.id));
+          removedPhotos.forEach((p) => del("photos", p.id));
+          // Deleting the interest remotely cascades to its entries/photos server-side.
+          if (userRef.current) deleteRemoteInterest(id);
+        },
+        restore() {
+          if (!removedInterest) return;
+          setInterests((list) => (list.some((x) => x.id === id) ? list : [...list, removedInterest].sort((a, b) => a.createdAt - b.createdAt)));
+          setEntries((list) => [...list, ...removedEntries.filter((e) => !list.some((x) => x.id === e.id))]);
+          setPhotos((list) => [...list, ...removedPhotos.filter((p) => !list.some((x) => x.id === p.id))]);
+        },
+      };
     },
     // Photos stay local-only for now (still a Blob, not yet a Storage
     // upload) — see src/lib/remote.js for why that's a separate follow-up.
@@ -272,14 +293,41 @@ export function StoreProvider({ children }) {
       put("photos", rec);
       bumpCoins(COINS_PER_LOG);
     },
+    updatePhotoCaption(id, caption) {
+      setPhotos((list) => list.map((p) => {
+        if (p.id !== id) return p;
+        const next = { ...p, caption };
+        put("photos", next);
+        return next;
+      }));
+    },
+    // Same optimistic-hide-then-commit-or-restore shape as deleteInterest.
     deletePhoto(id) {
-      setPhotos((list) => list.filter((x) => x.id !== id));
-      del("photos", id);
+      let removed = null;
+      setPhotos((list) => {
+        removed = list.find((p) => p.id === id) || null;
+        return list.filter((p) => p.id !== id);
+      });
+      return {
+        record: removed,
+        commit() { del("photos", id); },
+        restore() {
+          if (!removed) return;
+          setPhotos((list) => (list.some((p) => p.id === id) ? list : [...list, removed]));
+        },
+      };
     },
     addEntry(rec) {
       setEntries((list) => [...list, rec]);
       put("entries", rec);
       bumpCoins(COINS_PER_LOG);
+      if (userRef.current) pushEntry(rec);
+    },
+    // Edits an existing entry in place — no coin bump, this isn't new
+    // activity, just a correction to something already logged.
+    updateEntry(rec) {
+      setEntries((list) => list.map((x) => (x.id === rec.id ? rec : x)));
+      put("entries", rec);
       if (userRef.current) pushEntry(rec);
     },
     deleteEntry(id) {

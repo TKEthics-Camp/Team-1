@@ -25,6 +25,9 @@ export default function ProfileScreen() {
   const coins = (profile && profile.coins) || 0;
   const equippedDecoration = DECORATIONS.find((d) => d.id === (profile && profile.equippedDecoration)) || null;
   const discoverable = !!(profile && profile.discoverable);
+  const soundOn = !(profile && profile.soundOn === false);
+  const publicCount = entries.filter((e) => e.visibility === "public").length
+    + photos.filter((p) => p.visibility === "public").length;
 
   const permission = window.Notification ? Notification.permission : "unsupported";
   const granted = permission === "granted";
@@ -48,6 +51,25 @@ export default function ProfileScreen() {
     const { interests: seedInterests, entries: seedEntries } = demoGardenSeed();
     seedDemo(seedInterests, seedEntries);
     navigate("/");
+  }
+
+  // Photo bytes aren't included — a JSON file isn't a sane container for
+  // megabytes of image data. This is a backup of everything that's actually
+  // text: the profile, every tree, and every journal entry, plus each
+  // photo's caption/date/visibility (just not the picture itself).
+  function exportData() {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      profile, interests, entries,
+      photos: photos.map(({ blob, ...meta }) => meta),
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "leaves-export-" + new Date().toISOString().slice(0, 10) + ".json";
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -91,6 +113,7 @@ export default function ProfileScreen() {
           { n: photos.length, k: nOf(photos.length, "photos") },
           { n: entries.length, k: nOf(entries.length, "entries") },
         ]} />
+        <div className="sub">{publicCount + " " + nOf(publicCount, "publicCount")}</div>
 
         <div className="label">{t("theme")}</div>
         <div className="themes">
@@ -114,6 +137,10 @@ export default function ProfileScreen() {
           {granted ? "✓ " + t("remindersOn") : blocked ? t("remindersBlocked") : t("turnOn")}
         </button>
         <div className="sub">{t("remindNote")}</div>
+
+        <button className="btn2" onClick={() => updateProfile({ soundOn: !soundOn })}>
+          {soundOn ? "🔊 " + t("soundOn") : "🔈 " + t("soundOff")}
+        </button>
 
         <div className="label">{t("discoverableLabel")}</div>
         <div className="seg">
@@ -144,6 +171,10 @@ export default function ProfileScreen() {
         <div className="sub">{t("plantDemoGardenNote")}</div>
 
         <div className="grow" />
+
+        <button className="btn2" onClick={exportData}>{t("exportData")}</button>
+        <div className="sub">{t("exportDataNote")}</div>
+
         <div className="sub">{t("dataNote")}</div>
 
         <button className="btn2 btn-danger" onClick={handleClear}>

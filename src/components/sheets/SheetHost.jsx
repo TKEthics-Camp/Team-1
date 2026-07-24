@@ -14,7 +14,7 @@ import UsernameSheet from "./UsernameSheet";
 export default function SheetHost() {
   const { sheet } = useUI();
   if (!sheet) return null;
-  if (sheet.type === "entry") return <EntrySheet interestId={sheet.id} />;
+  if (sheet.type === "entry") return <EntrySheet interestId={sheet.id} entryId={sheet.entryId} />;
   if (sheet.type === "photo") return <PhotoSheet interestId={sheet.id} />;
   if (sheet.type === "orb") return <OrbSheet key={sheet.id || "new"} interestId={sheet.id} preset={sheet.preset} />;
   if (sheet.type === "student") return <StudentSheet student={sheet.student} />;
