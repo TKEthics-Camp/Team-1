@@ -4,13 +4,14 @@ import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
 import { photosOf, entriesOf, globalStreak } from "../../lib/derived";
-import { treeStage, treeHealth, daysPlanted, STAGE_KEY, HEALTH_KEY, REVIVE_COST } from "../../lib/tree";
+import { treeStage, treeHealth, daysPlanted, actsToNextStage, growthTimeline, STAGE_KEY, HEALTH_KEY, REVIVE_COST } from "../../lib/tree";
 import TopBar from "../shared/TopBar";
 import Stats from "../shared/Stats";
 import Tree from "../shared/Tree";
 import InterestCover from "./InterestCover";
 import AlbumTab from "./AlbumTab";
 import JournalTab from "./JournalTab";
+import GrowthReplay from "./GrowthReplay";
 
 export default function InterestScreen() {
   const { id } = useParams();
@@ -25,6 +26,7 @@ export default function InterestScreen() {
   // Preview: instantly see what this tree looks like at any stage/health,
   // without waiting for real activity or real neglect.
   const [preview, setPreview] = useState(null); // { stage, health } | null
+  const [replaying, setReplaying] = useState(false);
 
   useEffect(() => {
     if (!it) navigate("/", { replace: true });
@@ -41,11 +43,14 @@ export default function InterestScreen() {
 
   const realStage = treeStage(it, entries, photos);
   const realHealth = treeHealth(it, entries, photos);
+  const toNext = actsToNextStage(it, entries, photos);
   const stage = preview ? preview.stage : realStage;
   const health = preview ? preview.health : realHealth;
   const planted = daysPlanted(it);
   const coins = (profile && profile.coins) || 0;
   const canRevive = coins >= REVIVE_COST;
+  const timeline = growthTimeline(it, entries, photos);
+  const canReplay = timeline.length > 1; // more than just the seed frame
 
   function setTab(next) {
     setSearchParams(next === "album" ? {} : { tab: next });
@@ -72,8 +77,12 @@ export default function InterestScreen() {
             <div className="st-health">{t(HEALTH_KEY[health])}</div>
             {health === "dead" ? (
               <div className="st-note">{canRevive ? t("reviveHint") : t("reviveNeed").replace("{n}", REVIVE_COST)}</div>
-            ) : (
+            ) : preview ? (
               <div className="st-note">{t("grewNote")}</div>
+            ) : toNext > 0 ? (
+              <div className="st-note">{t("growNext").replace("{n}", toNext)}</div>
+            ) : (
+              <div className="st-note">{t("grownFull")}</div>
             )}
           </div>
         </div>
@@ -86,6 +95,10 @@ export default function InterestScreen() {
           >
             {t("reviveBtn").replace("{n}", REVIVE_COST)}
           </button>
+        )}
+
+        {canReplay && (
+          <button className="btn2" onClick={() => setReplaying(true)}>{t("watchGrow")}</button>
         )}
 
         <div className="label">{t("previewLabel")}</div>
@@ -134,7 +147,7 @@ export default function InterestScreen() {
           <button aria-selected={tab === "journal"} onClick={() => setTab("journal")}>{t("journal")}</button>
         </div>
 
-        <div className="scroll">
+        <div className="tab-content">
           {tab === "album" ? (
             <AlbumTab photos={ph} onOpenPhoto={openViewer} />
           ) : (
@@ -145,6 +158,16 @@ export default function InterestScreen() {
         <button className="btn" onClick={() => openSheet(tab === "album" ? "photo" : "entry", it.id)}>
           {tab === "album" ? t("addPhoto") : t("addEntry")}
         </button>
+
+        {replaying && (
+          <GrowthReplay
+            interest={it}
+            frames={timeline}
+            health={realHealth}
+            nameOf={nameOf}
+            onClose={() => setReplaying(false)}
+          />
+        )}
       </div>
     </>
   );

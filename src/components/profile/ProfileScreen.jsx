@@ -6,6 +6,7 @@ import { useAuth } from "../../store/AuthContext";
 import { useUI } from "../../ui/UIContext";
 import { PALETTE, THEMES, DEFAULT_THEME, DECORATIONS } from "../../lib/constants";
 import { globalStreak } from "../../lib/derived";
+import { demoGardenSeed } from "../../lib/demoGarden";
 import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
 import Stats from "../shared/Stats";
@@ -13,7 +14,7 @@ import PersonAvatar from "../shared/PersonAvatar";
 
 export default function ProfileScreen() {
   const { t, lang, nOf } = useI18n();
-  const { profile, interests, photos, entries, clearAllData, updateProfile } = useStore();
+  const { profile, interests, photos, entries, clearAllData, updateProfile, seedDemo } = useStore();
   const { signOut } = useAuth();
   const { openSheet } = useUI();
   const navigate = useNavigate();
@@ -40,6 +41,12 @@ export default function ProfileScreen() {
   function handleClear() {
     if (!armed) { setArmed(true); return; }
     clearAllData(true);
+  }
+
+  function plantDemoGarden() {
+    const { interests: seedInterests, entries: seedEntries } = demoGardenSeed();
+    seedDemo(seedInterests, seedEntries);
+    navigate("/");
   }
 
   return (
@@ -109,8 +116,11 @@ export default function ProfileScreen() {
 
         <button className="btn2" onClick={() => { updateProfile({ tourSeen: false }); navigate("/"); }}>{t("replayTour")}</button>
 
-        <button className="btn2" onClick={() => openSheet("yearReview")}>{t("yearReview")}</button>
+        <button className="btn2" data-tour="yearReview" onClick={() => openSheet("yearReview")}>{t("yearReview")}</button>
         <button className="btn2" onClick={() => openSheet("memories")}>{t("memories")}</button>
+
+        <button className="btn2" onClick={plantDemoGarden}>{t("plantDemoGarden")}</button>
+        <div className="sub">{t("plantDemoGardenNote")}</div>
 
         <div className="grow" />
         <div className="sub">{t("dataNote")}</div>

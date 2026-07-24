@@ -3,15 +3,15 @@ import { useI18n } from "../../i18n/I18nContext";
 import { SUGGESTIONS } from "../../i18n/strings";
 import Tree from "../shared/Tree";
 
-export default function InterestsStep({ drafts, addDraft, removeDraft, onNext }) {
+export default function InterestsStep({ drafts, addDraft, removeDraft, blocked, onNext }) {
   const { t, lang } = useI18n();
   const [value, setValue] = useState("");
   const inputRef = useRef(null);
   useEffect(() => { inputRef.current?.focus(); }, []);
 
   function submit(name) {
-    addDraft(name !== undefined ? name : value);
-    setValue("");
+    const ok = addDraft(name !== undefined ? name : value);
+    if (ok) setValue("");
   }
 
   return (
@@ -34,6 +34,8 @@ export default function InterestsStep({ drafts, addDraft, removeDraft, onNext })
         </div>
         <button className="btn2" style={{ width: "auto" }} onClick={() => submit()}>{t("add")}</button>
       </div>
+
+      {blocked && <div className="field-error">{t("hobbyBlocked")}</div>}
 
       <div className="chips">
         {SUGGESTIONS.map((s) => {

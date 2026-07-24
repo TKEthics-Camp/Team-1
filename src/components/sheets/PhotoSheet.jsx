@@ -5,6 +5,7 @@ import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
 import { uid } from "../../lib/id";
 import { downscale, useObjectURL } from "../../lib/image";
+import { actsToNextStage } from "../../lib/tree";
 import Sheet from "../shared/Sheet";
 import Field from "../shared/Field";
 import Chip from "../shared/Chip";
@@ -12,7 +13,7 @@ import VisRow from "../shared/VisRow";
 
 export default function PhotoSheet({ interestId }) {
   const { t, nameOf } = useI18n();
-  const { interests, addPhoto } = useStore();
+  const { interests, entries, photos: allPhotos, addPhoto } = useStore();
   const { closeSheet } = useUI();
   const navigate = useNavigate();
   const it = interests.find((x) => x.id === interestId);
@@ -34,13 +35,14 @@ export default function PhotoSheet({ interestId }) {
 
   function save() {
     if (!blob) return;
+    const leveledUp = actsToNextStage(it, entries, allPhotos) === 1;
     const rec = {
       id: uid(), interestId: it.id, blob, caption: caption.trim(),
       visibility, isPinned: pinned, createdAt: Date.now(),
     };
     addPhoto(rec);
     closeSheet();
-    navigate(`/saved/${it.id}`);
+    navigate(`/saved/${it.id}`, { state: { leveledUp } });
   }
 
   return (

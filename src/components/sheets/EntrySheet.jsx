@@ -5,6 +5,7 @@ import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
 import { uid } from "../../lib/id";
 import { today } from "../../lib/dates";
+import { actsToNextStage } from "../../lib/tree";
 import Sheet from "../shared/Sheet";
 import Field from "../shared/Field";
 import Chip from "../shared/Chip";
@@ -14,7 +15,7 @@ const DURATIONS = [15, 30, 45, 60, 90, 120];
 
 export default function EntrySheet({ interestId }) {
   const { t, nameOf } = useI18n();
-  const { interests, addEntry } = useStore();
+  const { interests, entries, photos, addEntry } = useStore();
   const { closeSheet } = useUI();
   const navigate = useNavigate();
   const it = interests.find((x) => x.id === interestId);
@@ -33,13 +34,14 @@ export default function EntrySheet({ interestId }) {
   function save() {
     const txt = text.trim();
     if (!txt) { textRef.current?.focus(); return; }
+    const leveledUp = actsToNextStage(it, entries, photos) === 1;
     const rec = {
       id: uid(), interestId: it.id, date: date || today(), text: txt,
       minutes, visibility, isPinned: pinned, createdAt: Date.now(), updatedAt: Date.now(),
     };
     addEntry(rec);
     closeSheet();
-    navigate(`/saved/${it.id}`);
+    navigate(`/saved/${it.id}`, { state: { leveledUp } });
   }
 
   return (

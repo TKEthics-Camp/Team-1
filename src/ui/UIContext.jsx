@@ -21,7 +21,11 @@ export function UIProvider({ children }) {
     closeSheet: () => setSheet(null),
     openViewer: (id) => setViewer(id),
     closeViewer: () => setViewer(null),
+    // Waves the nudge off for the rest of today (a dateKey string).
     dismissNudge: (id) => setDismissed((d) => ({ ...d, [id]: today() })),
+    // Waves it off for a short while instead of the whole day (a future
+    // timestamp) — for "ask me again in a bit" rather than "not today".
+    snoozeNudge: (id, minutes = 45) => setDismissed((d) => ({ ...d, [id]: Date.now() + minutes * 60000 })),
   }), [sheet, viewer, dismissed]);
 
   return <UICtx.Provider value={value}>{children}</UICtx.Provider>;

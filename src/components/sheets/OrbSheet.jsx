@@ -6,6 +6,7 @@ import { useUI } from "../../ui/UIContext";
 import { uid } from "../../lib/id";
 import { PALETTE } from "../../lib/constants";
 import { SPECIES, LEAF_COLORS, speciesOf, leafColorOf } from "../../lib/tree";
+import { isBlockedHobby } from "../../lib/hobbyFilter";
 import Sheet from "../shared/Sheet";
 import Field from "../shared/Field";
 import Tree from "../shared/Tree";
@@ -38,12 +39,14 @@ export default function OrbSheet({ interestId, preset = null }) {
   const previewId = useMemo(() => (editing ? editing.id : uid()), [editing]);
   const [species, setSpecies] = useState(editing ? editing.species || speciesOf(editing) : speciesOf({ id: previewId }));
   const [leafColor, setLeafColor] = useState(editing ? editing.leafColor || leafColorOf(editing) : leafColorOf({ id: previewId }));
+  const [blocked, setBlocked] = useState(false);
 
   useEffect(() => { nameRef.current?.focus(); }, []);
 
   function save() {
     const nm = name.trim();
     if (!nm) { nameRef.current?.focus(); return; }
+    if (isBlockedHobby(nm)) { setBlocked(true); nameRef.current?.focus(); return; }
     const friends = friendsText.split(/[,，]/).map((x) => x.trim()).filter(Boolean);
     if (editing) {
       updateInterest({ ...editing, name: nm, why: why.trim(), color, time, days, species, leafColor, friends, updatedAt: Date.now() });
@@ -69,7 +72,15 @@ export default function OrbSheet({ interestId, preset = null }) {
       </div>
       <h2>{editing ? t("editOrb") : t("newInterest")}</h2>
       <Field label={t("name")}>
-        <input ref={nameRef} type="text" maxLength={24} placeholder={t("interestPh")} value={name} onChange={(e) => setName(e.target.value)} />
+        <input
+          ref={nameRef}
+          type="text"
+          maxLength={24}
+          placeholder={t("interestPh")}
+          value={name}
+          onChange={(e) => { setName(e.target.value); setBlocked(false); }}
+        />
+        {blocked && <span className="field-error">{t("hobbyBlocked")}</span>}
       </Field>
       <Field label={t("why")}>
         <input type="text" maxLength={80} placeholder={t("whyPh")} value={why} onChange={(e) => setWhy(e.target.value)} />

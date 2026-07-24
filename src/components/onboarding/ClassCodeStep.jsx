@@ -22,6 +22,11 @@ export default function ClassCodeStep({ code, setCode, onNext }) {
       <h2>{t("classCodeTitle")}</h2>
       <p>{t("classCodeSub")}</p>
 
+      <div className="safe-note">
+        <span aria-hidden="true">👀</span>
+        <span>{t("classCodeWarning")}</span>
+      </div>
+
       <Field label={t("classCodePh")}>
         <input
           type="text"

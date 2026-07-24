@@ -31,7 +31,7 @@ export default function ExploreScreen() {
         <LangToggle />
       </TopBar>
       <div className="view">
-        <div className="tabs">
+        <div className="tabs" data-tour="exploreTabs">
           {TABS.map(([key, label]) => (
             <button key={key} aria-selected={tab === key} onClick={() => setTab(key)}>
               {t(label)}
