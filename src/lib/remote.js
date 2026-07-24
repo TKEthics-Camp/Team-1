@@ -1,5 +1,41 @@
 import { supabase } from "./supabase";
 
+// DEBUG ONLY: mirrors the flag in AuthContext.jsx. When set, searchUsers and
+// pullPublicProfile serve one fixture "friend" instead of hitting Supabase,
+// so the search -> view-another-user's-orb flow can be tested without a
+// second real account. Never set outside local dev.
+const DEBUG_MOCK = import.meta.env.VITE_DEBUG_SKIP_AUTH === "true";
+const DEBUG_FRIEND_ID = "00000000-0000-0000-0000-000000000099";
+const DEBUG_FRIEND = { id: DEBUG_FRIEND_ID, display_name: "Debug Friend", account_type: "individual" };
+const DEBUG_INTEREST_ROW = {
+  id: "debug-interest-pottery",
+  user_id: DEBUG_FRIEND_ID,
+  name: "Pottery",
+  why: "It calms me down after school",
+  color: "#63C489",
+  time: null,
+  friends: [],
+  visibility: "public",
+  category: null,
+  inspired_by: null,
+  created_at: new Date(Date.now() - 20 * 86400000).toISOString(),
+  updated_at: new Date().toISOString(),
+};
+const DEBUG_ENTRY_ROWS = [
+  {
+    id: "debug-entry-1", interest_id: DEBUG_INTEREST_ROW.id, date: "2026-07-20",
+    text: "Made my first bowl today! It's lopsided but I love it.", minutes: 45,
+    visibility: "public", is_pinned: false,
+    created_at: "2026-07-20T12:00:00.000Z", updated_at: "2026-07-20T12:00:00.000Z",
+  },
+  {
+    id: "debug-entry-2", interest_id: DEBUG_INTEREST_ROW.id, date: "2026-07-22",
+    text: "Glazed it a deep blue. Picking it up from the kiln next week.", minutes: 30,
+    visibility: "public", is_pinned: false,
+    created_at: "2026-07-22T12:00:00.000Z", updated_at: "2026-07-22T12:00:00.000Z",
+  },
+];
+
 // Maps between the local (Dexie/StoreContext) shape and the Supabase row
 // shape for interests + entries. Photos are deliberately left out for now —
 // they still store a local Blob, and syncing them needs a Storage bucket
@@ -121,7 +157,12 @@ export async function updateDiscovery(userId, enabled) {
 
 export async function updateDisplayName(userId, name) {
   const { error } = await supabase.from("users").update({ display_name: name }).eq("id", userId);
-  if (error) console.error("Sync (display name) failed:", error);
+  if (error) {
+    console.error("Sync (display name) failed:", error);
+    // 23505 = unique_violation — the users_display_name_unique_idx guard.
+    return { ok: false, taken: error.code === "23505" };
+  }
+  return { ok: true };
 }
 
 // RLS (users_select) already restricts what comes back to: this user's own
@@ -130,6 +171,10 @@ export async function updateDisplayName(userId, name) {
 export async function searchUsers(query, excludeUserId) {
   const q = String(query || "").trim();
   if (!q) return [];
+  if (DEBUG_MOCK) {
+    const match = DEBUG_FRIEND_ID !== excludeUserId && DEBUG_FRIEND.display_name.toLowerCase().includes(q.toLowerCase());
+    return match ? [DEBUG_FRIEND] : [];
+  }
   const { data, error } = await supabase
     .from("users")
     .select("id, display_name, account_type")
@@ -149,6 +194,12 @@ export async function searchUsers(query, excludeUserId) {
 // aren't included — they're still local-only (see the note up top), so
 // there's nothing remote to fetch yet for someone else's album.
 export async function pullPublicProfile(userId) {
+  if (DEBUG_MOCK && userId === DEBUG_FRIEND_ID) {
+    return {
+      interests: [rowToInterest(DEBUG_INTEREST_ROW)],
+      entries: DEBUG_ENTRY_ROWS.map(rowToEntry),
+    };
+  }
   const { data: interestRows, error: intErr } = await supabase
     .from("interests").select("*").eq("user_id", userId).eq("visibility", "public");
   if (intErr) {

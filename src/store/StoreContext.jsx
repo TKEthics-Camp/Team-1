@@ -88,6 +88,10 @@ export function StoreProvider({ children }) {
             ownedDecorations: [],
             equippedDecoration: null,
             createdAt: new Date(userRow.created_at).getTime(),
+            // This account already finished onboarding at some point in the
+            // past (that's the only way display_name got set) — a cache wipe
+            // from signing out shouldn't make the one-time tour replay.
+            tourSeen: true,
           };
           setProfileState(rebuilt);
           put("meta", rebuilt);
@@ -177,6 +181,24 @@ export function StoreProvider({ children }) {
         put("meta", next);
         return next;
       });
+    },
+    // Unlike setDiscoverable/updateProfile, this waits on the remote write
+    // before touching local state — a username collision (users_display_
+    // name_unique_idx) has to be known *before* the local profile commits to
+    // the new name, or the UI would show a name that didn't actually save.
+    async changeUsername(name) {
+      const trimmed = (name || "").trim();
+      if (!trimmed) return { ok: false, reason: "empty" };
+      if (!userRef.current) return { ok: false, reason: "error" };
+      const result = await updateDisplayName(userRef.current.id, trimmed);
+      if (!result.ok) return { ok: false, reason: result.taken ? "taken" : "error" };
+      setProfileState((p) => {
+        if (!p) return p;
+        const next = { ...p, name: trimmed };
+        put("meta", next);
+        return next;
+      });
+      return { ok: true };
     },
     // Opts this account into (or out of) Explore's user search. Off by
     // default (see the users_select RLS policy) — this is the only place

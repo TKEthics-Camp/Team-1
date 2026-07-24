@@ -67,9 +67,18 @@ export default function ProfileScreen() {
             <PersonAvatar color={PALETTE[0]} avatar={profile.avatar} decoration={equippedDecoration} size={76} />
             <span className="avatar-edit-badge" aria-hidden="true">✎</span>
           </button>
-          <div style={{ fontFamily: "var(--display)", fontSize: 19, fontWeight: 600, marginTop: 10 }}>
-            {profile.name}
-          </div>
+          <button
+            type="button"
+            className="row"
+            style={{ gap: 6, background: "none", border: "none", marginTop: 10, cursor: "pointer" }}
+            aria-label={t("editUsername")}
+            onClick={() => openSheet("username")}
+          >
+            <span style={{ fontFamily: "var(--display)", fontSize: 19, fontWeight: 600 }}>
+              {profile.name}
+            </span>
+            <span aria-hidden="true">✎</span>
+          </button>
           <div className="coin-row">
             <span className="chip coin-pill">{"🪙 " + coins}</span>
             <button className="chip" onClick={() => navigate("/market")}>{t("market")}</button>

@@ -9,6 +9,7 @@ import JoinClassSheet from "./JoinClassSheet";
 import AvatarSheet from "./AvatarSheet";
 import YearReviewSheet from "./YearReviewSheet";
 import MemoriesSheet from "./MemoriesSheet";
+import UsernameSheet from "./UsernameSheet";
 
 export default function SheetHost() {
   const { sheet } = useUI();
@@ -25,5 +26,6 @@ export default function SheetHost() {
   if (sheet.type === "avatar") return <AvatarSheet />;
   if (sheet.type === "yearReview") return <YearReviewSheet />;
   if (sheet.type === "memories") return <MemoriesSheet />;
+  if (sheet.type === "username") return <UsernameSheet />;
   return null;
 }
