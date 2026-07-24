@@ -105,6 +105,23 @@ export async function deleteAllMine(userId) {
   if (error) console.error("Sync (delete all) failed:", error);
 }
 
+// An educator claims a freshly-generated code as their own class. Returns
+// false on any failure — including the extremely unlikely case of a
+// collision with an existing code, since `id` is the primary key — so the
+// caller can just generate a new one and retry.
+export async function createClass(code, ownerId) {
+  const { error } = await supabase.from("classes").insert({ id: code, owner_id: ownerId });
+  if (error) console.error("Sync (create class) failed:", error);
+  return !error;
+}
+
+// Whether a code a student typed in matches a real, educator-created class.
+export async function classExists(code) {
+  const { data, error } = await supabase.from("classes").select("id").eq("id", code).maybeSingle();
+  if (error) { console.error("Sync (class lookup) failed:", error); return false; }
+  return !!data;
+}
+
 export async function pullUserRow(userId) {
   const { data, error } = await supabase.from("users").select("*").eq("id", userId).single();
   if (error) {
@@ -112,6 +129,42 @@ export async function pullUserRow(userId) {
     return null;
   }
   return data;
+}
+
+// Real public journal entries for the Community tab — anyone's, including
+// the current user's own, since posting one is supposed to be confirmable
+// right away. RLS on `entries`/`interests` already does all the real
+// filtering here (only rows that are public AND belong to a public orb, or
+// are the caller's own, are ever returned) — the .eq("visibility","public")
+// below is belt-and-suspenders, not the actual security boundary.
+//
+// Photos are excluded: they're still a local Blob (see the file header),
+// never uploaded anywhere, so there is nothing to pull for anyone but the
+// device that took them.
+export async function pullPublicFeed(limit = 30) {
+  const { data, error } = await supabase
+    .from("entries")
+    .select("id, text, minutes, created_at, interests(name, color, category, user_id, users(display_name))")
+    .eq("visibility", "public")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) {
+    console.error("Sync (pull public feed) failed:", error);
+    return [];
+  }
+  return (data || [])
+    .filter((row) => row.interests)
+    .map((row) => ({
+      id: row.id,
+      text: row.text,
+      minutes: row.minutes,
+      createdAt: toMs(row.created_at),
+      hobbyName: row.interests.name,
+      color: row.interests.color,
+      category: row.interests.category,
+      authorId: row.interests.user_id,
+      authorName: (row.interests.users && row.interests.users.display_name) || "",
+    }));
 }
 
 export async function pullMine(userId) {

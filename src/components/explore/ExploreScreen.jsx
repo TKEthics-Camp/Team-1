@@ -17,10 +17,19 @@ export default function ExploreScreen() {
   const { t } = useI18n();
   const { profile } = useStore();
 
-  // Organisations get the classmate web but not the solo idea browser;
-  // individuals get ideas but no school. Community is shared by both.
+  // Educator accounts (accountType "org", set only via onboarding's "school
+  // or group" path) don't browse hobby ideas for themselves — they get the
+  // classmate web instead. Everyone else keeps Ideas, and gets School too
+  // the moment they're in a class (classCode set), whether that's an
+  // individual who joined one later or the educator who created it — see
+  // JoinClassSheet, which deliberately never touches accountType.
   const isOrg = profile && profile.accountType === "org";
-  const TABS = ALL_TABS.filter(([key]) => (isOrg ? key !== "ideas" : key !== "school"));
+  const inClass = !!(profile && profile.classCode);
+  const TABS = ALL_TABS.filter(([key]) => {
+    if (key === "ideas") return !isOrg;
+    if (key === "school") return isOrg || inClass;
+    return true;
+  });
 
   const [tab, setTab] = useState(TABS[0][0]);
 

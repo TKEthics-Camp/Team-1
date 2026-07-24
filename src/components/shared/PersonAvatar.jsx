@@ -37,11 +37,15 @@ export default function PersonAvatar({ size, color = "#FFD45E", avatar = null, d
           {/* head */}
           <circle cx="50" cy="42" r="27" fill={a.skin} />
 
-          {/* hair, behind/around the head depending on style */}
+          {/* hair, behind/around the head depending on style. The long
+              strands are drawn first, reaching up well past the crown's
+              bottom edge, so the crown (drawn after, on top) overlaps them
+              with no visible seam — a real flow into the crown rather than
+              two separate pieces stuck on either side of it. */}
           {a.hair === "long" && (
             <>
-              <path d="M17 40 Q13 68 20 86 L28 86 Q23 62 25 40 Z" fill={a.hairColor} />
-              <path d="M83 40 Q87 68 80 86 L72 86 Q77 62 75 40 Z" fill={a.hairColor} />
+              <path d="M20 28 Q12 58 18 87 Q24 90 30 86 Q25 60 27 30 Z" fill={a.hairColor} />
+              <path d="M80 28 Q88 58 82 87 Q76 90 70 86 Q75 60 73 30 Z" fill={a.hairColor} />
             </>
           )}
           {(a.hair === "short" || a.hair === "long") && (

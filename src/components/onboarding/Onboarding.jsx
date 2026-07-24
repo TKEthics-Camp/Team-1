@@ -12,18 +12,26 @@ import LangToggle from "../shared/LangToggle";
 import WelcomeStep from "./WelcomeStep";
 import GenderStep from "./GenderStep";
 import AccountTypeStep from "./AccountTypeStep";
-import ClassCodeStep from "./ClassCodeStep";
+import CreateClassStep from "./CreateClassStep";
 import NameStep from "./NameStep";
 import InterestsStep from "./InterestsStep";
 import ScheduleStep from "./ScheduleStep";
 import ThemeStep from "./ThemeStep";
 
-// Schools/groups get one extra question up front — a class code — instead
-// of going straight to "what do you love doing". Everyone still ends up at
-// the same interests/schedule/theme steps; only this one step differs.
+// Educators get one extra question up front — creating their class and
+// getting a code back to hand out — instead of going straight to "what do
+// you love doing" (which is the students' question, not theirs). Everyone
+// still ends up at the same interests/schedule/theme steps; only this one
+// step differs. Individual students who want to join a class do that later,
+// from Me → Join a class (JoinClassSheet), once they have a code from their
+// teacher — not here.
 function stepsFor(accountType) {
-  const base = ["welcome", "gender", "account"];
-  if (accountType === "org") base.push("classcode");
+  const base = ["welcome", "account"];
+  // Gender only ever picks a starting avatar hairstyle for the person using
+  // the app day to day — not relevant to an educator setting up a class for
+  // other people, so it's skipped for that path.
+  if (accountType !== "org") base.push("gender");
+  if (accountType === "org") base.push("createclass");
   return base.concat(["name", "interests", "schedule", "theme"]);
 }
 
@@ -109,8 +117,8 @@ export default function Onboarding() {
           {steps[step] === "account" && (
             <AccountTypeStep value={accountType} setType={setAccountType} onNext={() => setStep(step + 1)} />
           )}
-          {steps[step] === "classcode" && (
-            <ClassCodeStep code={classCode} setCode={setClassCode} onNext={() => setStep(step + 1)} />
+          {steps[step] === "createclass" && (
+            <CreateClassStep code={classCode} setCode={setClassCode} onNext={() => setStep(step + 1)} />
           )}
           {steps[step] === "name" && <NameStep name={name} setName={setName} onNext={() => setStep(step + 1)} />}
           {steps[step] === "interests" && (

@@ -4,9 +4,11 @@ import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
 import { uid } from "../../lib/id";
-import { PALETTE } from "../../lib/constants";
+import { PALETTE, CATS } from "../../lib/constants";
 import { SPECIES, LEAF_COLORS, speciesOf, leafColorOf } from "../../lib/tree";
 import { isBlockedHobby } from "../../lib/hobbyFilter";
+import { ideaCat } from "../../lib/explore";
+import { CAT_EMOJI } from "../../lib/community";
 import Sheet from "../shared/Sheet";
 import Field from "../shared/Field";
 import Tree from "../shared/Tree";
@@ -39,6 +41,12 @@ export default function OrbSheet({ interestId, preset = null }) {
   const previewId = useMemo(() => (editing ? editing.id : uid()), [editing]);
   const [species, setSpecies] = useState(editing ? editing.species || speciesOf(editing) : speciesOf({ id: previewId }));
   const [leafColor, setLeafColor] = useState(editing ? editing.leafColor || leafColorOf(editing) : leafColorOf({ id: previewId }));
+  // What the cover picture (InterestCover) draws before any photo exists.
+  // Pre-filled with a best guess (auto-detected from the name for a curated
+  // idea) but always explicit and overridable — this is the fix for a made-up
+  // hobby name never getting an illustration, and for a misdetected one
+  // showing the wrong picture.
+  const [category, setCategory] = useState(editing ? (editing.category || ideaCat(editing.name) || null) : (ideaCat(name) || null));
   const [blocked, setBlocked] = useState(false);
 
   useEffect(() => { nameRef.current?.focus(); }, []);
@@ -49,10 +57,10 @@ export default function OrbSheet({ interestId, preset = null }) {
     if (isBlockedHobby(nm)) { setBlocked(true); nameRef.current?.focus(); return; }
     const friends = friendsText.split(/[,，]/).map((x) => x.trim()).filter(Boolean);
     if (editing) {
-      updateInterest({ ...editing, name: nm, why: why.trim(), color, time, days, species, leafColor, friends, updatedAt: Date.now() });
+      updateInterest({ ...editing, name: nm, why: why.trim(), color, time, days, species, leafColor, friends, category, updatedAt: Date.now() });
     } else {
       addInterest({
-        id: previewId, name: nm, why: why.trim(), color, time, days, species, leafColor, friends,
+        id: previewId, name: nm, why: why.trim(), color, time, days, species, leafColor, friends, category,
         createdAt: Date.now(), updatedAt: Date.now(),
       });
     }
@@ -81,6 +89,22 @@ export default function OrbSheet({ interestId, preset = null }) {
           onChange={(e) => { setName(e.target.value); setBlocked(false); }}
         />
         {blocked && <span className="field-error">{t("hobbyBlocked")}</span>}
+      </Field>
+      <Field label={t("categoryLabel")}>
+        <div className="chips">
+          {Object.keys(CATS).map((c) => (
+            <button
+              key={c}
+              type="button"
+              className="chip"
+              aria-pressed={category === c}
+              onClick={() => setCategory(c)}
+            >
+              {CAT_EMOJI[c] + " " + CATS[c][lang === "en" ? 0 : 1]}
+            </button>
+          ))}
+        </div>
+        <span className="hint">{t("categoryNote")}</span>
       </Field>
       <Field label={t("why")}>
         <input type="text" maxLength={80} placeholder={t("whyPh")} value={why} onChange={(e) => setWhy(e.target.value)} />

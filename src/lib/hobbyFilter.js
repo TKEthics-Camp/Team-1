@@ -1,11 +1,12 @@
 // Names that don't count as a "hobby to cultivate" under the app's own
 // constitution: video games and social-media/short-video apps are screen
-// time, not something this app exists to help someone build. Matching is
-// substring-based and case-insensitive (Chinese needs no case-folding), so
-// common variants ("gaming", "Genshin", "王者") are still caught without
-// needing an exhaustive list of every title and app.
+// time, not something this app exists to help someone build. Profanity is
+// blocked for the same reason a real teacher would reject it on a form.
+// Matching is substring-based and case-insensitive (Chinese needs no
+// case-folding), so common variants ("gaming", "Genshin", "王者") are still
+// caught without needing an exhaustive list of every title, app, or word.
 const BLOCKED_TERMS = [
-  // generic
+  // generic screen-time terms
   "video game", "videogame", "gaming", "gamer", "esports", "e-sports",
   "电竞", "游戏", "手游", "端游", "网游",
   // games popular with Chinese teens specifically, since this build targets
@@ -37,10 +38,30 @@ const BLOCKED_TERMS = [
   "twitter", "推特",
   "bilibili", "哔哩哔哩", "b站",
   "youtube", "油管",
+  // English profanity/slurs
+  "fuck", "shit", "bitch", "asshole", "dick", "cunt", "bastard", "whore",
+  "slut", "piss", "pussy", "cock", "nigger", "nigga", "faggot", "retard",
+  "twat", "dumbass",
+  // Chinese profanity/slurs
+  "操你", "草你", "他妈的", "妈的", "你妈", "尼玛", "傻逼", "煞笔", "沙比", "sb",
+  "婊子", "贱人", "王八蛋", "混蛋", "死全家", "妈逼", "弱智", "智障", "狗日的",
 ];
+
+function escapeRegex(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// Handles asterisk-censored profanity ("f*ck", "sh*t", "b*tch"): each '*' in
+// the typed name is treated as exactly one hidden character, so the pattern
+// still matches the clean word it was censoring.
+function wildcardMatches(input, term) {
+  if (!input.includes("*")) return false;
+  const pattern = input.split("*").map(escapeRegex).join(".");
+  return new RegExp(pattern, "i").test(term);
+}
 
 export function isBlockedHobby(name) {
   const n = String(name || "").trim().toLowerCase();
   if (!n) return false;
-  return BLOCKED_TERMS.some((term) => n.includes(term.toLowerCase()));
+  return BLOCKED_TERMS.some((term) => n.includes(term) || wildcardMatches(n, term));
 }

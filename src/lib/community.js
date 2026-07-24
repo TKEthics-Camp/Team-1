@@ -1,4 +1,4 @@
-import { STUDENTS, CAPTIONS, CLASS_CODES } from "./constants";
+import { STUDENTS, CAPTIONS, CLASS_CODES, IDEAS } from "./constants";
 
 export function isValidClassCode(code) {
   return CLASS_CODES.includes(String(code || "").trim().toUpperCase());
@@ -15,18 +15,31 @@ export function isValidClassCode(code) {
 const HOBBY_EMOJI = {
   basketball: "🏀", football: "⚽", badminton: "🏸", "table tennis": "🏓",
   running: "🏃", cycling: "🚴", swimming: "🏊", "rope skipping": "🪢",
-  drawing: "🎨", watercolor: "🖌️", calligraphy: "🖌️", "paper cutting": "✂️",
+  drawing: "🎨", watercolor: "🖌️", calligraphy: "🖋️", "paper cutting": "✂️",
   photography: "📷", origami: "🕊️", "clay modeling": "🏺", comics: "📖",
-  piano: "🎹", guitar: "🎸", singing: "🎤", erhu: "🎻", flute: "🎶", drums: "🥁",
+  piano: "🎹", guitar: "🎸", singing: "🎤", erhu: "🎻", flute: "🪈", drums: "🥁",
   reading: "📚", chess: "♟️", go: "⚫", journaling: "📓", puzzles: "🧩", "star gazing": "🔭",
   cooking: "🍳", baking: "🧁", gardening: "🌱", "tea making": "🍵",
   hiking: "🥾", fishing: "🎣", "bird watching": "🐦", "kite flying": "🪁",
   dancing: "💃", "jump rope tricks": "🤸", skateboarding: "🛹",
 };
-const CAT_EMOJI = { sport: "⚽", art: "🎨", music: "🎵", mind: "📚", food: "🍳", outdoor: "🌲", dance: "💃" };
+export const CAT_EMOJI = { sport: "⚽", art: "🎨", music: "🎵", mind: "📚", food: "🍳", outdoor: "🌲", dance: "💃" };
+
+// HOBBY_EMOJI is keyed on the curated English name only. A hobby typed or
+// stored in Chinese (or matching the Chinese name of a curated idea) needs
+// resolving back to that English key first — otherwise "篮球" never finds
+// "basketball" and silently falls back to the generic (and often wrong)
+// category icon instead, e.g. a soccer ball standing in for basketball.
+function canonicalName(name) {
+  const low = String(name || "").toLowerCase();
+  for (let i = 0; i < IDEAS.length; i++) {
+    if (IDEAS[i][0].toLowerCase() === low || IDEAS[i][1] === name) return IDEAS[i][0].toLowerCase();
+  }
+  return low;
+}
 
 export function hobbyEmoji(name, cat) {
-  return HOBBY_EMOJI[String(name || "").toLowerCase()] || CAT_EMOJI[cat] || "🌱";
+  return HOBBY_EMOJI[canonicalName(name)] || CAT_EMOJI[cat] || "🌱";
 }
 
 // A hobby picture: a soft gradient (by category) with the hobby's own emoji on

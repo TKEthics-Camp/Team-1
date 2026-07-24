@@ -16,7 +16,7 @@ const STEPS = [
   { path: "/profile", selector: '[data-tour="yearReview"]', textKey: "tourProfile" },
 ];
 
-const REVEAL_DELAY = 1500;
+const REVEAL_DELAY = 900;
 
 // A one-time (or replay-on-demand) walkthrough: Sprig hops between Home,
 // Explore, and Me, pointing out a few things in a speech bubble at each

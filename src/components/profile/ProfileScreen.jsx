@@ -14,7 +14,7 @@ import PersonAvatar from "../shared/PersonAvatar";
 
 export default function ProfileScreen() {
   const { t, lang, nOf } = useI18n();
-  const { profile, interests, photos, entries, clearAllData, updateProfile, seedDemo } = useStore();
+  const { profile, interests, photos, entries, clearAllData, updateProfile, seedDemo, removeDemoGarden } = useStore();
   const { signOut } = useAuth();
   const { openSheet } = useUI();
   const navigate = useNavigate();
@@ -23,6 +23,7 @@ export default function ProfileScreen() {
   const currentTheme = (profile && profile.theme) || DEFAULT_THEME;
   const [, bumpPermissionCheck] = useState(0);
   const coins = (profile && profile.coins) || 0;
+  const hasDemoGarden = interests.some((x) => x.isDemo);
   const equippedDecoration = DECORATIONS.find((d) => d.id === (profile && profile.equippedDecoration)) || null;
 
   const permission = window.Notification ? Notification.permission : "unsupported";
@@ -119,8 +120,12 @@ export default function ProfileScreen() {
         <button className="btn2" data-tour="yearReview" onClick={() => openSheet("yearReview")}>{t("yearReview")}</button>
         <button className="btn2" onClick={() => openSheet("memories")}>{t("memories")}</button>
 
-        <button className="btn2" onClick={plantDemoGarden}>{t("plantDemoGarden")}</button>
-        <div className="sub">{t("plantDemoGardenNote")}</div>
+        {hasDemoGarden ? (
+          <button className="btn2" onClick={removeDemoGarden}>{t("removeDemoGarden")}</button>
+        ) : (
+          <button className="btn2" onClick={plantDemoGarden}>{t("plantDemoGarden")}</button>
+        )}
+        <div className="sub">{hasDemoGarden ? t("removeDemoGardenNote") : t("plantDemoGardenNote")}</div>
 
         <div className="grow" />
         <div className="sub">{t("dataNote")}</div>

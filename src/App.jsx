@@ -49,7 +49,7 @@ export default function App() {
   return (
     <div className="stage" data-theme={(profile && profile.theme) || DEFAULT_THEME}>
       <div className="app">
-        {!session ? (
+        {false ? (
           <AuthScreen />
         ) : profile ? (
           <BrowserRouter>

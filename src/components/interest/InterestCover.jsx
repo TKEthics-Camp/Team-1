@@ -9,9 +9,12 @@ export default function InterestCover({ interest, firstPhoto }) {
   const url = useObjectURL(firstPhoto ? firstPhoto.blob : null);
 
   // With no photo yet, draw an illustration that matches the hobby (paint for
-  // Drawing, a ball for Basketball…) instead of a bare initial. Falls back to
-  // the letter only when the hobby maps to no known category.
-  const cat = firstPhoto ? null : ideaCat(interest.name);
+  // Drawing, a ball for Basketball…) instead of a bare initial. A category
+  // the user picked themselves (OrbSheet) always wins — it's the only way a
+  // made-up hobby name that isn't one of the curated ideas gets an
+  // illustration at all, not just a blank initial. Falls back to the letter
+  // only when there's no photo, no chosen category, and no inferable one.
+  const cat = firstPhoto ? null : (interest.category || ideaCat(interest.name));
   const hasVisual = Boolean(firstPhoto || cat);
 
   return (
