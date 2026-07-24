@@ -13,7 +13,7 @@ function mkEntry(interestId, date) {
   return {
     id: uid(), interestId, date, text: "Logged for the demo.",
     minutes: DURATIONS[Math.floor(Math.random() * DURATIONS.length)],
-    visibility: "private", isPinned: false,
+    visibility: "private", isPinned: false, isDemo: true,
     createdAt: Date.now(), updatedAt: Date.now(),
   };
 }
@@ -21,7 +21,7 @@ function mkEntry(interestId, date) {
 function mkInterest(cfg) {
   return {
     id: cfg.id, name: cfg.name, color: cfg.color, species: cfg.species, leafColor: cfg.leafColor,
-    why: "", time: "16:00", days: [], friends: [],
+    why: "", time: "16:00", days: [], friends: [], isDemo: true,
     createdAt: Date.now() - cfg.plantedDaysAgo * DAY, updatedAt: Date.now(),
   };
 }

@@ -261,6 +261,26 @@ export function StoreProvider({ children }) {
       setInterests((list) => [...list, ...newInterests].sort((a, b) => a.createdAt - b.createdAt));
       setEntries((list) => [...list, ...newEntries]);
     },
+    // The other half of seedDemo: pulls out every interest it planted (and,
+    // cascading the same way deleteInterest does, their entries/photos too)
+    // so a demo garden can be undone as a single unit instead of deleting
+    // five trees by hand or nuking real data along with it via clearAllData.
+    removeDemoGarden() {
+      setInterests((list) => {
+        const demoIds = new Set(list.filter((x) => x.isDemo).map((x) => x.id));
+        if (!demoIds.size) return list;
+        demoIds.forEach((id) => del("interests", id));
+        setPhotos((ph) => {
+          ph.filter((p) => demoIds.has(p.interestId)).forEach((p) => del("photos", p.id));
+          return ph.filter((p) => !demoIds.has(p.interestId));
+        });
+        setEntries((en) => {
+          en.filter((e) => demoIds.has(e.interestId)).forEach((e) => del("entries", e.id));
+          return en.filter((e) => !demoIds.has(e.interestId));
+        });
+        return list.filter((x) => !x.isDemo);
+      });
+    },
     // Bring a dead tree back for REVIVE_COST coins. Returns false (and changes
     // nothing) if the user can't afford it. revivedAt resets the decay clock.
     // revivedAt/coins are a local-only game mechanic, not part of the synced

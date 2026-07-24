@@ -13,7 +13,7 @@ import OrbWall from "./OrbWall";
 
 export default function HomeScreen() {
   const { t } = useI18n();
-  const { profile, interests, photos, entries } = useStore();
+  const { profile, interests, photos, entries, removeDemoGarden } = useStore();
   const { dismissed } = useUI();
 
   const due = dueNudges(interests, entries, dismissed);
@@ -27,6 +27,13 @@ export default function HomeScreen() {
   // mascot don't end up overlapping on screen at once.
   const barren = entries.length === 0 && photos.length === 0 && profile.tourSeen;
 
+  // While a demo garden is planted, show only its trees — mixing 5 sample
+  // trees in with someone's real ones (which might just be a lone sprout)
+  // buries the point of the demo and clutters their actual garden. Removing
+  // the demo garden (here or from Profile) brings the real ones straight back.
+  const hasDemoGarden = interests.some((x) => x.isDemo);
+  const shownInterests = hasDemoGarden ? interests.filter((x) => x.isDemo) : interests;
+
   return (
     <>
       <TopBar>
@@ -38,7 +45,16 @@ export default function HomeScreen() {
         {due.length > 0 && <NudgeBanner interest={due[0]} />}
         {memory && <MemoryBanner memory={memory} />}
         {barren && <DemoGardenCard />}
-        <OrbWall interests={interests} photos={photos} entries={entries} />
+        {hasDemoGarden && (
+          <div className="safe-note">
+            <span aria-hidden="true">🌱</span>
+            <span>{t("viewingDemoGarden")}</span>
+            <button className="chip" style={{ marginLeft: "auto", flex: "none" }} onClick={removeDemoGarden}>
+              {t("exitDemoGarden")}
+            </button>
+          </div>
+        )}
+        <OrbWall interests={shownInterests} photos={photos} entries={entries} />
       </div>
     </>
   );
