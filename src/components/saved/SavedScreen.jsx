@@ -15,7 +15,7 @@ export default function SavedScreen() {
   const { t, nameOf } = useI18n();
   const { interests, photos, entries } = useStore();
 
-  const it = interests.find((x) => x.id === id) || interests[0];
+  const it = interests.find((x) => x.id === id);
   const leveledUp = !!location.state?.leveledUp;
 
   useEffect(() => {

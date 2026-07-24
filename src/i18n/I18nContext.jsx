@@ -4,7 +4,7 @@ import { STR } from "./strings";
 const I18nCtx = createContext(null);
 
 // "1 entry", not "1 entries". Chinese measure words don't inflect.
-const SINGULARS = { entries: "entry1", photos: "photo1", orbsCount: "orb1" };
+const SINGULARS = { entries: "entry1", photos: "photo1", orbsCount: "orb1", publicCount: "publicCount1" };
 
 export function I18nProvider({ children }) {
   const [lang, setLang] = useState("en");

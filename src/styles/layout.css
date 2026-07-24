@@ -85,6 +85,20 @@
 .nav button[aria-current="page"] { color: var(--gold); }
 .nav button[aria-current="page"] .dot { opacity: 1; box-shadow: 0 0 8px var(--gold); }
 
+.undo-toast {
+  position: absolute; left: 14px; right: 14px; bottom: 78px; z-index: 35;
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(24, 10, 36, .92); color: #fff; border-radius: 14px;
+  padding: 12px 12px 12px 16px; font-size: 13.5px;
+  box-shadow: 0 14px 34px -12px rgba(30, 10, 40, .55);
+  animation: rise .22s ease;
+}
+.undo-toast span { flex: 1; }
+.undo-btn {
+  flex: none; background: none; border: none; color: var(--candy, #ff6fa5);
+  font-weight: 700; font-size: 13.5px; padding: 6px 4px; cursor: pointer;
+}
+
 /* ---------- interest cover ---------- */
 .cover {
   position: relative; width: 100%; aspect-ratio: 16 / 9;

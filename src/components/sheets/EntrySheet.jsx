@@ -4,6 +4,8 @@ import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
 import { uid } from "../../lib/id";
 import { today } from "../../lib/dates";
+import { actsToNextStage } from "../../lib/tree";
+import { celebrate, levelUpCelebrate } from "../../lib/feedback";
 import Sheet from "../shared/Sheet";
 import Field from "../shared/Field";
 import Chip from "../shared/Chip";
@@ -11,17 +13,18 @@ import VisRow from "../shared/VisRow";
 
 const DURATIONS = [15, 30, 45, 60, 90, 120];
 
-export default function EntrySheet({ interestId }) {
+export default function EntrySheet({ interestId, entryId }) {
   const { t, nameOf } = useI18n();
-  const { interests, addEntry } = useStore();
+  const { interests, entries, photos, profile, addEntry, updateEntry } = useStore();
   const { closeSheet } = useUI();
   const it = interests.find((x) => x.id === interestId);
+  const editing = entryId ? entries.find((e) => e.id === entryId) : null;
 
-  const [date, setDate] = useState(today());
-  const [minutes, setMinutes] = useState(30);
-  const [text, setText] = useState("");
-  const [visibility, setVisibility] = useState("private");
-  const [pinned, setPinned] = useState(false);
+  const [date, setDate] = useState(editing ? editing.date : today());
+  const [minutes, setMinutes] = useState(editing ? editing.minutes : 30);
+  const [text, setText] = useState(editing ? editing.text : "");
+  const [visibility, setVisibility] = useState(editing ? editing.visibility || "private" : "private");
+  const [pinned, setPinned] = useState(editing ? !!editing.isPinned : false);
   const textRef = useRef(null);
 
   useEffect(() => { textRef.current?.focus(); }, []);
@@ -31,17 +34,23 @@ export default function EntrySheet({ interestId }) {
   function save() {
     const txt = text.trim();
     if (!txt) { textRef.current?.focus(); return; }
-    const rec = {
-      id: uid(), interestId: it.id, date: date || today(), text: txt,
-      minutes, visibility, isPinned: pinned, createdAt: Date.now(), updatedAt: Date.now(),
-    };
-    addEntry(rec);
+    if (editing) {
+      updateEntry({ ...editing, date: date || today(), text: txt, minutes, visibility, isPinned: pinned, updatedAt: Date.now() });
+      celebrate(profile);
+    } else {
+      const leveledUp = actsToNextStage(it, entries, photos) === 1;
+      addEntry({
+        id: uid(), interestId: it.id, date: date || today(), text: txt,
+        minutes, visibility, isPinned: pinned, createdAt: Date.now(), updatedAt: Date.now(),
+      });
+      if (leveledUp) levelUpCelebrate(profile); else celebrate(profile);
+    }
     closeSheet();
   }
 
   return (
     <Sheet onClose={closeSheet}>
-      <h2>{t("addEntry") + " · " + nameOf(it)}</h2>
+      <h2>{(editing ? t("editEntry") : t("addEntry")) + " · " + nameOf(it)}</h2>
       <Field label={t("date")}>
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
       </Field>

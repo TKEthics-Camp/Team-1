@@ -21,7 +21,7 @@ const SPECIES_ICON = {
 export default function OrbSheet({ interestId, preset = null }) {
   const { t, lang } = useI18n();
   const { interests, addInterest, updateInterest, deleteInterest } = useStore();
-  const { closeSheet } = useUI();
+  const { closeSheet, offerUndo } = useUI();
   const navigate = useNavigate();
 
   const editing = interestId ? interests.find((x) => x.id === interestId) : null;
@@ -62,9 +62,10 @@ export default function OrbSheet({ interestId, preset = null }) {
   }
 
   function remove() {
-    deleteInterest(editing.id);
+    const { restore, commit } = deleteInterest(editing.id);
     closeSheet();
     navigate("/");
+    offerUndo(t("treeDeleted"), restore, commit);
   }
 
   return (
@@ -117,6 +118,17 @@ export default function OrbSheet({ interestId, preset = null }) {
             />
           ))}
         </div>
+        <button
+          type="button"
+          className="chip"
+          style={{ marginTop: 8 }}
+          onClick={() => {
+            setSpecies(SPECIES[Math.floor(Math.random() * SPECIES.length)]);
+            setLeafColor(Object.keys(LEAF_COLORS)[Math.floor(Math.random() * Object.keys(LEAF_COLORS).length)]);
+          }}
+        >
+          {"🎲 " + t("surpriseMe")}
+        </button>
       </Field>
       <Field label={t("timeLabel")}>
         <input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
