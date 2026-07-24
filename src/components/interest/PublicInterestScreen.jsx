@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useI18n } from "../../i18n/I18nContext";
 import { pullPublicProfile } from "../../lib/remote";
 import { entriesOf, minutesOf, fmtHours } from "../../lib/derived";
-import { treeStage, treeHealth, daysPlanted, STAGE_KEY, HEALTH_KEY } from "../../lib/tree";
+import { treeStage, daysPlanted, STAGE_KEY } from "../../lib/tree";
 import TopBar from "../shared/TopBar";
 import Stats from "../shared/Stats";
 import Tree from "../shared/Tree";
@@ -38,8 +38,10 @@ export default function PublicInterestScreen() {
 
   const en = entriesOf(entries, it.id);
   const minutes = minutesOf(entries, it.id);
+  // Photos never sync, so health/idleness can't be judged fairly from here —
+  // a tree tended mostly with photos would look neglected to visitors.
+  // Public view always draws the tree healthy and shows no health line.
   const stage = treeStage(it, entries, []);
-  const health = treeHealth(it, entries, []);
   const planted = daysPlanted(it);
 
   return (
@@ -54,11 +56,10 @@ export default function PublicInterestScreen() {
           {planted === 0 ? t("plantedToday") : t("plantedDays").replace("{n}", planted)}
         </div>
 
-        <div className={"tree-status" + (health === "dead" ? " dead" : "")}>
-          <Tree interest={it} size={84} stage={stage} health={health} />
+        <div className="tree-status">
+          <Tree interest={it} size={84} stage={stage} health="healthy" />
           <div className="info">
             <div className="st-stage">{t(STAGE_KEY[stage])}</div>
-            <div className="st-health">{t(HEALTH_KEY[health])}</div>
           </div>
         </div>
 

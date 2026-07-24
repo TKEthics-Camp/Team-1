@@ -4,7 +4,7 @@ import { useI18n } from "../../i18n/I18nContext";
 import { useUI } from "../../ui/UIContext";
 import { pullPublicProfile } from "../../lib/remote";
 import { minutesOf, fmtHours } from "../../lib/derived";
-import { treeStage, treeHealth } from "../../lib/tree";
+import { treeStage } from "../../lib/tree";
 import { PALETTE } from "../../lib/constants";
 import { shade } from "../../lib/color";
 import Sheet from "../shared/Sheet";
@@ -57,8 +57,9 @@ export default function UserProfileSheet({ userId, displayName, accountType }) {
         <div className="ideas">
           {interests.map((it) => {
             const minutes = minutesOf(entries, it.id);
+            // Photos never sync — health can't be judged fairly for someone
+            // else's tree, so public listings always draw it healthy.
             const stage = treeStage(it, entries, []);
-            const health = treeHealth(it, entries, []);
             return (
               <div
                 className="idea"
@@ -72,11 +73,11 @@ export default function UserProfileSheet({ userId, displayName, accountType }) {
                 }}
               >
                 <div style={{ flex: "none" }}>
-                  <Tree interest={it} size={46} stage={stage} health={health} />
+                  <Tree interest={it} size={46} stage={stage} health="healthy" />
                 </div>
                 <div className="grow">
                   <div className="idea-nm">{nameOf(it)}</div>
-                  <div className="idea-cat">{health === "dead" ? t("hlDead") : fmtHours(minutes)}</div>
+                  <div className="idea-cat">{fmtHours(minutes)}</div>
                 </div>
               </div>
             );

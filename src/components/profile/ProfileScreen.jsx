@@ -155,6 +155,8 @@ export default function ProfileScreen() {
         <div className="sub">{t("discoverableNote")}</div>
 
         {isOrg ? (
+          <div className="sub">{t("yourClassCode") + ": " + profile.classCode}</div>
+        ) : profile.classCode ? (
           <div className="sub">{t("joinedClass")}</div>
         ) : (
           <>

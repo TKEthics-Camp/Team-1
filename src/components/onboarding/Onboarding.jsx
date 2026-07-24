@@ -3,7 +3,7 @@ import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useAuth } from "../../store/AuthContext";
 import { supabase } from "../../lib/supabase";
-import { PALETTE, DEFAULT_THEME } from "../../lib/constants";
+import { PALETTE, DEFAULT_THEME, CLASS_CODES } from "../../lib/constants";
 import { uid } from "../../lib/id";
 import { askNotifications } from "../../lib/useReminderTimers";
 import { isBlockedHobby } from "../../lib/hobbyFilter";
@@ -12,18 +12,21 @@ import LangToggle from "../shared/LangToggle";
 import WelcomeStep from "./WelcomeStep";
 import GenderStep from "./GenderStep";
 import AccountTypeStep from "./AccountTypeStep";
-import ClassCodeStep from "./ClassCodeStep";
 import NameStep from "./NameStep";
 import InterestsStep from "./InterestsStep";
 import ScheduleStep from "./ScheduleStep";
 import ThemeStep from "./ThemeStep";
 
-// Schools/groups get one extra question up front — a class code — instead
-// of going straight to "what do you love doing". Everyone still ends up at
-// the same interests/schedule/theme steps; only this one step differs.
+// A school/group account is the educator running a class, not a student
+// joining one — so it skips straight from name to theme, with no hobby
+// picking (interests/schedule) and no gender/avatar-hairstyle question,
+// since neither applies to the adult running the dashboard. Their class
+// code is minted automatically at finish() rather than typed in; students
+// join *that* code later from Me → Join a class.
 function stepsFor(accountType) {
-  const base = ["welcome", "gender", "account"];
-  if (accountType === "org") base.push("classcode");
+  const base = ["welcome", "account"];
+  if (accountType !== "org") base.push("gender");
+  if (accountType === "org") return base.concat(["name", "theme"]);
   return base.concat(["name", "interests", "schedule", "theme"]);
 }
 
@@ -43,7 +46,6 @@ export default function Onboarding() {
   const [step, setStep] = useState(0);
   const [gender, setGender] = useState(null);
   const [accountType, setAccountType] = useState(null);
-  const [classCode, setClassCode] = useState("");
   const [name, setName] = useState("");
   const [drafts, setDrafts] = useState([]);
   const [theme, setTheme] = useState(DEFAULT_THEME);
@@ -95,7 +97,7 @@ export default function Onboarding() {
     saveProfile({
       key: "profile", name: trimmedName, lang, color: PALETTE[0], theme,
       accountType: accountType || "individual",
-      classCode: accountType === "org" ? classCode.trim().toUpperCase() : null,
+      classCode: accountType === "org" ? CLASS_CODES[0] : null,
       coins: 0, ownedDecorations: [], equippedDecoration: null, createdAt: Date.now(),
       avatar: avatarForGender(gender),
       userId: user ? user.id : null,
@@ -126,9 +128,6 @@ export default function Onboarding() {
           )}
           {steps[step] === "account" && (
             <AccountTypeStep value={accountType} setType={setAccountType} onNext={() => setStep(step + 1)} />
-          )}
-          {steps[step] === "classcode" && (
-            <ClassCodeStep code={classCode} setCode={setClassCode} onNext={() => setStep(step + 1)} />
           )}
           {steps[step] === "name" && (
             <NameStep

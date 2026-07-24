@@ -55,7 +55,7 @@ export default function OrbWall({ interests, photos, entries }) {
         </button>
       </div>
       {pageCount > 1 && (
-        <div className="tree-dots" data-tour="dots">
+        <div className="tree-dots">
           {Array.from({ length: pageCount }).map((_, i) => (
             <span key={i} className={"dot" + (i === activeDot ? " on" : "")} />
           ))}
