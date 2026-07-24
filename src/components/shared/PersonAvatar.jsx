@@ -9,7 +9,6 @@ export default function PersonAvatar({ size, color = "#FFD45E", avatar = null, d
   const a = { ...DEFAULT_AVATAR, ...avatar };
   const w = Math.max(3, Math.round(size * 0.06));
   const cut = `radial-gradient(farthest-side, transparent calc(100% - ${w}px), #000 calc(100% - ${w}px))`;
-  const hairDark = shade(a.hairColor, -24);
   const outfitDark = shade(a.outfitColor, -22);
 
   return (
@@ -61,10 +60,6 @@ export default function PersonAvatar({ size, color = "#FFD45E", avatar = null, d
               fill={a.hairColor}
             />
           )}
-          {a.hair !== "bald" && a.hair !== "curly" && a.hair !== "spiky" && (
-            <ellipse cx="36" cy="30" rx="7" ry="4" fill={hairDark} opacity=".35" />
-          )}
-
           {/* face — eyes and a smile, no more */}
           <circle cx="41" cy="41" r="3.4" fill="#4A3363" />
           <circle cx="59" cy="41" r="3.4" fill="#4A3363" />

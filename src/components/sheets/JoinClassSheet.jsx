@@ -31,6 +31,11 @@ export default function JoinClassSheet() {
       <h2>{t("classCodeTitle")}</h2>
       <p className="sub">{t("classCodeSub")}</p>
 
+      <div className="safe-note">
+        <span aria-hidden="true">👀</span>
+        <span>{t("classCodeWarning")}</span>
+      </div>
+
       <Field label={t("classCodePh")}>
         <input
           type="text"

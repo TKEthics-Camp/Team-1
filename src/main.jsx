@@ -17,3 +17,12 @@ createRoot(document.getElementById("root")).render(
     </I18nProvider>
   </StrictMode>
 );
+
+// Only in production: the dev server's own hot-reload already fights a
+// service worker for control of the page, and there's nothing built at
+// /sw.js in dev anyway.
+if ("serviceWorker" in navigator && import.meta.env.PROD) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  });
+}

@@ -17,6 +17,7 @@ import SavedScreen from "./components/saved/SavedScreen";
 import BottomNav from "./components/shared/BottomNav";
 import SheetHost from "./components/sheets/SheetHost";
 import PhotoViewer from "./components/interest/PhotoViewer";
+import MascotTour from "./components/shared/MascotTour";
 
 export default function App() {
   const { loading, profile, interests, entries, photos, clearAllData } = useStore();
@@ -67,6 +68,7 @@ export default function App() {
 function RoutedShell() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { profile } = useStore();
   const { sheet, viewer, closeSheet, closeViewer } = useUI();
   const showNav = !location.pathname.startsWith("/saved");
 
@@ -102,6 +104,7 @@ function RoutedShell() {
       {showNav && <BottomNav />}
       {sheet && <SheetHost />}
       {viewer && <PhotoViewer />}
+      {profile && !profile.tourSeen && <MascotTour />}
     </>
   );
 }

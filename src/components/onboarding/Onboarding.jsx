@@ -6,9 +6,11 @@ import { supabase } from "../../lib/supabase";
 import { PALETTE, DEFAULT_THEME } from "../../lib/constants";
 import { uid } from "../../lib/id";
 import { askNotifications } from "../../lib/useReminderTimers";
+import { isBlockedHobby } from "../../lib/hobbyFilter";
 import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
 import WelcomeStep from "./WelcomeStep";
+import GenderStep from "./GenderStep";
 import AccountTypeStep from "./AccountTypeStep";
 import ClassCodeStep from "./ClassCodeStep";
 import NameStep from "./NameStep";
@@ -20,9 +22,18 @@ import ThemeStep from "./ThemeStep";
 // of going straight to "what do you love doing". Everyone still ends up at
 // the same interests/schedule/theme steps; only this one step differs.
 function stepsFor(accountType) {
-  const base = ["welcome", "account"];
+  const base = ["welcome", "gender", "account"];
   if (accountType === "org") base.push("classcode");
   return base.concat(["name", "interests", "schedule", "theme"]);
+}
+
+// Gender only ever picks a starting hair style for the avatar — everything
+// else (skin, hair colour, outfit) stays the shared default and is free to
+// change later from Me → avatar. "unspecified" keeps that same default.
+function avatarForGender(gender) {
+  if (gender === "boy") return { hair: "short" };
+  if (gender === "girl") return { hair: "long" };
+  return {};
 }
 
 export default function Onboarding() {
@@ -30,17 +41,22 @@ export default function Onboarding() {
   const { saveProfile, addInterest } = useStore();
   const { user } = useAuth();
   const [step, setStep] = useState(0);
+  const [gender, setGender] = useState(null);
   const [accountType, setAccountType] = useState(null);
   const [classCode, setClassCode] = useState("");
   const [name, setName] = useState("");
   const [drafts, setDrafts] = useState([]);
   const [theme, setTheme] = useState(DEFAULT_THEME);
+  const [hobbyBlocked, setHobbyBlocked] = useState(false);
   const steps = stepsFor(accountType);
 
   function addDraft(raw) {
     const nm = (raw || "").trim();
-    if (!nm) return;
+    if (!nm) return true;
+    if (isBlockedHobby(nm)) { setHobbyBlocked(true); return false; }
+    setHobbyBlocked(false);
     setDrafts((d) => [...d, { id: uid(), name: nm, color: PALETTE[d.length % PALETTE.length], time: "16:00", friends: [] }]);
+    return true;
   }
   function removeDraft(i) {
     setDrafts((d) => d.filter((_, idx) => idx !== i));
@@ -56,6 +72,7 @@ export default function Onboarding() {
       accountType: accountType || "individual",
       classCode: accountType === "org" ? classCode.trim().toUpperCase() : null,
       coins: 0, ownedDecorations: [], equippedDecoration: null, createdAt: Date.now(),
+      avatar: avatarForGender(gender),
     });
     drafts.forEach((d) => {
       addInterest({
@@ -86,6 +103,9 @@ export default function Onboarding() {
       <div className="view">
         <div className="onb">
           {steps[step] === "welcome" && <WelcomeStep onBegin={() => setStep(step + 1)} />}
+          {steps[step] === "gender" && (
+            <GenderStep value={gender} setGender={setGender} onNext={() => setStep(step + 1)} />
+          )}
           {steps[step] === "account" && (
             <AccountTypeStep value={accountType} setType={setAccountType} onNext={() => setStep(step + 1)} />
           )}
@@ -94,7 +114,13 @@ export default function Onboarding() {
           )}
           {steps[step] === "name" && <NameStep name={name} setName={setName} onNext={() => setStep(step + 1)} />}
           {steps[step] === "interests" && (
-            <InterestsStep drafts={drafts} addDraft={addDraft} removeDraft={removeDraft} onNext={() => setStep(step + 1)} />
+            <InterestsStep
+              drafts={drafts}
+              addDraft={addDraft}
+              removeDraft={removeDraft}
+              blocked={hobbyBlocked}
+              onNext={() => setStep(step + 1)}
+            />
           )}
           {steps[step] === "schedule" && (
             <ScheduleStep drafts={drafts} updateDraft={updateDraft} onEnter={() => setStep(step + 1)} />

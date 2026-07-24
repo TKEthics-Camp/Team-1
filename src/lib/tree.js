@@ -35,13 +35,53 @@ export function daysPlanted(interest) {
 }
 
 // 0 seed → 4 full tree, by how many times you've shown up (entries + photos).
+// Each stage asks for one more log than the last — 5 to sprout, then 6, 7,
+// and 8 more to go from young tree to full tree — so growth visibly slows
+// down the bigger the tree gets, the way a real one does.
+const STAGE_COSTS = [5, 6, 7, 8]; // cost to go from stage N to N+1
+const STAGE_THRESHOLDS = STAGE_COSTS.reduce((acc, cost) => {
+  acc.push((acc[acc.length - 1] || 0) + cost);
+  return acc;
+}, []); // [5, 11, 18, 26]
+
 export function treeStage(interest, entries, photos) {
   const acts = entriesOf(entries, interest.id).length + photosOf(photos, interest.id).length;
-  if (acts >= 12) return 4;
-  if (acts >= 6) return 3;
-  if (acts >= 3) return 2;
-  if (acts >= 1) return 1;
+  for (let stage = STAGE_THRESHOLDS.length; stage >= 1; stage--) {
+    if (acts >= STAGE_THRESHOLDS[stage - 1]) return stage;
+  }
   return 0;
+}
+
+// How many more logs until this tree reaches its next stage — used to show
+// "3 more to go" type progress instead of just the stage name.
+export function actsToNextStage(interest, entries, photos) {
+  const acts = entriesOf(entries, interest.id).length + photosOf(photos, interest.id).length;
+  const next = STAGE_THRESHOLDS.find((n) => n > acts);
+  return next === undefined ? 0 : next - acts;
+}
+
+// The stage-by-stage story of how this tree got here: one frame per stage
+// it has actually reached, each dated to the log that pushed it over that
+// stage's threshold (or, for stage 0, the day it was planted). Feeds the
+// "watch it grow" replay — a fixed-length animation regardless of how many
+// logs there are, since it always has at most 5 frames (stage 0 through 4).
+export function growthTimeline(interest, entries, photos) {
+  const acts = [];
+  entriesOf(entries, interest.id).forEach((e) => acts.push(e.date));
+  photosOf(photos, interest.id).forEach((p) => acts.push(dateKey(new Date(p.createdAt))));
+  acts.sort();
+
+  const plantedDate = dateKey(new Date((interest && interest.createdAt) || Date.now()));
+  const frames = [{ stage: 0, date: plantedDate }];
+  let stage = 0;
+  acts.forEach((date, idx) => {
+    const count = idx + 1;
+    while (stage < STAGE_THRESHOLDS.length && count >= STAGE_THRESHOLDS[stage]) {
+      stage++;
+      frames.push({ stage, date });
+    }
+  });
+  return frames;
 }
 
 export function treeHealth(interest, entries, photos) {

@@ -126,7 +126,7 @@ input[type="date"], input[type="time"] { font-family: var(--mono); color-scheme:
 /* ---------- guided tour ---------- */
 .tour-overlay {
   position: absolute; inset: 0; z-index: 40; cursor: pointer;
-  background: rgba(24, 10, 36, .32); backdrop-filter: blur(1px);
+  background: rgba(24, 10, 36, .32);
 }
 .tour-ring {
   position: absolute; border-radius: 16px; pointer-events: none;
@@ -145,7 +145,6 @@ input[type="date"], input[type="time"] { font-family: var(--mono); color-scheme:
   box-shadow: 0 14px 34px -12px rgba(30, 10, 40, .55);
   transition: top .35s ease;
 }
-.tour-bubble.above { transform: translateY(-100%); }
 .tour-mascot { flex: none; animation: sway 2.4s ease-in-out infinite; transform-origin: 50% 90%; }
 .tour-text p { margin: 0; font-size: 14px; line-height: 1.4; color: var(--ink); }
 .tour-hint {
@@ -153,6 +152,53 @@ input[type="date"], input[type="time"] { font-family: var(--mono); color-scheme:
   opacity: 0; transition: opacity .4s ease;
 }
 .tour-hint.show { opacity: 1; }
+.tour-progress { position: absolute; top: 10px; left: 14px; right: 14px; z-index: 42; display: flex; gap: 5px; }
+.tour-progress .seg { flex: 1; height: 3px; border-radius: 999px; background: rgba(255,255,255,.35); }
+.tour-progress .seg.done { background: var(--candy); }
+.tour-progress .seg.on { background: rgba(255,255,255,.85); }
+
+/* ---------- year in review (full screen) ---------- */
+.year-full {
+  position: absolute; inset: 0; z-index: 25; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 20px 20px 24px; gap: 14px;
+  /* --app-bg is itself a full multi-layer gradient stack (see tokens.css),
+     not a single colour — nesting it inside another gradient() call is
+     invalid CSS and silently computes to no background at all. Use it
+     directly, same as .app itself does, for a solid opaque backdrop. */
+  background: var(--shelf, #fff);
+  background-image: var(--app-bg);
+  animation: rise .22s ease;
+}
+.year-close {
+  align-self: flex-end; width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(0,0,0,.14); color: var(--ink); border: none; font-size: 15px;
+  display: grid; place-items: center; cursor: pointer; flex: none;
+}
+.year-progress { display: flex; gap: 5px; width: 100%; flex: none; }
+.year-progress .seg { flex: 1; height: 3px; border-radius: 999px; background: rgba(0,0,0,.12); }
+.year-progress .seg.done { background: var(--candy); }
+.year-progress .seg.on { background: var(--ink); opacity: .5; }
+.year-intro { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; cursor: default; }
+.year-intro h2 { margin: 4px 0 0; }
+.year-intro .btn, .year-intro .btn2 { width: 100%; max-width: 280px; }
+.year-card-full { flex: 1; display: flex; justify-content: center; }
+.year-emoji { font-size: 40px; line-height: 1; }
+.year-demo-note { flex: none; }
+.year-next { flex: none; width: 100%; max-width: 320px; cursor: pointer; }
+
+/* ---------- level-up celebration ---------- */
+.confetti-wrap { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 5; }
+.confetti-piece {
+  position: absolute; top: -8%; font-size: 20px; opacity: 0;
+  animation-name: confettiFall; animation-timing-function: ease-in; animation-fill-mode: forwards;
+}
+@keyframes confettiFall {
+  /* a fixed distance, not a viewport unit — .view is a bounded frame, not
+     the real viewport, and this only needs to clear it comfortably */
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(650px) rotate(var(--rot)); opacity: 0; }
+}
 
 .species-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .species-btn {

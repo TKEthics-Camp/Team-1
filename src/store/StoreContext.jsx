@@ -200,6 +200,16 @@ export function StoreProvider({ children }) {
       put("interests", rec);
       if (userRef.current) pushInterest(rec, userRef.current.id);
     },
+    // Bulk-add throwaway demo data in one shot: one state update instead of
+    // ~75, and deliberately NO remote sync — this is a showcase you're meant
+    // to clear, not real data worth uploading (and syncing it would race the
+    // interest inserts against the entries' foreign key).
+    seedDemo(newInterests, newEntries) {
+      newInterests.forEach((rec) => put("interests", rec));
+      newEntries.forEach((rec) => put("entries", rec));
+      setInterests((list) => [...list, ...newInterests].sort((a, b) => a.createdAt - b.createdAt));
+      setEntries((list) => [...list, ...newEntries]);
+    },
     // Bring a dead tree back for REVIVE_COST coins. Returns false (and changes
     // nothing) if the user can't afford it. revivedAt resets the decay clock.
     // revivedAt/coins are a local-only game mechanic, not part of the synced

@@ -1,0 +1,16 @@
+{
+  "name": "Leaves",
+  "short_name": "Leaves",
+  "description": "A private garden of trees, one for each thing you make, play, or do. No feed, no strangers, no cloud — everything stays on your device.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FFE7F3",
+  "theme_color": "#FFD6EC",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
