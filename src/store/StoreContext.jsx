@@ -74,7 +74,26 @@ export function StoreProvider({ children }) {
       // means "this account already exists" and its profile can be rebuilt
       // straight from that row instead.
       const userRow = await pullUserRow(user.id);
-      if (!profileRef.current) {
+
+      // A cached local profile only ever belongs to whoever was signed in on
+      // this device last — nothing here is scoped per-account. If a *different*
+      // account signs in on top of it (no explicit sign-out in between — e.g.
+      // switching accounts, or another person's session on a shared device),
+      // that stranger's name/garden/theme would otherwise bleed straight into
+      // this session. Once we know for certain it's not this account's data,
+      // drop it before doing anything else — same local-only wipe as signing
+      // out, just triggered by a mismatch instead.
+      let hasLocalProfile = !!profileRef.current;
+      if (hasLocalProfile && profileRef.current.userId && profileRef.current.userId !== user.id) {
+        await dbClearAll();
+        setProfileState(null);
+        setInterests([]);
+        setPhotos([]);
+        setEntries([]);
+        hasLocalProfile = false;
+      }
+
+      if (!hasLocalProfile) {
         if (userRow && userRow.display_name) {
           const rebuilt = {
             key: "profile",
@@ -92,6 +111,7 @@ export function StoreProvider({ children }) {
             // past (that's the only way display_name got set) — a cache wipe
             // from signing out shouldn't make the one-time tour replay.
             tourSeen: true,
+            userId: user.id,
           };
           setProfileState(rebuilt);
           put("meta", rebuilt);
@@ -113,6 +133,15 @@ export function StoreProvider({ children }) {
         // here; push it across whenever the two disagree.
         if (profileRef.current.name && userRow.display_name !== profileRef.current.name) {
           updateDisplayName(user.id, profileRef.current.name);
+        }
+        // Backfills userId on profiles that predate this field (created
+        // before this fix shipped) — from this point on, this cache is
+        // considered claimed by this account, so a future switch to a
+        // genuinely different one is detected instead of silently inherited.
+        if (!profileRef.current.userId) {
+          const next = { ...profileRef.current, userId: user.id };
+          setProfileState(next);
+          put("meta", next);
         }
       }
 

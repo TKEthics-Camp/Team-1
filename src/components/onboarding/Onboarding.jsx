@@ -98,6 +98,7 @@ export default function Onboarding() {
       classCode: accountType === "org" ? classCode.trim().toUpperCase() : null,
       coins: 0, ownedDecorations: [], equippedDecoration: null, createdAt: Date.now(),
       avatar: avatarForGender(gender),
+      userId: user ? user.id : null,
     });
     drafts.forEach((d) => {
       addInterest({
@@ -111,6 +112,9 @@ export default function Onboarding() {
   return (
     <>
       <TopBar>
+        {step > 0 && (
+          <button className="icon" aria-label={t("back")} onClick={() => setStep(step - 1)}>←</button>
+        )}
         <h1>{t("appName")}</h1>
         <LangToggle />
       </TopBar>

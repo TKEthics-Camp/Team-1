@@ -139,20 +139,15 @@
 .add-orb:hover .plus { border-color: var(--candy); color: var(--candy); background: rgba(255,255,255,.7); }
 
 /* ---------- trees (hobbies as living things) ----------
-   One hobby fills the screen at a time; swipe sideways to walk the grove. */
+   Laid out as a two-column grid, like a profile grid — scrolls down with
+   the rest of the page instead of swiping sideways one at a time. */
 /* the little onboarding grove (WelcomeStep) reuses this as a plain grid */
 .tree-wall { display: grid; gap: 6px; padding: 6px 0 4px; align-items: end; }
-.tree-pager-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; margin: 0 -18px; }
-.tree-pager {
-  flex: 1; min-height: 0; display: flex;
-  overflow-x: auto; overflow-y: hidden;
-  scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
-}
-.tree-pager::-webkit-scrollbar { display: none; }
-.tree-page {
-  flex: 0 0 100%; scroll-snap-align: center; scroll-snap-stop: always;
-  background: none; border: none; cursor: pointer; padding: 10px 18px 4px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+.tree-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; padding: 4px 0 20px; }
+.tree-cell {
+  background: var(--card); border: 1px solid var(--line); border-radius: 20px;
+  cursor: pointer; padding: 18px 10px 14px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
 }
 .tree-svg { display: block; }
 .planted-label {
@@ -161,19 +156,14 @@
 }
 .planted-label.center-label { align-self: center; }
 .preview-row { display: flex; flex-wrap: wrap; gap: 6px; }
-.tree-page .tree-svg { width: min(74%, 300px); height: min(74%, 300px); }
-.tree-page .alive { animation: sway 6s ease-in-out infinite; transform-origin: 50% 90%; }
+.tree-cell .alive { animation: sway 6s ease-in-out infinite; transform-origin: 50% 90%; }
 @keyframes sway { 0%, 100% { transform: rotate(-1.2deg); } 50% { transform: rotate(1.2deg); } }
-.tree-page .tree-name { font-family: var(--display); font-weight: 700; font-size: 20px; color: var(--ink); text-align: center; line-height: 1.2; }
-.tree-page .tree-meta { font-family: var(--mono); font-size: 13px; color: var(--dim); font-variant-numeric: tabular-nums; }
-.tree-page .tree-meta .dead { color: var(--candy); font-family: var(--body); }
-.tree-add { border: 2px dashed var(--line); }
-.tree-add .plus { font-family: var(--display); font-size: 44px; color: var(--muted); line-height: 1; }
+.tree-cell .tree-name { font-family: var(--display); font-weight: 700; font-size: 15px; color: var(--ink); text-align: center; line-height: 1.2; }
+.tree-cell .tree-meta { font-family: var(--mono); font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; }
+.tree-cell .tree-meta .dead { color: var(--candy); font-family: var(--body); }
+.tree-add { background: none; border: 2px dashed var(--line); }
+.tree-add .plus { font-family: var(--display); font-size: 36px; color: var(--muted); line-height: 1; }
 .tree-add .tree-name { color: var(--muted); }
-
-.tree-dots { display: flex; justify-content: center; gap: 6px; padding: 6px 0 2px; flex: none; }
-.tree-dots .dot { width: 6px; height: 6px; border-radius: 999px; background: var(--line); transition: background .2s, width .2s; }
-.tree-dots .dot.on { background: var(--candy); width: 16px; }
 
 /* the tree's status on its own page */
 .tree-status {

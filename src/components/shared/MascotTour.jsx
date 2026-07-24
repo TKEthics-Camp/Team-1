@@ -4,13 +4,12 @@ import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import Mascot from "./Mascot";
 
-// Six stops across all three tabs — Home, Explore, and Me — so the tour
+// Five stops across all three tabs — Home, Explore, and Me — so the tour
 // actually covers the app instead of just the screen you land on first.
 // `path` is optional; omit it to stay on the current screen.
 const STEPS = [
   { path: "/", selector: '[data-tour="streak"]', textKey: "tourStreak" },
   { path: "/", selector: '[data-tour="trees"]', textKey: "tourTrees" },
-  { path: "/", selector: '[data-tour="dots"]', textKey: "tourDots" },
   { path: "/", selector: '[data-tour="nav"]', textKey: "tourNav" },
   { path: "/explore", selector: '[data-tour="exploreTabs"]', textKey: "tourExplore" },
   { path: "/profile", selector: '[data-tour="yearReview"]', textKey: "tourProfile" },
