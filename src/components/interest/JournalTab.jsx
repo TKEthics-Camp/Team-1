@@ -3,11 +3,11 @@ import { useStore } from "../../store/StoreContext";
 import { fmtDate } from "../../lib/dates";
 import EmptyState from "../shared/EmptyState";
 
-export default function JournalTab({ entries }) {
+export default function JournalTab({ entries, readOnly }) {
   const { t, lang } = useI18n();
   const { deleteEntry } = useStore();
 
-  if (!entries.length) return <EmptyState text={t("noEntries")} />;
+  if (!entries.length) return <EmptyState text={t(readOnly ? "noEntriesPublic" : "noEntries")} />;
 
   return (
     <>
@@ -17,7 +17,7 @@ export default function JournalTab({ entries }) {
             <div className="d">{fmtDate(e.date, lang) + (e.isPinned ? "  ★" : "") + (e.visibility === "public" ? "  🌐" : "")}</div>
             <div className="t">{e.text}</div>
           </div>
-          <button className="icon" aria-label={t("del")} onClick={() => deleteEntry(e.id)}>×</button>
+          {!readOnly && <button className="icon" aria-label={t("del")} onClick={() => deleteEntry(e.id)}>×</button>}
         </div>
       ))}
     </>

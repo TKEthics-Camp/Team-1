@@ -48,6 +48,8 @@ export default function Onboarding() {
   const [drafts, setDrafts] = useState([]);
   const [theme, setTheme] = useState(DEFAULT_THEME);
   const [hobbyBlocked, setHobbyBlocked] = useState(false);
+  const [nameError, setNameError] = useState(null);
+  const [finishing, setFinishing] = useState(false);
   const steps = stepsFor(accountType);
 
   function addDraft(raw) {
@@ -65,8 +67,31 @@ export default function Onboarding() {
     setDrafts((d) => d.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
   }
 
-  function finish() {
+  async function finish() {
+    if (finishing) return;
     const trimmedName = name.trim();
+
+    // The `users` row already exists (created by the on_auth_user_created
+    // trigger the moment this account signed up) — this just fills in the
+    // display name and account type collected during onboarding. Checked
+    // *before* anything local commits: a taken username needs to send them
+    // back to fix the name, not finish onboarding with a name that never
+    // actually saved server-side (see users_display_name_unique_idx).
+    if (user) {
+      setFinishing(true);
+      const { error } = await supabase
+        .from("users")
+        .update({ display_name: trimmedName, account_type: accountType || "individual" })
+        .eq("id", user.id);
+      setFinishing(false);
+      if (error) {
+        console.error("Failed to sync profile:", error);
+        setNameError(error.code === "23505" ? "usernameTaken" : "usernameError");
+        setStep(steps.indexOf("name"));
+        return;
+      }
+    }
+
     saveProfile({
       key: "profile", name: trimmedName, lang, color: PALETTE[0], theme,
       accountType: accountType || "individual",
@@ -81,17 +106,6 @@ export default function Onboarding() {
       });
     });
     askNotifications();
-
-    // The `users` row already exists (created by the on_auth_user_created
-    // trigger the moment this account signed up) — this just fills in the
-    // display name and account type collected during onboarding.
-    if (user) {
-      supabase
-        .from("users")
-        .update({ display_name: trimmedName, account_type: accountType || "individual" })
-        .eq("id", user.id)
-        .then(({ error }) => { if (error) console.error("Failed to sync profile:", error); });
-    }
   }
 
   return (
@@ -112,7 +126,15 @@ export default function Onboarding() {
           {steps[step] === "classcode" && (
             <ClassCodeStep code={classCode} setCode={setClassCode} onNext={() => setStep(step + 1)} />
           )}
-          {steps[step] === "name" && <NameStep name={name} setName={setName} onNext={() => setStep(step + 1)} />}
+          {steps[step] === "name" && (
+            <NameStep
+              name={name}
+              setName={setName}
+              onNext={() => setStep(step + 1)}
+              error={nameError}
+              clearError={() => setNameError(null)}
+            />
+          )}
           {steps[step] === "interests" && (
             <InterestsStep
               drafts={drafts}

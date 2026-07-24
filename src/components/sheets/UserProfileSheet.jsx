@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useI18n } from "../../i18n/I18nContext";
 import { useUI } from "../../ui/UIContext";
 import { pullPublicProfile } from "../../lib/remote";
@@ -10,11 +11,13 @@ import Sheet from "../shared/Sheet";
 import Tree from "../shared/Tree";
 
 // Tap a search result: their public trees only (interests_select's own RLS
-// gate), no photos yet (those still live local-only, see remote.js), and no
-// way to message them — same hands-off rule as the fake classmate sheet.
+// gate) — tapping one of those trees opens a read-only journal view (no
+// photos yet, those still live local-only, see remote.js), and there's still
+// no way to message them — same hands-off rule as the fake classmate sheet.
 export default function UserProfileSheet({ userId, displayName, accountType }) {
   const { t, nameOf } = useI18n();
   const { closeSheet } = useUI();
+  const navigate = useNavigate();
   const [state, setState] = useState({ loading: true, interests: [], entries: [] });
 
   useEffect(() => {
@@ -57,7 +60,17 @@ export default function UserProfileSheet({ userId, displayName, accountType }) {
             const stage = treeStage(it, entries, []);
             const health = treeHealth(it, entries, []);
             return (
-              <div className="idea" key={it.id} style={{ cursor: "default" }}>
+              <div
+                className="idea"
+                key={it.id}
+                role="button"
+                tabIndex={0}
+                style={{ cursor: "pointer" }}
+                onClick={() => { closeSheet(); navigate(`/user/${userId}/interest/${it.id}`); }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") { closeSheet(); navigate(`/user/${userId}/interest/${it.id}`); }
+                }}
+              >
                 <div style={{ flex: "none" }}>
                   <Tree interest={it} size={46} stage={stage} health={health} />
                 </div>

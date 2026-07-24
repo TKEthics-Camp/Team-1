@@ -10,6 +10,7 @@ import AuthScreen from "./components/auth/AuthScreen";
 import Onboarding from "./components/onboarding/Onboarding";
 import HomeScreen from "./components/home/HomeScreen";
 import InterestScreen from "./components/interest/InterestScreen";
+import PublicInterestScreen from "./components/interest/PublicInterestScreen";
 import ExploreScreen from "./components/explore/ExploreScreen";
 import ProfileScreen from "./components/profile/ProfileScreen";
 import MarketScreen from "./components/market/MarketScreen";
@@ -95,6 +96,7 @@ function RoutedShell() {
       <Routes>
         <Route path="/" element={<HomeScreen />} />
         <Route path="/interest/:id" element={<InterestScreen />} />
+        <Route path="/user/:userId/interest/:interestId" element={<PublicInterestScreen />} />
         <Route path="/explore" element={<ExploreScreen />} />
         <Route path="/profile" element={<ProfileScreen />} />
         <Route path="/market" element={<MarketScreen />} />

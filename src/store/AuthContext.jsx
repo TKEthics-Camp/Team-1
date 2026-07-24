@@ -3,11 +3,18 @@ import { supabase } from "../lib/supabase";
 
 const AuthCtx = createContext(null);
 
+// DEBUG ONLY: VITE_DEBUG_SKIP_AUTH lets local dev skip the real login screen
+// entirely, landing straight in the app under a fake account. Only ever set
+// in a local .env.local (gitignored) — never in a deployed environment.
+const DEBUG_SKIP_AUTH = import.meta.env.VITE_DEBUG_SKIP_AUTH === "true";
+const DEBUG_SESSION = { user: { id: "00000000-0000-0000-0000-000000000001", email: "debug@local.test" } };
+
 export function AuthProvider({ children }) {
-  const [session, setSession] = useState(undefined); // undefined = not checked yet, null = signed out
+  const [session, setSession] = useState(DEBUG_SKIP_AUTH ? DEBUG_SESSION : undefined); // undefined = not checked yet, null = signed out
   const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
+    if (DEBUG_SKIP_AUTH) return;
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
     const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => setSession(sess));
     return () => sub.subscription.unsubscribe();
