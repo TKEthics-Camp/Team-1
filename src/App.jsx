@@ -58,7 +58,7 @@ export default function App() {
         {!session ? (
           <AuthScreen />
         ) : profile ? (
-          <BrowserRouter>
+          <BrowserRouter basename={import.meta.env.BASE_URL}>
             <UIProvider>
               <RoutedShell />
             </UIProvider>

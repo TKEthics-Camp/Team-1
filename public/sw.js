@@ -5,7 +5,13 @@
 // successful network response. Good enough for "load once, then it works
 // offline" without pulling in a bundler plugin.
 const CACHE = "leaves-v1";
-const APP_SHELL = ["/", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png"];
+// self.registration.scope is the directory this worker was registered
+// under (e.g. "/" at the domain root, or "/Team-1/" on a project subpath) —
+// deriving the shell paths from it keeps this file portable across deploys.
+const SCOPE = self.registration.scope;
+const APP_SHELL = [SCOPE, "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png"].map(
+  (p) => new URL(p, SCOPE).pathname
+);
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(APP_SHELL)));
@@ -32,6 +38,6 @@ self.addEventListener("fetch", (e) => {
         caches.open(CACHE).then((c) => c.put(req, copy));
         return res;
       })
-      .catch(() => caches.match(req).then((cached) => cached || caches.match("/")))
+      .catch(() => caches.match(req).then((cached) => cached || caches.match(SCOPE)))
   );
 });
