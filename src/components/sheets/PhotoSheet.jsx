@@ -1,10 +1,11 @@
 import { useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
 import { uid } from "../../lib/id";
 import { downscale, useObjectURL } from "../../lib/image";
+import { actsToNextStage } from "../../lib/tree";
+import { celebrate, levelUpCelebrate } from "../../lib/feedback";
 import Sheet from "../shared/Sheet";
 import Field from "../shared/Field";
 import Chip from "../shared/Chip";
@@ -12,15 +13,13 @@ import VisRow from "../shared/VisRow";
 
 export default function PhotoSheet({ interestId }) {
   const { t, nameOf } = useI18n();
-  const { interests, addPhoto } = useStore();
+  const { interests, entries, photos, profile, addPhoto } = useStore();
   const { closeSheet } = useUI();
-  const navigate = useNavigate();
   const it = interests.find((x) => x.id === interestId);
 
   const fileRef = useRef(null);
   const [blob, setBlob] = useState(null);
   const [caption, setCaption] = useState("");
-  const [visibility, setVisibility] = useState("private");
   const [pinned, setPinned] = useState(false);
   const previewUrl = useObjectURL(blob);
 
@@ -34,13 +33,14 @@ export default function PhotoSheet({ interestId }) {
 
   function save() {
     if (!blob) return;
+    const leveledUp = actsToNextStage(it, entries, photos) === 1;
     const rec = {
       id: uid(), interestId: it.id, blob, caption: caption.trim(),
       visibility, isPinned: pinned, createdAt: Date.now(),
     };
     addPhoto(rec);
+    if (leveledUp) levelUpCelebrate(profile); else celebrate(profile);
     closeSheet();
-    navigate(`/saved/${it.id}`);
   }
 
   return (

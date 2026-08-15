@@ -2,7 +2,7 @@ import { useI18n } from "../../i18n/I18nContext";
 import { useUI } from "../../ui/UIContext";
 import { PALETTE } from "../../lib/constants";
 import { catLabel } from "../../lib/explore";
-import Orb from "../shared/Orb";
+import Tree from "../shared/Tree";
 
 // One hobby idea: an orb, its name + category, and a button that opens the
 // new-orb sheet prefilled from it — the offline call to action.
@@ -20,8 +20,8 @@ export default function IdeaCard({ idea }) {
       onClick={() => openSheet("idea", { idea })}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openSheet("idea", { idea }); }}
     >
-      <div className="orb-wrap" style={{ flex: "none" }}>
-        <Orb interest={{ color, name }} size={52} />
+      <div style={{ flex: "none" }}>
+        <Tree interest={{ color, name }} size={52} stage={2} health="healthy" />
       </div>
       <div className="grow">
         <div className="idea-nm">{name}</div>

@@ -25,14 +25,8 @@ export function streakOf(dates) {
   return n;
 }
 
-// A day counts toward the streak whether it was logged with a journal entry
-// or a photo — either one is "showing up" for the interest that day.
-export function interestStreak(entries, photos, id) {
-  var dates = entriesOf(entries, id).map((e) => e.date)
-    .concat(photosOf(photos, id).map((p) => dateKey(new Date(p.createdAt))));
-  return streakOf(dates);
-}
-
+// The streak is unified across every hobby — logging any one of them today
+// keeps it alive, the way Duolingo counts any lesson toward one streak.
 export function globalStreak(entries, photos) {
   var dates = entries.map((e) => e.date).concat(photos.map((p) => dateKey(new Date(p.createdAt))));
   return streakOf(dates);

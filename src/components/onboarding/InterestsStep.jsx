@@ -1,17 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { SUGGESTIONS } from "../../i18n/strings";
-import Orb from "../shared/Orb";
+import Tree from "../shared/Tree";
 
-export default function InterestsStep({ drafts, addDraft, removeDraft, onNext }) {
+export default function InterestsStep({ drafts, addDraft, removeDraft, blocked, onNext }) {
   const { t, lang } = useI18n();
   const [value, setValue] = useState("");
   const inputRef = useRef(null);
   useEffect(() => { inputRef.current?.focus(); }, []);
 
   function submit(name) {
-    addDraft(name !== undefined ? name : value);
-    setValue("");
+    const ok = addDraft(name !== undefined ? name : value);
+    if (ok) setValue("");
   }
 
   return (
@@ -35,6 +35,8 @@ export default function InterestsStep({ drafts, addDraft, removeDraft, onNext })
         <button className="btn2" style={{ width: "auto" }} onClick={() => submit()}>{t("add")}</button>
       </div>
 
+      {blocked && <div className="field-error">{t("hobbyBlocked")}</div>}
+
       <div className="chips">
         {SUGGESTIONS.map((s) => {
           const label = s[lang === "en" ? 0 : 1];
@@ -45,14 +47,12 @@ export default function InterestsStep({ drafts, addDraft, removeDraft, onNext })
       </div>
 
       {drafts.length > 0 && (
-        <div className="orbwall">
+        <div className="draft-wall">
           {drafts.map((d, i) => (
-            <button key={d.id} className="orb-cell" aria-label={t("del") + " " + d.name} onClick={() => removeDraft(i)}>
-              <div className="orb-wrap" style={{ animationDelay: `${i * 0.9}s` }}>
-                <Orb interest={d} size={58} />
-              </div>
-              <div className="orb-name">{d.name}</div>
-              <div className="orb-meta">{t("del")}</div>
+            <button key={d.id} className="draft" aria-label={t("del") + " " + d.name} onClick={() => removeDraft(i)}>
+              <span className="x" aria-hidden="true">✕</span>
+              <Tree interest={d} size={72} stage={1} health="healthy" />
+              <div className="draft-nm">{d.name}</div>
             </button>
           ))}
         </div>

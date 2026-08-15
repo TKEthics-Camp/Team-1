@@ -1,0 +1,31 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFD6EC" />
+      <stop offset="0.5" stop-color="#E4D6FF" />
+      <stop offset="1" stop-color="#CFEBFF" />
+    </linearGradient>
+    <radialGradient id="sprigBody" cx="38%" cy="30%" r="75%">
+      <stop offset="0" stop-color="#7FE0A6" />
+      <stop offset="1" stop-color="#2E9E63" />
+    </radialGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#bg)" />
+
+  <g transform="translate(56 56) scale(4)">
+    <rect x="46" y="86" width="8" height="10" rx="3" fill="#8B5A2B" />
+    <ellipse cx="50" cy="97" rx="20" ry="4" fill="rgba(0,0,0,.12)" />
+    <ellipse cx="20" cy="58" rx="13" ry="8" fill="url(#sprigBody)" transform="rotate(-24 20 58)" />
+    <ellipse cx="80" cy="58" rx="13" ry="8" fill="url(#sprigBody)" transform="rotate(24 80 58)" />
+    <circle cx="50" cy="56" r="34" fill="url(#sprigBody)" />
+    <ellipse cx="43" cy="26" rx="7" ry="4.5" fill="url(#sprigBody)" transform="rotate(-30 43 26)" />
+    <ellipse cx="57" cy="24" rx="7" ry="4.5" fill="url(#sprigBody)" transform="rotate(30 57 24)" />
+    <ellipse cx="36" cy="42" rx="9" ry="6" fill="rgba(255,255,255,.3)" />
+    <circle cx="40" cy="58" r="4" fill="#264E3A" />
+    <circle cx="60" cy="58" r="4" fill="#264E3A" />
+    <path d="M40 68 Q50 76 60 68" stroke="#264E3A" stroke-width="3.4" fill="none" stroke-linecap="round" />
+    <circle cx="30" cy="64" r="4" fill="#FF9DBB" opacity=".6" />
+    <circle cx="70" cy="64" r="4" fill="#FF9DBB" opacity=".6" />
+  </g>
+</svg>

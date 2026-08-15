@@ -5,7 +5,7 @@ import { nudgeHead, nudgeSub } from "../../lib/reminders";
 
 export default function NudgeBanner({ interest }) {
   const { t, lang, nameOf } = useI18n();
-  const { dismissNudge } = useUI();
+  const { snoozeNudge } = useUI();
   const navigate = useNavigate();
 
   return (
@@ -19,7 +19,7 @@ export default function NudgeBanner({ interest }) {
       </div>
       <div className="row">
         <button className="btn" onClick={() => navigate(`/interest/${interest.id}?tab=journal`)}>{t("goDoIt")}</button>
-        <button className="btn2" style={{ width: "auto", whiteSpace: "nowrap" }} onClick={() => dismissNudge(interest.id)}>
+        <button className="btn2" style={{ width: "auto", whiteSpace: "nowrap" }} onClick={() => snoozeNudge(interest.id)}>
           {t("later")}
         </button>
       </div>

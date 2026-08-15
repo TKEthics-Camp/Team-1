@@ -85,6 +85,20 @@
 .nav button[aria-current="page"] { color: var(--gold); }
 .nav button[aria-current="page"] .dot { opacity: 1; box-shadow: 0 0 8px var(--gold); }
 
+.undo-toast {
+  position: absolute; left: 14px; right: 14px; bottom: 78px; z-index: 35;
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(24, 10, 36, .92); color: #fff; border-radius: 14px;
+  padding: 12px 12px 12px 16px; font-size: 13.5px;
+  box-shadow: 0 14px 34px -12px rgba(30, 10, 40, .55);
+  animation: rise .22s ease;
+}
+.undo-toast span { flex: 1; }
+.undo-btn {
+  flex: none; background: none; border: none; color: var(--candy, #ff6fa5);
+  font-weight: 700; font-size: 13.5px; padding: 6px 4px; cursor: pointer;
+}
+
 /* ---------- interest cover ---------- */
 .cover {
   position: relative; width: 100%; aspect-ratio: 16 / 9;
@@ -92,6 +106,8 @@
   box-shadow: 0 14px 34px -16px rgba(122,86,160,.65);
 }
 .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cover .cover-scene { position: absolute; inset: 0; }
+.cover .cover-scene svg { width: 100%; height: 100%; display: block; }
 .cover.blank {
   background: radial-gradient(circle at 28% 22%, rgba(255,255,255,.5) 0%, transparent 42%), var(--c);
   display: grid; place-items: center;
@@ -130,6 +146,20 @@
 .memory .when { font-family: var(--mono); font-size: 11px; color: var(--dim); margin-top: 4px; }
 .memory img { width: 54px; height: 54px; border-radius: 12px; object-fit: cover; flex: none; }
 
+/* first-run "plant a sample garden" offer — same card language as .memory */
+.demo-card {
+  flex: none;
+  border: 1px solid var(--line); border-radius: 18px; padding: 14px;
+  background: linear-gradient(150deg, rgba(255,255,255,.85), rgba(225,240,255,.6));
+  display: flex; flex-direction: column; width: 100%;
+}
+.demo-card .demo-card-top { display: flex; gap: 13px; align-items: center; }
+.demo-card .demo-card-mascot { flex: none; animation: sway 3.2s ease-in-out infinite; transform-origin: 50% 90%; }
+.demo-card .body { flex: 1; min-width: 0; }
+.demo-card .kicker { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+.demo-card .text { font-size: 13px; color: var(--ink); margin-top: 3px; line-height: 1.4; }
+.demo-card .demo-card-btn { width: 100%; margin-top: 12px; }
+
 .nudge {
   border: 1px solid rgba(255,168,120,.45); border-radius: 16px;
   background: linear-gradient(140deg, rgba(255,236,205,.95), rgba(255,214,232,.8)); padding: 13px 14px;
@@ -140,16 +170,48 @@
 .nudge .sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
 .nudge .bell { font-size: 18px; }
 
+.code-card {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 16px; padding: 14px 16px;
+}
+.code-value { font-family: var(--mono); font-size: 21px; font-weight: 600; letter-spacing: .06em; color: var(--ink); }
+
 .label { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); font-weight: 700; }
-.empty { color: var(--muted); font-size: 14px; text-align: center; padding: 26px 14px; line-height: 1.7; }
+.empty {
+  color: var(--muted); font-size: 14px; text-align: center; padding: 26px 14px; line-height: 1.7;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.empty-mascot { animation: sway 3.2s ease-in-out infinite; transform-origin: 50% 90%; }
 
 .scroll { overflow-y: auto; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; margin: 0 -18px; padding: 0 18px; }
 .scroll::-webkit-scrollbar { width: 0; }
+/* Same look as .scroll, minus the flex:1 sizing — for screens (like
+   InterestScreen) where the fixed header content above it can grow past
+   one screen's height, which would otherwise squeeze a flex:1 sibling to
+   zero height. This flows naturally instead and lets .view's own scroll
+   carry it. */
+.tab-content { display: flex; flex-direction: column; gap: 16px; margin: 0 -18px; padding: 0 18px; }
 
 /* ---------- onboarding ---------- */
 .onb { flex: 1; display: flex; flex-direction: column; gap: 18px; }
 .onb h2 { font-family: var(--display); font-size: 25px; font-weight: 600; margin: 0; letter-spacing: -.015em; text-wrap: balance; }
 .onb p { margin: 0; color: var(--muted); font-size: 14px; max-width: 32ch; }
+/* individual vs organisation picker */
+.acct-choices { display: flex; flex-direction: column; gap: 12px; }
+.acct-card {
+  text-align: left; cursor: pointer; display: grid;
+  grid-template-columns: 44px 1fr; grid-template-rows: auto auto; column-gap: 12px;
+  background: var(--card); border: 1.5px solid var(--line); border-radius: 18px; padding: 16px;
+}
+.acct-card .acct-emoji { grid-row: 1 / 3; align-self: center; font-size: 30px; }
+.acct-label { font-family: var(--display); font-weight: 700; font-size: 16px; color: var(--ink); }
+.acct-note { font-size: 12.5px; color: var(--muted); line-height: 1.45; margin-top: 2px; }
+.acct-card[aria-pressed="true"] {
+  border-color: var(--candy);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--candy) 28%, transparent);
+}
+
 .setup-row { border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 9px; }
 .setup-row .who { display: flex; align-items: center; gap: 10px; }
 .setup-row .who .n { font-family: var(--display); font-weight: 600; font-size: 14.5px; }

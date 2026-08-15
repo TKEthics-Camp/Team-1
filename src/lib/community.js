@@ -1,4 +1,8 @@
-import { STUDENTS, CAPTIONS } from "./constants";
+import { STUDENTS, CAPTIONS, CLASS_CODES } from "./constants";
+
+export function isValidClassCode(code) {
+  return CLASS_CODES.includes(String(code || "").trim().toUpperCase());
+}
 
 /* ================= fake community + school =================
    Everything here is fabricated demo content. No real accounts, no network
@@ -6,11 +10,30 @@ import { STUDENTS, CAPTIONS } from "./constants";
    while staying inside the constitution: anonymised by default, finite (no
    infinite scroll), and every card ends by sending the kid back outside. */
 
-// A hobby scene as an inline SVG — an illustration, deliberately not a photo
-// of a real child. Keyed by category so any hobby has a matching picture.
-export function scene(cat, seed) {
+// One clear, recognisable emoji per hobby — instantly readable, unlike the old
+// abstract shapes. Falls back to a category emoji for anything not listed.
+const HOBBY_EMOJI = {
+  basketball: "🏀", football: "⚽", badminton: "🏸", "table tennis": "🏓",
+  running: "🏃", cycling: "🚴", swimming: "🏊", "rope skipping": "🪢",
+  drawing: "🎨", watercolor: "🖌️", calligraphy: "🖌️", "paper cutting": "✂️",
+  photography: "📷", origami: "🕊️", "clay modeling": "🏺", comics: "📖",
+  piano: "🎹", guitar: "🎸", singing: "🎤", erhu: "🎻", flute: "🎶", drums: "🥁",
+  reading: "📚", chess: "♟️", go: "⚫", journaling: "📓", puzzles: "🧩", "star gazing": "🔭",
+  cooking: "🍳", baking: "🧁", gardening: "🌱", "tea making": "🍵",
+  hiking: "🥾", fishing: "🎣", "bird watching": "🐦", "kite flying": "🪁",
+  dancing: "💃", "jump rope tricks": "🤸", skateboarding: "🛹",
+};
+const CAT_EMOJI = { sport: "⚽", art: "🎨", music: "🎵", mind: "📚", food: "🍳", outdoor: "🌲", dance: "💃" };
+
+export function hobbyEmoji(name, cat) {
+  return HOBBY_EMOJI[String(name || "").toLowerCase()] || CAT_EMOJI[cat] || "🌱";
+}
+
+// A hobby picture: a soft gradient (by category) with the hobby's own emoji on
+// a little white disc, so football / basketball / table tennis each read clearly.
+export function scene(cat, seed, name) {
   const G = {
-    sport:  ["#7FD6A0", "#2E9E63", "M0 44 Q50 34 100 44 L100 60 L0 60Z"],
+    sport:  ["#7FD6A0", "#2E9E63"],
     art:    ["#C9A8FF", "#7A4BD0"],
     music:  ["#8FC6FF", "#2C6FC9"],
     mind:   ["#A8B4FF", "#5A5AD0"],
@@ -20,21 +43,14 @@ export function scene(cat, seed) {
   };
   const g = G[cat] || G.mind;
   const id = "g" + cat + (seed || 0);
-  const motif = {
-    sport:  '<circle cx="50" cy="30" r="11" fill="#fff"/><path d="M50 19 L54 27 L46 27Z M39 30 L47 33 L44 40Z M61 30 L53 33 L56 40Z" fill="#2E9E63"/>',
-    art:    '<circle cx="38" cy="30" r="9" fill="#FF8FBF"/><circle cx="55" cy="24" r="7" fill="#FFD45E"/><circle cx="58" cy="38" r="8" fill="#6EE7A8"/><rect x="46" y="14" width="4" height="34" rx="2" fill="#fff" transform="rotate(24 48 30)"/>',
-    music:  '<path d="M40 40 L40 20 L64 15 L64 35" stroke="#fff" stroke-width="3.5" fill="none"/><circle cx="38" cy="41" r="6" fill="#fff"/><circle cx="62" cy="36" r="6" fill="#fff"/>',
-    mind:   '<path d="M50 20 L50 44 M50 20 Q40 16 32 20 L32 44 Q40 40 50 44 M50 20 Q60 16 68 20 L68 44 Q60 40 50 44" fill="#fff" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/><circle cx="24" cy="16" r="1.6" fill="#fff"/><circle cx="76" cy="20" r="1.6" fill="#fff"/>',
-    food:   '<path d="M34 30 A16 16 0 0 0 66 30 Z" fill="#fff"/><rect x="30" y="28" width="40" height="4" rx="2" fill="#fff"/><path d="M46 20 Q48 16 46 12 M54 20 Q56 16 54 12" stroke="#fff" stroke-width="2" fill="none" opacity=".8"/>',
-    outdoor:'<circle cx="70" cy="20" r="8" fill="#FFE38A"/><path d="M10 46 L34 24 L52 46Z M40 46 L60 28 L82 46Z" fill="#fff" fill-opacity=".92"/>',
-    dance:  '<path d="M50 16 L53 27 L64 30 L53 33 L50 44 L47 33 L36 30 L47 27Z" fill="#fff"/><circle cx="30" cy="20" r="2" fill="#fff"/><circle cx="70" cy="40" r="2" fill="#fff"/>',
-  };
+  const emoji = hobbyEmoji(name, cat);
   return '<svg viewBox="0 0 100 60" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">' +
     '<defs><linearGradient id="' + id + '" x1="0" y1="0" x2="0" y2="1">' +
     '<stop offset="0" stop-color="' + g[0] + '"/><stop offset="1" stop-color="' + g[1] + '"/></linearGradient></defs>' +
     '<rect width="100" height="60" fill="url(#' + id + ')"/>' +
-    (g[2] ? '<path d="' + g[2] + '" fill="rgba(255,255,255,.18)"/>' : "") +
-    (motif[cat] || motif.mind) + '</svg>';
+    '<circle cx="50" cy="30" r="17" fill="rgba(255,255,255,.92)"/>' +
+    '<text x="50" y="31" font-size="20" text-anchor="middle" dominant-baseline="central">' + emoji + '</text>' +
+    '</svg>';
 }
 
 // Build a finite, stable feed: each student's most-active orb becomes one post.

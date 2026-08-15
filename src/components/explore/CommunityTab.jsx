@@ -2,7 +2,7 @@ import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { PALETTE } from "../../lib/constants";
 import { communityPosts } from "../../lib/community";
-import Orb from "../shared/Orb";
+import PersonAvatar from "../shared/PersonAvatar";
 import PostCard from "./PostCard";
 
 export default function CommunityTab() {
@@ -45,8 +45,8 @@ export default function CommunityTab() {
           which always show named (see PostCard). */}
       <div className="idea">
         {style === "named" ? (
-          <div className="orb-wrap" style={{ flex: "none" }}>
-            <Orb interest={{ color: (profile && profile.color) || PALETTE[0] }} faceBlob={profile && profile.avatar} size={40} />
+          <div style={{ flex: "none" }}>
+            <PersonAvatar color={(profile && profile.color) || PALETTE[0]} avatar={profile && profile.avatar} size={40} />
           </div>
         ) : (
           <div className="avatar anon">🙂</div>

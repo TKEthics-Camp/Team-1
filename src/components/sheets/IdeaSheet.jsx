@@ -19,7 +19,7 @@ export default function IdeaSheet({ idea }) {
 
   return (
     <Sheet onClose={closeSheet}>
-      <div className="post-pic" dangerouslySetInnerHTML={{ __html: scene(cat, idea[2]) }} />
+      <div className="post-pic" dangerouslySetInnerHTML={{ __html: scene(cat, idea[2], idea[0]) }} />
       <div>
         <h2>{name}</h2>
         <div className="sub">{catLabel(cat, lang)}</div>

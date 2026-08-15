@@ -1,18 +1,22 @@
 import { useI18n } from "../../i18n/I18nContext";
 import { PALETTE } from "../../lib/constants";
-import Orb from "../shared/Orb";
+import Tree from "../shared/Tree";
 
-const DEMO_COLORS = [PALETTE[0], PALETTE[1], PALETTE[3]];
-const DEMO_SIZES = [72, 58, 64];
+// A little grove to set the tone — three trees at different growth stages.
+const DEMO = [
+  { color: PALETTE[3], size: 78, stage: 3 },
+  { color: PALETTE[0], size: 62, stage: 1 },
+  { color: PALETTE[1], size: 70, stage: 2 },
+];
 
 export default function WelcomeStep({ onBegin }) {
   const { t } = useI18n();
   return (
     <>
-      <div className="orbwall">
-        {DEMO_COLORS.map((color, i) => (
-          <div key={i} className="orb-wrap" style={{ animationDelay: `${i * 1.4}s` }}>
-            <Orb interest={{ color, name: "" }} size={DEMO_SIZES[i]} />
+      <div className="tree-wall" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+        {DEMO.map((d, i) => (
+          <div key={i} style={{ display: "flex", justifyContent: "center", alignItems: "flex-end" }}>
+            <Tree interest={{ color: d.color }} size={d.size} stage={d.stage} health="healthy" className="alive" />
           </div>
         ))}
       </div>
