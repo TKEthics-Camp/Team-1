@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/icons/icon-192.png" width="96" height="96" alt="Leaves icon" />
+  <img src="public/icons/icon-192.png" width="96" height="96" alt="Forest icon" />
 </p>
 
 <h1 align="center">Leaves</h1>
