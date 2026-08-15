@@ -1,4 +1,4 @@
-# Product Requirements Document — "Orbs" (working title)
+# Product Requirements Document — "Forest" (working title)
 
 *A personal sanctuary for the things you love — and a window into what others love. Version 2.0 — competition build.*
 
@@ -6,9 +6,9 @@
 
 ## 1. Vision
 
-Open the app and see everything you love laid out like the glowing memory orbs from *Inside Out*. Tap into any one — Watercolors, Piano, Basketball — and you enter a space to tend that interest: an album of what you've made, and a journal of the days you spent on it.
+Open the app and see everything you love represent by saplings Tap into any one — Watercolors, Piano, Basketball — and you enter a space to tend that interest: an album of what you've made, and a journal of the days you spent on it.
 
-Each orb is yours to curate. You decide whether it stays **private** — a sealed room only you enter — or goes **public**, where it can be discovered by someone who has never tried watercolors and doesn't yet know they'd love it.
+Each sapling is yours to curate. You decide whether it stays **private** — a sealed room only you enter — or goes **public**, where it can be discovered by someone who has never tried watercolors and doesn't yet know they'd love it.
 
 The app exists for two motions:
 
