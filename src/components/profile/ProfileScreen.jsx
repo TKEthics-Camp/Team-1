@@ -6,7 +6,6 @@ import { useAuth } from "../../store/AuthContext";
 import { useUI } from "../../ui/UIContext";
 import { PALETTE, THEMES, DEFAULT_THEME, DECORATIONS } from "../../lib/constants";
 import { globalStreak } from "../../lib/derived";
-import { demoGardenSeed } from "../../lib/demoGarden";
 import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
 import Stats from "../shared/Stats";
@@ -14,7 +13,7 @@ import PersonAvatar from "../shared/PersonAvatar";
 
 export default function ProfileScreen() {
   const { t, lang, nOf } = useI18n();
-  const { profile, interests, photos, entries, clearAllData, updateProfile, setDiscoverable, seedDemo, removeDemoGarden } = useStore();
+  const { profile, interests, photos, entries, clearAllData, updateProfile, setDiscoverable } = useStore();
   const { signOut } = useAuth();
   const { openSheet } = useUI();
   const navigate = useNavigate();
@@ -28,7 +27,6 @@ export default function ProfileScreen() {
   const soundOn = !(profile && profile.soundOn === false);
   const publicCount = entries.filter((e) => e.visibility === "public").length
     + photos.filter((p) => p.visibility === "public").length;
-  const hasDemoGarden = interests.some((x) => x.isDemo);
 
   const permission = window.Notification ? Notification.permission : "unsupported";
   const granted = permission === "granted";
@@ -46,12 +44,6 @@ export default function ProfileScreen() {
   function handleClear() {
     if (!armed) { setArmed(true); return; }
     clearAllData(true);
-  }
-
-  function plantDemoGarden() {
-    const { interests: seedInterests, entries: seedEntries } = demoGardenSeed();
-    seedDemo(seedInterests, seedEntries);
-    navigate("/");
   }
 
   // Photo bytes aren't included — a JSON file isn't a sane container for
@@ -169,13 +161,6 @@ export default function ProfileScreen() {
 
         <button className="btn2" data-tour="yearReview" onClick={() => openSheet("yearReview")}>{t("yearReview")}</button>
         <button className="btn2" onClick={() => openSheet("memories")}>{t("memories")}</button>
-
-        {hasDemoGarden ? (
-          <button className="btn2" onClick={removeDemoGarden}>{t("removeDemoGarden")}</button>
-        ) : (
-          <button className="btn2" onClick={plantDemoGarden}>{t("plantDemoGarden")}</button>
-        )}
-        <div className="sub">{hasDemoGarden ? t("removeDemoGardenNote") : t("plantDemoGardenNote")}</div>
 
         <div className="grow" />
 

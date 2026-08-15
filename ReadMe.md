@@ -36,7 +36,6 @@ A few decisions this app is built around, on purpose:
 - **The grove** — every hobby is a full-screen tree; swipe sideways to walk between them (`src/components/home/OrbWall.jsx`).
 - **Guided tour** — Sprig, the mascot, walks a first-time visitor across Home, Explore, and Me on first login, or on demand from Me → "Show me around again" (`src/components/shared/MascotTour.jsx`).
 - **Year in Review** — a full-screen, story-paced recap (tap to advance) of hours logged, longest streak, top hobby, and grove size. Has a one-tap demo mode with realistic sample data, so it's never empty on a fresh account (`src/components/sheets/YearReviewSheet.jsx`).
-- **Plant a demo garden** — one button (Me → "Plant a demo garden") seeds five trees at every stage and health — full-grown, mid-growth, wilting, dead — plus a real two-week streak, so there's something worth looking at immediately (`src/lib/demoGarden.js`).
 - **Level-up moments** — logging the entry that pushes a tree into its next growth stage gets a small leaf-burst celebration instead of just a number changing (`src/components/shared/LevelUpBurst.jsx`).
 - **Class codes** — a school/group account joins with a class code instead of a solo interests list, and unlocks a classmates view scoped to shared interests only (`src/components/onboarding/ClassCodeStep.jsx`).
 
