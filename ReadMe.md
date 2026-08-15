@@ -2,7 +2,7 @@
   <img src="public/icons/icon-192.png" width="96" height="96" alt="Forest icon" />
 </p>
 
-<h1 align="center">Leaves</h1>
+<h1 align="center">Forest</h1>
 <p align="center"><em>A private garden of trees — one for each thing you make, play, or do.</em></p>
 
 ---
