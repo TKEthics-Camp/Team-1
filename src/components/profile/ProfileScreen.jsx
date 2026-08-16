@@ -46,25 +46,6 @@ export default function ProfileScreen() {
     clearAllData(true);
   }
 
-  // Photo bytes aren't included — a JSON file isn't a sane container for
-  // megabytes of image data. This is a backup of everything that's actually
-  // text: the profile, every tree, and every journal entry, plus each
-  // photo's caption/date/visibility (just not the picture itself).
-  function exportData() {
-    const payload = {
-      exportedAt: new Date().toISOString(),
-      profile, interests, entries,
-      photos: photos.map(({ blob, ...meta }) => meta),
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "leaves-export-" + new Date().toISOString().slice(0, 10) + ".json";
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
   return (
     <>
       <TopBar>
@@ -163,9 +144,6 @@ export default function ProfileScreen() {
         <button className="btn2" onClick={() => openSheet("memories")}>{t("memories")}</button>
 
         <div className="grow" />
-
-        <button className="btn2" onClick={exportData}>{t("exportData")}</button>
-        <div className="sub">{t("exportDataNote")}</div>
 
         <div className="sub">{t("dataNote")}</div>
 

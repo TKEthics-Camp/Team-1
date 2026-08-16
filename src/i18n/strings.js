@@ -157,8 +157,6 @@ export const STR = {
   soundOff:     ["Sound effects off", "音效已关闭"],
   publicCount:  ["public entries", "篇公开内容"],
   publicCount1: ["public entry", "篇公开内容"],
-  exportData:      ["Export my data", "导出我的数据"],
-  exportDataNote:  ["Downloads everything you've written as a JSON file — your profile, trees, and journal entries. Photos aren't included.", "把你写下的一切下载为一个 JSON 文件 —— 你的资料、树和日记。不包含照片本身。"],
   discoverableLabel: ["Let others find me", "允许别人找到我"],
   discoverableOff: ["Off", "关闭"],
   discoverableOn:  ["On", "开启"],
