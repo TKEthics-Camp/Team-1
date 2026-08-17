@@ -20,6 +20,7 @@ export default function PhotoSheet({ interestId }) {
   const fileRef = useRef(null);
   const [blob, setBlob] = useState(null);
   const [caption, setCaption] = useState("");
+  const [visibility, setVisibility] = useState("private");
   const [pinned, setPinned] = useState(false);
   const previewUrl = useObjectURL(blob);
 
