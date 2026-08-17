@@ -9,7 +9,7 @@
 
 ## What it is
 
-Leaves is a habit tracker that never feels like one. Every hobby you plant — piano, basketball, drawing, whatever — grows into its own tree. Show up and log a photo or a journal entry, and it visibly grows: sapling → young tree → full tree, one stage at a time, each one asking a little more of you than the last. Ignore it too long and it wilts, then drops its leaves, then dies — quietly, honestly, the way a real plant would. You can bring a dead tree back for a handful of coins, but you have to earn the coins first.
+Forest is a habit tracker that never feels like one. Every hobby you plant — piano, basketball, drawing, whatever — grows into its own tree. Show up and log a photo or a journal entry, and it visibly grows: sapling → young tree → full tree, one stage at a time, each one asking a little more of you than the last. Ignore it too long and it wilts, then drops its leaves, then dies — quietly, honestly, the way a real plant would. You can bring a dead tree back for a handful of coins, but you have to earn the coins first.
 
 There's no feed. No followers. No stranger's garden to compare yours against. If you're in a class, you can see your classmates' *shared* interests — never a wall of their private data. Everything else lives on your device.
 
@@ -41,7 +41,7 @@ A few decisions this app is built around, on purpose:
 
 ## Installable & offline
 
-Leaves is a PWA: `manifest.webmanifest` + a hand-rolled service worker (`public/sw.js`, network-first with a same-origin cache fallback — no bundler plugin needed since Vite's hashed filenames rule out a static precache list). Visit it once, and it's addable to your home screen and keeps working without a connection.
+Forest is a PWA: `manifest.webmanifest` + a hand-rolled service worker (`public/sw.js`, network-first with a same-origin cache fallback — no bundler plugin needed since Vite's hashed filenames rule out a static precache list). Visit it once, and it's addable to your home screen and keeps working without a connection.
 
 ## Getting started
 

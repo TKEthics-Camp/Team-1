@@ -1,5 +1,5 @@
 export const STR = {
-  appName:      ["Leaves", "叶子"],
+  appName:      ["Forest", "森林"],
   home:         ["Home", "首页"],
   me:           ["Me", "我的"],
   // onboarding
@@ -11,7 +11,7 @@ export const STR = {
   genderBoy:    ["Boy", "男生"],
   genderGirl:   ["Girl", "女生"],
   genderSkip:   ["Prefer not to say", "不想说"],
-  acctTitle:    ["Who's using Leaves?", "谁在用叶子？"],
+  acctTitle:    ["Who's using Forest?", "谁在用森林？"],
   acctSub:      ["This just sets up your home. You can pick 'Just me' and join a class later from Me.", "这只是帮你搭好首页。选“只有我”也没关系，之后可以在“我的”里加入班级。"],
   acctSolo:     ["Just me", "只有我"],
   acctSoloNote: ["One person keeping track of the things they love.", "一个人，记录自己喜欢的事。"],
