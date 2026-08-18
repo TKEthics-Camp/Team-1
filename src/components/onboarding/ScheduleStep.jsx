@@ -24,16 +24,6 @@ export default function ScheduleStep({ drafts, updateDraft, onEnter }) {
             <Field label={t("daysLabel")}>
               <DayPicker days={d.days || []} onChange={(days) => updateDraft(i, { days })} />
             </Field>
-            <Field label={t("friendsLabel")}>
-              <input
-                type="text"
-                placeholder={t("friendsPh")}
-                maxLength={60}
-                onChange={(e) => updateDraft(i, {
-                  friends: e.target.value.split(/[,，]/).map((x) => x.trim()).filter(Boolean),
-                })}
-              />
-            </Field>
           </div>
         ))}
       </div>

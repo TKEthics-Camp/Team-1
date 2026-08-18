@@ -42,12 +42,6 @@ export function nudgeHead(it, lang, nameOf) {
   return lang === "en" ? nameOf(it) + " at " + it.time : it.time + " " + nameOf(it);
 }
 
-export function nudgeSub(it, t) {
-  var friends = (it.friends || []).filter(Boolean);
-  if (!friends.length) return t("nudgeSolo");
-  return t("askCome") + friends[0] + t("askCome2");
-}
-
 export function nudgeText(it, lang, nameOf, t) {
-  return nudgeHead(it, lang, nameOf) + " — " + nudgeSub(it, t);
+  return nudgeHead(it, lang, nameOf) + " — " + t("nudgeSolo");
 }

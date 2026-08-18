@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "../../i18n/I18nContext";
 import { useUI } from "../../ui/UIContext";
-import { nudgeHead, nudgeSub } from "../../lib/reminders";
+import { nudgeHead } from "../../lib/reminders";
 
 export default function NudgeBanner({ interest }) {
   const { t, lang, nameOf } = useI18n();
@@ -14,7 +14,7 @@ export default function NudgeBanner({ interest }) {
         <span className="bell" aria-hidden="true">🔔</span>
         <div className="body">
           <div className="head">{nudgeHead(interest, lang, nameOf)}</div>
-          <div className="sub">{nudgeSub(interest, t)}</div>
+          <div className="sub">{t("nudgeSolo")}</div>
         </div>
       </div>
       <div className="row">

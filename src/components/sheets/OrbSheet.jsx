@@ -35,7 +35,6 @@ export default function OrbSheet({ interestId, preset = null }) {
   const color = editing ? editing.color : preset ? preset.color : PALETTE[interests.length % PALETTE.length];
   const [time, setTime] = useState(editing ? editing.time || "16:00" : "16:00");
   const [days, setDays] = useState(editing ? editing.days || [] : []);
-  const [friendsText, setFriendsText] = useState(editing ? (editing.friends || []).join(", ") : "");
   const [visibility, setVisibility] = useState(editing ? editing.visibility || "private" : "private");
   const nameRef = useRef(null);
   const previewId = useMemo(() => (editing ? editing.id : uid()), [editing]);
@@ -49,12 +48,11 @@ export default function OrbSheet({ interestId, preset = null }) {
     const nm = name.trim();
     if (!nm) { nameRef.current?.focus(); return; }
     if (isBlockedHobby(nm)) { setBlocked(true); nameRef.current?.focus(); return; }
-    const friends = friendsText.split(/[,，]/).map((x) => x.trim()).filter(Boolean);
     if (editing) {
-      updateInterest({ ...editing, name: nm, why: why.trim(), color, time, days, species, leafColor, friends, visibility, updatedAt: Date.now() });
+      updateInterest({ ...editing, name: nm, why: why.trim(), color, time, days, species, leafColor, visibility, updatedAt: Date.now() });
     } else {
       addInterest({
-        id: previewId, name: nm, why: why.trim(), color, time, days, species, leafColor, friends, visibility,
+        id: previewId, name: nm, why: why.trim(), color, time, days, species, leafColor, visibility,
         createdAt: Date.now(), updatedAt: Date.now(),
       });
     }
@@ -136,15 +134,6 @@ export default function OrbSheet({ interestId, preset = null }) {
       <Field label={t("daysLabel")}>
         <DayPicker days={days} onChange={setDays} />
         <span className="hint">{t("daysNote")}</span>
-      </Field>
-      <Field label={t("friendsLabel")}>
-        <input
-          type="text"
-          maxLength={60}
-          placeholder={t("friendsPh")}
-          value={friendsText}
-          onChange={(e) => setFriendsText(e.target.value)}
-        />
       </Field>
       <VisRow value={visibility} onChange={setVisibility} />
 

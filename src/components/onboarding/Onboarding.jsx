@@ -59,7 +59,7 @@ export default function Onboarding() {
     if (!nm) return true;
     if (isBlockedHobby(nm)) { setHobbyBlocked(true); return false; }
     setHobbyBlocked(false);
-    setDrafts((d) => [...d, { id: uid(), name: nm, color: PALETTE[d.length % PALETTE.length], time: "16:00", friends: [] }]);
+    setDrafts((d) => [...d, { id: uid(), name: nm, color: PALETTE[d.length % PALETTE.length], time: "16:00" }]);
     return true;
   }
   function removeDraft(i) {
@@ -104,7 +104,7 @@ export default function Onboarding() {
     });
     drafts.forEach((d) => {
       addInterest({
-        id: d.id, name: d.name, color: d.color, why: "", time: d.time, days: d.days || [], friends: d.friends,
+        id: d.id, name: d.name, color: d.color, why: "", time: d.time, days: d.days || [],
         createdAt: Date.now(), updatedAt: Date.now(),
       });
     });
