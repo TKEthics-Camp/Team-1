@@ -1,65 +1,85 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { SUGGESTIONS } from "../../i18n/strings";
-import Tree from "../shared/Tree";
+import SfHead from "./SfHead";
 
-export default function InterestsStep({ drafts, addDraft, removeDraft, blocked, onNext }) {
+// Pick-from-a-list rather than free text: tapping a row adds or removes that
+// hobby outright. "Other" reveals a field for anything not on the list — the
+// typed value is committed on Continue, so it can't be lost by moving on.
+export default function InterestsStep({ drafts, toggleDraft, addDraft, blocked, onNext }) {
   const { t, lang } = useI18n();
-  const [value, setValue] = useState("");
-  const inputRef = useRef(null);
-  useEffect(() => { inputRef.current?.focus(); }, []);
+  const [other, setOther] = useState(false);
+  const [otherName, setOtherName] = useState("");
 
-  function submit(name) {
-    const ok = addDraft(name !== undefined ? name : value);
-    if (ok) setValue("");
+  const names = drafts.map((d) => d.name);
+  const typed = otherName.trim();
+  const canGo = drafts.length > 0 || (other && !!typed);
+
+  function next() {
+    if (other && typed) {
+      if (!addDraft(typed)) return; // blocked hobby — keep them here to fix it
+      setOtherName("");
+      setOther(false);
+    }
+    onNext();
   }
 
   return (
     <>
-      <h2>{t("whatLove")}</h2>
-      <p>{t("whatLoveSub")}</p>
+      <SfHead>{t("sfHobbiesTitle")}</SfHead>
 
-      <div className="row">
-        <div className="grow">
+      <div className="sf-scroll">
+        <div className="sf-checks">
+          {SUGGESTIONS.map((s) => {
+            const label = s[lang === "en" ? 0 : 1];
+            const on = names.includes(label);
+            return (
+              <button
+                key={label}
+                type="button"
+                className="sf-check"
+                aria-pressed={on ? "true" : "false"}
+                onClick={() => toggleDraft(label)}
+              >
+                <span className="sf-box" aria-hidden="true">{on ? "✓" : ""}</span>
+                <span className="sf-check-label">{label}</span>
+              </button>
+            );
+          })}
+
+          <button
+            type="button"
+            className="sf-check"
+            aria-pressed={other ? "true" : "false"}
+            onClick={() => setOther((o) => !o)}
+          >
+            <span className="sf-box" aria-hidden="true">{other ? "✓" : ""}</span>
+            <span className="sf-check-label">{t("sfOther")}</span>
+          </button>
+        </div>
+
+        {other && (
           <input
-            ref={inputRef}
+            className="sf-field"
+            style={{ marginTop: 14 }}
             type="text"
             maxLength={24}
-            placeholder={t("interestPh")}
-            autoComplete="off"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } }}
+            autoFocus
+            placeholder={t("sfOtherPh")}
+            value={otherName}
+            onChange={(e) => setOtherName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter" && canGo) { e.preventDefault(); next(); } }}
           />
-        </div>
-        <button className="btn2" style={{ width: "auto" }} onClick={() => submit()}>{t("add")}</button>
+        )}
+
+        {blocked && <p className="sf-err">{t("hobbyBlocked")}</p>}
       </div>
 
-      {blocked && <div className="field-error">{t("hobbyBlocked")}</div>}
-
-      <div className="chips">
-        {SUGGESTIONS.map((s) => {
-          const label = s[lang === "en" ? 0 : 1];
-          return (
-            <button key={label} className="chip" onClick={() => submit(label)}>{"+ " + label}</button>
-          );
-        })}
+      <div className="sf-foot">
+        <button className="sf-btn" disabled={!canGo} onClick={() => canGo && next()}>
+          {t("sfContinue")}
+        </button>
       </div>
-
-      {drafts.length > 0 && (
-        <div className="draft-wall">
-          {drafts.map((d, i) => (
-            <button key={d.id} className="draft" aria-label={t("del") + " " + d.name} onClick={() => removeDraft(i)}>
-              <span className="x" aria-hidden="true">✕</span>
-              <Tree interest={d} size={72} stage={1} health="healthy" />
-              <div className="draft-nm">{d.name}</div>
-            </button>
-          ))}
-        </div>
-      )}
-
-      <div className="grow" />
-      <button className="btn" disabled={!drafts.length} onClick={() => drafts.length && onNext()}>{t("next")}</button>
     </>
   );
 }

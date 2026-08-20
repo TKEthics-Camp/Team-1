@@ -6,5 +6,3 @@ export default defineConfig({
   plugins: [react()],
 });
 
-ini git.
-  

@@ -1,0 +1,204 @@
+/* ============================================================
+   Start flow — the redesigned onboarding from the UI Design
+   Figma (individual path). The Figma builds on Apple's iOS 27
+   Liquid Glass kit, so this leans on the HIG: SF system type,
+   one blue accent, plain grey fills, generous whitespace.
+
+   Everything is scoped under .sf / .sf-view so the rest of the
+   app keeps its own themed, gradient look untouched.
+   ============================================================ */
+
+/* The start flow paints its own flat surface over the themed
+   stage — the Figma screens are white, not gradient. */
+.sf-view {
+  background: #fff;
+  padding: 0;
+  gap: 0;
+}
+
+.sf {
+  --sf-blue: #0088ff;
+  --sf-ink: #1c1c1e;
+  --sf-muted: #6e6e73;
+  --sf-fill: #ececee;
+  --sf-line: #d6d6da;
+
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 4px 24px 28px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui,
+    "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: var(--sf-ink);
+  line-height: 1.4;
+  letter-spacing: -.01em;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- chrome ---------- */
+
+.sf-bar {
+  display: flex; align-items: center; gap: 8px;
+  min-height: 40px; margin-bottom: 4px;
+}
+.sf-back {
+  background: none; border: none; padding: 0 8px 0 0;
+  color: var(--sf-blue); font-size: 27px; line-height: 1;
+}
+.sf-back:active { opacity: .5; }
+
+/* the shared language toggle, restyled to sit quietly in this flow */
+.sf .lang {
+  background: var(--sf-fill); border: none; border-radius: 999px;
+  color: var(--sf-muted); font-family: inherit; font-size: 13px; font-weight: 600;
+  padding: 6px 13px;
+}
+
+/* ---------- shared page furniture ---------- */
+
+/* mascot + title, the header on every step after Welcome */
+.sf-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 6px 0 26px;
+}
+.sf-mascot { width: 54px; height: 55px; flex: none; }
+.sf-head h2 {
+  flex: 1; margin: 0;
+  font-size: 24px; font-weight: 600; line-height: 1.18;
+  letter-spacing: -.022em; text-align: center; text-wrap: balance;
+}
+
+.sf-grow { flex: 1; min-height: 20px; }
+.sf-foot { padding-top: 20px; }
+.sf-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+
+.sf-muted { margin: 0; color: var(--sf-muted); font-size: 14.5px; }
+.sf-note { margin: 0 0 14px; text-align: center; font-size: 14.5px; }
+.sf-err { margin: 10px 0 0; color: #ff3b30; font-size: 13.5px; font-weight: 500; }
+
+/* ---------- buttons ---------- */
+
+.sf-btn {
+  width: 100%; border: none; border-radius: 999px;
+  background: var(--sf-blue); color: #fff;
+  font-family: inherit; font-size: 17px; font-weight: 600;
+  letter-spacing: -.01em; padding: 15px 20px;
+  transition: transform .12s ease, opacity .12s ease;
+}
+.sf-btn:active { transform: scale(.975); }
+.sf-btn[disabled] { opacity: .35; cursor: not-allowed; transform: none; }
+
+.sf-linkbtn {
+  width: 100%; background: none; border: none; padding: 14px 0 0;
+  color: var(--sf-blue); font-family: inherit; font-size: 15px; font-weight: 500;
+}
+
+/* ---------- pill choices (account type, gender, look) ---------- */
+
+.sf-options { display: flex; flex-direction: column; gap: 12px; }
+.sf-pill {
+  width: 100%; border: none; border-radius: 10px;
+  background: var(--sf-fill); color: var(--sf-ink);
+  font-family: inherit; font-size: 16px; font-weight: 600;
+  letter-spacing: -.01em; padding: 11px 16px; text-align: center;
+  transition: background .15s ease, color .15s ease, transform .12s ease;
+}
+.sf-pill:active { transform: scale(.985); }
+.sf-pill[aria-pressed="true"] { background: var(--sf-blue); color: #fff; }
+
+/* the look picker adds a leading glyph and a little more height */
+.sf-pill.sf-look {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  border-radius: 12px; padding: 14px 16px;
+}
+.sf-look-ico { font-size: 15px; line-height: 1; }
+
+/* ---------- checkbox list (hobbies) ---------- */
+
+.sf-checks { display: flex; flex-direction: column; gap: 15px; }
+/* colour is set explicitly because controls.css puts the themed --ink on
+   every <button>, which would otherwise tint these labels purple */
+.sf-check {
+  display: flex; align-items: center; gap: 14px;
+  width: 100%; padding: 0; border: none; background: none;
+  font-family: inherit; text-align: left; color: var(--sf-ink);
+}
+.sf-box {
+  width: 28px; height: 28px; flex: none; border-radius: 50%;
+  background: var(--sf-fill); color: #fff;
+  display: grid; place-items: center;
+  font-size: 14px; font-weight: 700; line-height: 1;
+  transition: background .15s ease;
+}
+.sf-check[aria-pressed="true"] .sf-box { background: var(--sf-blue); }
+.sf-check-label { font-size: 17px; letter-spacing: -.015em; }
+
+/* ---------- fields ---------- */
+
+.sf-label { display: block; margin-bottom: 8px; font-size: 15px; font-weight: 500; }
+
+/* double-scoped on purpose: controls.css targets input[type="text"], whose
+   attribute selector out-specifies a bare .sf-field class */
+.sf .sf-field {
+  width: 100%; font: inherit; font-size: 16px;
+  background: #fff; color: var(--sf-ink);
+  border: 1px solid var(--sf-line); border-radius: 8px;
+  padding: 9px 12px;
+}
+.sf .sf-field::placeholder { color: #b4b4b8; }
+.sf .sf-field:focus {
+  outline: none; border-color: var(--sf-blue);
+  box-shadow: 0 0 0 3px rgba(0, 136, 255, .15);
+}
+.sf-stack { display: flex; flex-direction: column; gap: 18px; }
+
+/* ---------- hobby confirm rows ---------- */
+
+.sf-hobbies-label { margin: 0 0 14px; font-size: 19px; font-weight: 600; }
+.sf-hobby-rows { display: flex; flex-direction: column; gap: 10px; }
+.sf-hobby-row { display: flex; align-items: center; gap: 10px; }
+.sf-hobby-row .sf-field { flex: 1; min-width: 0; }
+.sf-x {
+  width: 34px; height: 34px; flex: none; padding: 0;
+  border: none; border-radius: 50%; background: none;
+  color: #bcbcc1; font-size: 21px; line-height: 1;
+  display: grid; place-items: center;
+}
+.sf-x:hover { color: var(--sf-muted); }
+.sf-x:active { transform: scale(.9); }
+
+/* ---------- schedule ---------- */
+
+.sf-sched-group + .sf-sched-group { margin-top: 22px; }
+.sf-hobby-name { margin: 0 0 10px; font-size: 19px; font-weight: 600; }
+.sf-days { display: flex; gap: 5px; }
+.sf-day {
+  flex: 1; min-width: 0; padding: 7px 0;
+  border: none; border-radius: 8px;
+  background: var(--sf-fill); color: var(--sf-ink);
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  transition: background .15s ease, color .15s ease;
+}
+.sf-day[aria-pressed="true"] { background: var(--sf-blue); color: #fff; }
+
+/* ---------- welcome / intro ---------- */
+
+.sf-center {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center;
+}
+.sf-wordmark {
+  margin: 0; font-size: 54px; font-weight: 600;
+  letter-spacing: -.035em; line-height: 1;
+}
+.sf-hero { width: 132px; height: 134px; margin-top: 30px; }
+.sf-tagline {
+  margin: 32px 0 0; max-width: 22ch;
+  font-size: 16px; line-height: 1.35;
+}
+.sf-title-c {
+  margin: 0; max-width: 18ch;
+  font-size: 24px; font-weight: 600; line-height: 1.18;
+  letter-spacing: -.022em; text-wrap: balance;
+}

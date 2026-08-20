@@ -1,39 +1,42 @@
 import { useI18n } from "../../i18n/I18nContext";
+import SfHead from "./SfHead";
 
-// Asked once, right after Welcome, purely to pick a sensible starting look
-// for the avatar (hair style) — everything it sets is freely re-editable
-// later from Me → avatar, coins and all, so nothing here is permanent.
+// Asked once, purely to pick a sensible starting look for the avatar (hair
+// style) — everything it sets is freely re-editable later from Me → avatar,
+// coins and all, so nothing here is permanent. Individuals only.
 export default function GenderStep({ value, setGender, onNext }) {
   const { t } = useI18n();
 
   const options = [
-    ["boy", "👦", t("genderBoy")],
-    ["girl", "👧", t("genderGirl")],
-    ["unspecified", "🌿", t("genderSkip")],
+    ["boy", t("sfMale")],
+    ["girl", t("sfFemale")],
+    ["unspecified", t("sfPreferNot")],
   ];
 
   return (
     <>
-      <h2>{t("genderTitle")}</h2>
-      <p>{t("genderSub")}</p>
+      <SfHead>{t("sfQuickTitle")}</SfHead>
 
-      <div className="acct-choices">
-        {options.map(([key, emoji, label]) => (
+      <div className="sf-options">
+        {options.map(([key, label]) => (
           <button
             key={key}
             type="button"
-            className="acct-card"
+            className="sf-pill"
             aria-pressed={value === key ? "true" : "false"}
             onClick={() => setGender(key)}
           >
-            <span className="acct-emoji" aria-hidden="true">{emoji}</span>
-            <span className="acct-label">{label}</span>
+            {label}
           </button>
         ))}
       </div>
 
-      <div className="grow" />
-      <button className="btn" disabled={!value} onClick={() => value && onNext()}>{t("next")}</button>
+      <div className="sf-grow" />
+      <div className="sf-foot">
+        <button className="sf-btn" disabled={!value} onClick={() => value && onNext()}>
+          {t("sfContinue")}
+        </button>
+      </div>
     </>
   );
 }

@@ -1,44 +1,50 @@
 import { useI18n } from "../../i18n/I18nContext";
-import Tree from "../shared/Tree";
-import Field from "../shared/Field";
-import DayPicker from "../shared/DayPicker";
+import { DAY_ABBR, DAY_FULL } from "../../i18n/strings";
+import SfHead from "./SfHead";
 
+// Days only. The Figma trims this step down to a weekday row per hobby —
+// reminder time keeps the default set when the draft was created, and is
+// editable later from the hobby's own settings.
 export default function ScheduleStep({ drafts, updateDraft, onEnter }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+
+  function toggle(i, days, d) {
+    const next = days.includes(d) ? days.filter((x) => x !== d) : [...days, d].sort((a, b) => a - b);
+    updateDraft(i, { days: next });
+  }
 
   return (
     <>
-      <h2>{t("setupTitle")}</h2>
-      <p>{t("setupSub")}</p>
+      <SfHead>{t("sfWhenTitle")}</SfHead>
 
-      <div className="scroll">
-        {drafts.map((d, i) => (
-          <div key={d.id} className="setup-row">
-            <div className="who">
-              <Tree interest={d} size={34} stage={1} health="healthy" />
-              <span className="n">{d.name}</span>
+      <div className="sf-scroll">
+        {drafts.map((d, i) => {
+          const days = d.days || [];
+          return (
+            <div key={d.id} className="sf-sched-group">
+              <p className="sf-hobby-name">{d.name}</p>
+              <div className="sf-days">
+                {DAY_ABBR.map((label, dayNum) => (
+                  <button
+                    key={dayNum}
+                    type="button"
+                    className="sf-day"
+                    aria-pressed={days.includes(dayNum) ? "true" : "false"}
+                    aria-label={d.name + " — " + DAY_FULL[dayNum][lang === "en" ? 0 : 1]}
+                    onClick={() => toggle(i, days, dayNum)}
+                  >
+                    {label[lang === "en" ? 0 : 1]}
+                  </button>
+                ))}
+              </div>
             </div>
-            <Field label={t("timeLabel")}>
-              <input type="time" value={d.time} onChange={(e) => updateDraft(i, { time: e.target.value })} />
-            </Field>
-            <Field label={t("daysLabel")}>
-              <DayPicker days={d.days || []} onChange={(days) => updateDraft(i, { days })} />
-            </Field>
-            <Field label={t("friendsLabel")}>
-              <input
-                type="text"
-                placeholder={t("friendsPh")}
-                maxLength={60}
-                onChange={(e) => updateDraft(i, {
-                  friends: e.target.value.split(/[,，]/).map((x) => x.trim()).filter(Boolean),
-                })}
-              />
-            </Field>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      <button className="btn" onClick={onEnter}>{t("next")}</button>
+      <div className="sf-foot">
+        <button className="sf-btn" onClick={onEnter}>{t("sfContinue")}</button>
+      </div>
     </>
   );
 }

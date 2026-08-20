@@ -7,27 +7,26 @@ import { PALETTE, DEFAULT_THEME, CLASS_CODES } from "../../lib/constants";
 import { uid } from "../../lib/id";
 import { askNotifications } from "../../lib/useReminderTimers";
 import { isBlockedHobby } from "../../lib/hobbyFilter";
-import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
 import WelcomeStep from "./WelcomeStep";
+import IntroStep from "./IntroStep";
 import GenderStep from "./GenderStep";
 import AccountTypeStep from "./AccountTypeStep";
 import NameStep from "./NameStep";
 import InterestsStep from "./InterestsStep";
+import ConfirmHobbiesStep from "./ConfirmHobbiesStep";
 import ScheduleStep from "./ScheduleStep";
-import ThemeStep from "./ThemeStep";
+import LookStep from "./LookStep";
 
 // A school/group account is the educator running a class, not a student
-// joining one — so it skips straight from name to theme, with no hobby
-// picking (interests/schedule) and no gender/avatar-hairstyle question,
-// since neither applies to the adult running the dashboard. Their class
-// code is minted automatically at finish() rather than typed in; students
-// join *that* code later from Me → Join a class.
+// joining one — so it skips the hobby steps (interests/confirm/schedule) and
+// the gender/avatar-hairstyle question, since neither applies to the adult
+// running the dashboard. Their class code is minted automatically at finish()
+// rather than typed in; students join *that* code later from Me → Join a class.
 function stepsFor(accountType) {
-  const base = ["welcome", "account"];
-  if (accountType !== "org") base.push("gender");
-  if (accountType === "org") return base.concat(["name", "theme"]);
-  return base.concat(["name", "interests", "schedule", "theme"]);
+  const base = ["welcome", "intro", "account"];
+  if (accountType === "org") return base.concat(["name", "look"]);
+  return base.concat(["gender", "name", "interests", "confirm", "schedule", "look"]);
 }
 
 // Gender only ever picks a starting hair style for the avatar — everything
@@ -67,6 +66,11 @@ export default function Onboarding() {
   }
   function updateDraft(i, patch) {
     setDrafts((d) => d.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
+  }
+  // Tapping a row on the hobby list is add-or-remove, keyed by name.
+  function toggleDraft(nm) {
+    const at = drafts.findIndex((d) => d.name === nm);
+    if (at >= 0) removeDraft(at); else addDraft(nm);
   }
 
   async function finish() {
@@ -111,48 +115,60 @@ export default function Onboarding() {
     askNotifications();
   }
 
+  const current = steps[step];
+
   return (
-    <>
-      <TopBar>
-        {step > 0 && (
-          <button className="icon" aria-label={t("back")} onClick={() => setStep(step - 1)}>←</button>
-        )}
-        <h1>{t("appName")}</h1>
-        <LangToggle />
-      </TopBar>
-      <div className="view">
-        <div className="onb">
-          {steps[step] === "welcome" && <WelcomeStep onBegin={() => setStep(step + 1)} />}
-          {steps[step] === "gender" && (
-            <GenderStep value={gender} setGender={setGender} onNext={() => setStep(step + 1)} />
+    <div className="view sf-view">
+      <div className="sf">
+        <div className="sf-bar">
+          {step > 0 && (
+            <button className="sf-back" aria-label={t("back")} onClick={() => setStep(step - 1)}>‹</button>
           )}
-          {steps[step] === "account" && (
-            <AccountTypeStep value={accountType} setType={setAccountType} onNext={() => setStep(step + 1)} />
-          )}
-          {steps[step] === "name" && (
-            <NameStep
-              name={name}
-              setName={setName}
-              onNext={() => setStep(step + 1)}
-              error={nameError}
-              clearError={() => setNameError(null)}
-            />
-          )}
-          {steps[step] === "interests" && (
-            <InterestsStep
-              drafts={drafts}
-              addDraft={addDraft}
-              removeDraft={removeDraft}
-              blocked={hobbyBlocked}
-              onNext={() => setStep(step + 1)}
-            />
-          )}
-          {steps[step] === "schedule" && (
-            <ScheduleStep drafts={drafts} updateDraft={updateDraft} onEnter={() => setStep(step + 1)} />
-          )}
-          {steps[step] === "theme" && <ThemeStep value={theme} setTheme={setTheme} onEnter={finish} />}
+          <div className="sf-grow" />
+          <LangToggle />
         </div>
+
+        {current === "welcome" && <WelcomeStep onBegin={() => setStep(step + 1)} />}
+        {current === "intro" && <IntroStep onNext={() => setStep(step + 1)} />}
+        {current === "account" && (
+          <AccountTypeStep value={accountType} setType={setAccountType} onNext={() => setStep(step + 1)} />
+        )}
+        {current === "gender" && (
+          <GenderStep value={gender} setGender={setGender} onNext={() => setStep(step + 1)} />
+        )}
+        {current === "name" && (
+          <NameStep
+            name={name}
+            setName={setName}
+            onNext={() => setStep(step + 1)}
+            error={nameError}
+            clearError={() => setNameError(null)}
+          />
+        )}
+        {current === "interests" && (
+          <InterestsStep
+            drafts={drafts}
+            toggleDraft={toggleDraft}
+            addDraft={addDraft}
+            blocked={hobbyBlocked}
+            onNext={() => setStep(step + 1)}
+          />
+        )}
+        {current === "confirm" && (
+          <ConfirmHobbiesStep
+            drafts={drafts}
+            updateDraft={updateDraft}
+            removeDraft={removeDraft}
+            addDraft={addDraft}
+            blocked={hobbyBlocked}
+            onNext={() => setStep(step + 1)}
+          />
+        )}
+        {current === "schedule" && (
+          <ScheduleStep drafts={drafts} updateDraft={updateDraft} onEnter={() => setStep(step + 1)} />
+        )}
+        {current === "look" && <LookStep value={theme} setTheme={setTheme} onEnter={finish} />}
       </div>
-    </>
+    </div>
   );
 }
