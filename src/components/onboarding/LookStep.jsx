@@ -7,7 +7,7 @@ import SfHead from "./SfHead";
 // theme — no new theming model, and the colour themes are still all there
 // under Me → theme. A real dark mode is separate work; "Dark" picks the
 // darkest theme the app currently has.
-const LIGHT_THEME = "marshmallow";
+const LIGHT_THEME = "slate";
 const DARK_THEME = "midnight";
 
 function systemTheme() {

@@ -1,6 +1,9 @@
 /* A skin is just a set of tokens on .stage[data-theme]. Everything else draws
    from these, so a new theme is a colour recipe, not new markup.
-   Defaults here = Marshmallow, the theme when no data-theme is set. */
+   The .stage bare selector below (Marshmallow's rule) is a CSS fallback for
+   an unset data-theme attribute; the app's actual default is the DEFAULT_THEME
+   constant in lib/constants.js, which App.jsx always sets explicitly — see
+   Slate below, the current default. */
 :root {
   --gold-on: #FFFFFF;
   --display: ui-rounded, "SF Pro Rounded", "Avenir Next", "Hiragino Maru Gothic ProN", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
@@ -8,7 +11,27 @@
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
 }
 
-/* ---- Marshmallow (default) ---- */
+/* ---- Slate (default): flat iOS system grey, no gradient blobs ---- */
+.stage[data-theme="slate"] {
+  --stage-bg: #F2F2F7;
+  --app-bg: #FFFFFF;
+  --cloud: rgba(255,255,255,0);
+  --cast: rgba(0,0,0,.14);
+  --shelf: #F7F7FA;
+  --glass: rgba(255,255,255,.72);
+  --glass2: rgba(255,255,255,.82);
+  --sel: #fff;
+  --card:  rgba(255,255,255,.9);
+  --card-2:rgba(255,255,255,.98);
+  --line:  rgba(60,60,67,.29);
+  --ink:   #1C1C1E;
+  --muted: #6E6E73;
+  --dim:   #AEAEB2;
+  --gold:  #FF9500;
+  --candy: #FF3B30;
+}
+
+/* ---- Marshmallow ---- */
 .stage, .stage[data-theme="marshmallow"] {
   --stage-bg:
     radial-gradient(ellipse 60% 40% at 12% 8%,  rgba(255,183,214,.75), transparent 62%),

@@ -5,6 +5,7 @@ export const PALETTE = [
 
 // Each theme is a data-theme value + a 3-stop swatch for the picker preview.
 export const THEMES = [
+  { id: "slate",       name: ["Slate", "石墨灰"],      sw: ["#FFFFFF", "#F2F2F7", "#E5E5EA"] },
   { id: "marshmallow", name: ["Marshmallow", "棉花糖"], sw: ["#FFB6D6", "#B4CDFF", "#FFD6BE"] },
   { id: "sunset",      name: ["Sunset", "日落"],       sw: ["#FF966E", "#FF7896", "#FFC460"] },
   { id: "meadow",      name: ["Meadow", "草地"],       sw: ["#78D6A8", "#8CC8FF", "#D2E878"] },
@@ -14,7 +15,7 @@ export const THEMES = [
   { id: "dusk",        name: ["Dusk", "黄昏"],         sw: ["#FF9E6E", "#B06EE0", "#6E7EE0"] },
   { id: "forest",      name: ["Forest", "森林"],       sw: ["#5AD6A0", "#3FB0C0", "#8CD060"] },
 ];
-export const DEFAULT_THEME = "marshmallow";
+export const DEFAULT_THEME = "slate";
 
 // Coins: earned by logging real activity, spent on purely cosmetic avatar gear.
 export const COINS_PER_LOG = 5;
