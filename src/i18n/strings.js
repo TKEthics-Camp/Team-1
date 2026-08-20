@@ -9,6 +9,7 @@ export const STR = {
   // start flow (UI Design Figma) — individual path
   sfStart:      ["Start", "开始"],
   sfContinue:   ["Continue", "继续"],
+  sfChecking:   ["Checking…", "检查中…"],
   sfAdd:        ["Add", "添加"],
   sfTagline:    ["A Simple, Easy Way To Track Your Hobbies", "简单、轻松地记录你的爱好"],
   sfLogIn:      ["Log In", "登录"],

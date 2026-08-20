@@ -51,7 +51,18 @@ export default function Onboarding() {
   const [hobbyBlocked, setHobbyBlocked] = useState(false);
   const [nameError, setNameError] = useState(null);
   const [finishing, setFinishing] = useState(false);
+  const [checkingName, setCheckingName] = useState(false);
+  // Sidesteps re-checking a name that was already reserved server-side —
+  // cleared whenever the field changes, so a mid-flow rename to something
+  // else re-runs the uniqueness check instead of trusting a stale pass.
+  const [nameReserved, setNameReserved] = useState(false);
   const steps = stepsFor(accountType);
+
+  function handleNameChange(v) {
+    setName(v);
+    setNameReserved(false);
+    setNameError(null);
+  }
 
   function addDraft(raw) {
     const nm = (raw || "").trim();
@@ -73,26 +84,52 @@ export default function Onboarding() {
     if (at >= 0) removeDraft(at); else addDraft(nm);
   }
 
+  // The `users` row already exists (created by the on_auth_user_created
+  // trigger the moment this account signed up) — this just fills in the
+  // display name and account type collected during onboarding. A unique-
+  // index violation (23505) means the name is taken, regardless of whether
+  // that other account is visible to us under RLS.
+  async function reserveName(trimmedName) {
+    if (!user) return { ok: true };
+    const { error } = await supabase
+      .from("users")
+      .update({ display_name: trimmedName, account_type: accountType || "individual" })
+      .eq("id", user.id);
+    if (error) {
+      console.error("Failed to sync profile:", error);
+      return { ok: false, code: error.code };
+    }
+    return { ok: true };
+  }
+
+  // Reserve the name as soon as it's entered rather than waiting until the
+  // very end of onboarding — otherwise a taken username only surfaces after
+  // gender, hobbies, and theme are all filled in, sending the user all the
+  // way back to redo it.
+  async function tryAdvanceFromName() {
+    if (checkingName) return;
+    if (nameReserved) { setStep(step + 1); return; }
+    setCheckingName(true);
+    const { ok, code } = await reserveName(name.trim());
+    setCheckingName(false);
+    if (!ok) {
+      setNameError(code === "23505" ? "usernameTaken" : "usernameError");
+      return;
+    }
+    setNameReserved(true);
+    setStep(step + 1);
+  }
+
   async function finish() {
     if (finishing) return;
     const trimmedName = name.trim();
 
-    // The `users` row already exists (created by the on_auth_user_created
-    // trigger the moment this account signed up) — this just fills in the
-    // display name and account type collected during onboarding. Checked
-    // *before* anything local commits: a taken username needs to send them
-    // back to fix the name, not finish onboarding with a name that never
-    // actually saved server-side (see users_display_name_unique_idx).
-    if (user) {
+    if (!nameReserved) {
       setFinishing(true);
-      const { error } = await supabase
-        .from("users")
-        .update({ display_name: trimmedName, account_type: accountType || "individual" })
-        .eq("id", user.id);
+      const { ok, code } = await reserveName(trimmedName);
       setFinishing(false);
-      if (error) {
-        console.error("Failed to sync profile:", error);
-        setNameError(error.code === "23505" ? "usernameTaken" : "usernameError");
+      if (!ok) {
+        setNameError(code === "23505" ? "usernameTaken" : "usernameError");
         setStep(steps.indexOf("name"));
         return;
       }
@@ -139,8 +176,9 @@ export default function Onboarding() {
         {current === "name" && (
           <NameStep
             name={name}
-            setName={setName}
-            onNext={() => setStep(step + 1)}
+            setName={handleNameChange}
+            onNext={tryAdvanceFromName}
+            busy={checkingName}
             error={nameError}
             clearError={() => setNameError(null)}
           />
