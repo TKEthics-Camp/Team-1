@@ -27,7 +27,7 @@ const STEPS_ORG = [
 
 const REVEAL_DELAY = 1500;
 
-// A one-time (or replay-on-demand) walkthrough: Sprig hops between Home,
+// A one-time (or replay-on-demand) walkthrough: Twig hops between Home,
 // Explore, and Me, pointing out a few things in a speech bubble at each
 // stop. Nothing can be skipped for the first REVEAL_DELAY ms — the "tap
 // anywhere to continue" line only appears after that, so it reads instead

@@ -6,6 +6,7 @@ import { useI18n } from "./i18n/I18nContext";
 import { useReminderTimers } from "./lib/useReminderTimers";
 import { UIProvider, useUI } from "./ui/UIContext";
 import { DEFAULT_THEME } from "./lib/constants";
+import { useResolvedTheme } from "./lib/useResolvedTheme";
 import AuthScreen from "./components/auth/AuthScreen";
 import Onboarding from "./components/onboarding/Onboarding";
 import HomeScreen from "./components/home/HomeScreen";
@@ -27,6 +28,7 @@ export default function App() {
   const { lang, setLang, nameOf, t } = useI18n();
   const syncedLang = useRef(false);
   const lastUserId = useRef(null);
+  const resolvedTheme = useResolvedTheme((profile && profile.theme) || DEFAULT_THEME);
 
   // Demo trees carry a real reminder time ("16:00") same as any other —
   // without excluding them, a planted demo garden could fire a genuine OS
@@ -53,7 +55,7 @@ export default function App() {
   if (loading || authLoading) return null;
 
   return (
-    <div className="stage" data-theme={(profile && profile.theme) || DEFAULT_THEME}>
+    <div className="stage" data-theme={resolvedTheme}>
       <div className="app">
         {!session ? (
           <AuthScreen />

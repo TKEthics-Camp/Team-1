@@ -1,5 +1,5 @@
 import { useI18n } from "../../i18n/I18nContext";
-import sprig from "../../assets/sprig.png";
+import Mascot from "../shared/Mascot";
 
 export default function WelcomeStep({ onBegin }) {
   const { t } = useI18n();
@@ -7,7 +7,7 @@ export default function WelcomeStep({ onBegin }) {
     <>
       <div className="sf-center">
         <h2 className="sf-wordmark">{t("appName")}</h2>
-        <img className="sf-hero" src={sprig} alt="" />
+        <Mascot size={132} className="sf-hero" />
         <p className="sf-tagline">{t("sfTagline")}</p>
       </div>
       <div className="sf-foot">

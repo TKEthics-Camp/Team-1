@@ -1,5 +1,5 @@
 import { useI18n } from "../../i18n/I18nContext";
-import sprig from "../../assets/sprig.png";
+import Mascot from "../shared/Mascot";
 
 // Breather screen between signing in and the first real question, so the
 // flow doesn't open on a form. Shown to individuals and orgs alike.
@@ -9,7 +9,7 @@ export default function IntroStep({ onNext }) {
     <>
       <div className="sf-center">
         <h2 className="sf-title-c">{t("sfIntroTitle")}</h2>
-        <img className="sf-hero" src={sprig} alt="" />
+        <Mascot size={132} className="sf-hero" />
       </div>
       <div className="sf-foot">
         <button className="sf-btn" onClick={onNext}>{t("sfContinue")}</button>

@@ -37,7 +37,7 @@ export default function HomeScreen() {
   // handful of sprouts (onboarding's suggestion chips make it easy to add
   // several) but nothing logged yet. Offer the sample garden here, where it
   // matters most; it vanishes the moment there's any real activity. Hidden
-  // during the guided tour so Sprig (the tour mascot) and the card's own
+  // during the guided tour so Twig (the tour mascot) and the card's own
   // mascot don't end up overlapping on screen at once.
   const barren = entries.length === 0 && photos.length === 0 && profile.tourSeen;
 

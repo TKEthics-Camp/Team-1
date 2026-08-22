@@ -4,18 +4,14 @@ export const PALETTE = [
 ];
 
 // Each theme is a data-theme value + a 3-stop swatch for the picker preview.
+// "system" isn't a fixed data-theme value — see lib/useResolvedTheme, which
+// resolves it to White or Black to match the OS, live.
 export const THEMES = [
-  { id: "slate",       name: ["Slate", "石墨灰"],      sw: ["#FFFFFF", "#F2F2F7", "#E5E5EA"] },
-  { id: "marshmallow", name: ["Marshmallow", "棉花糖"], sw: ["#FFB6D6", "#B4CDFF", "#FFD6BE"] },
-  { id: "sunset",      name: ["Sunset", "日落"],       sw: ["#FF966E", "#FF7896", "#FFC460"] },
-  { id: "meadow",      name: ["Meadow", "草地"],       sw: ["#78D6A8", "#8CC8FF", "#D2E878"] },
-  { id: "ocean",       name: ["Ocean", "海洋"],        sw: ["#6FE0D8", "#5AA8F2", "#9BD6FF"] },
-  { id: "berry",       name: ["Berry", "莓果"],        sw: ["#FF8FC8", "#C08CF2", "#FFB0D8"] },
-  { id: "midnight",    name: ["Midnight", "午夜"],     sw: ["#50C8BE", "#786EFF", "#D26EDC"] },
-  { id: "dusk",        name: ["Dusk", "黄昏"],         sw: ["#FF9E6E", "#B06EE0", "#6E7EE0"] },
-  { id: "forest",      name: ["Forest", "森林"],       sw: ["#5AD6A0", "#3FB0C0", "#8CD060"] },
+  { id: "white",  name: ["White", "白色"],   sw: ["#FFFFFF", "#F2F2F7", "#E5E5EA"] },
+  { id: "black",  name: ["Black", "黑色"],   sw: ["#000000", "#1C1C1E", "#3A3A3C"] },
+  { id: "system", name: ["System", "跟随系统"], sw: ["#FFFFFF", "#8E8E93", "#000000"] },
 ];
-export const DEFAULT_THEME = "slate";
+export const DEFAULT_THEME = "system";
 
 // Coins: earned by logging real activity, spent on purely cosmetic avatar gear.
 export const COINS_PER_LOG = 5;
