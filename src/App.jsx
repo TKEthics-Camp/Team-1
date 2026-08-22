@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useStore } from "./store/StoreContext";
 import { useAuth } from "./store/AuthContext";
@@ -6,6 +6,7 @@ import { useI18n } from "./i18n/I18nContext";
 import { useReminderTimers } from "./lib/useReminderTimers";
 import { UIProvider, useUI } from "./ui/UIContext";
 import { DEFAULT_THEME } from "./lib/constants";
+import WelcomeScreen from "./components/auth/WelcomeScreen";
 import AuthScreen from "./components/auth/AuthScreen";
 import Onboarding from "./components/onboarding/Onboarding";
 import HomeScreen from "./components/home/HomeScreen";
@@ -27,6 +28,9 @@ export default function App() {
   const { lang, setLang, nameOf, t } = useI18n();
   const syncedLang = useRef(false);
   const lastUserId = useRef(null);
+  // Signed-out visitors land on the Welcome screen first; picking Start or
+  // "Already have an account?" reveals the actual sign up/log in form.
+  const [authView, setAuthView] = useState("welcome"); // "welcome" | "signUp" | "signIn"
 
   useReminderTimers(interests, entries, photos, lang, nameOf, t);
 
@@ -46,13 +50,23 @@ export default function App() {
     lastUserId.current = user ? user.id : null;
   }, [user, clearAllData]);
 
+  // A fresh sign-out should land back on Welcome, not reopen straight into
+  // whichever form (sign up or log in) was showing before.
+  useEffect(() => {
+    if (!session) setAuthView("welcome");
+  }, [session]);
+
   if (loading || authLoading) return null;
 
   return (
     <div className="stage" data-theme={(profile && profile.theme) || DEFAULT_THEME}>
       <div className="app">
         {!session ? (
-          <AuthScreen />
+          authView === "welcome" ? (
+            <WelcomeScreen onStart={() => setAuthView("signUp")} onLogIn={() => setAuthView("signIn")} />
+          ) : (
+            <AuthScreen initialMode={authView} />
+          )
         ) : profile ? (
           <BrowserRouter basename={import.meta.env.BASE_URL}>
             <UIProvider>

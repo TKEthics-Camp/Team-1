@@ -276,6 +276,10 @@ export const STR = {
   memoriesEmpty: ["Nothing to look back on yet — keep logging and memories will show up here.", "还没有可以回顾的内容 —— 继续记录，回忆会慢慢出现在这里。"],
   dLabel:       ["d", "天"],
   hLabel:       ["h", "小时"],
+  // welcome
+  welcomeTagline: ["A Simple, Easy Way To Track Your Hobbies", "追踪你的爱好，简单又轻松"],
+  welcomeHaveAccount: ["Already have an account?", "已有账号？"],
+  welcomeStart: ["Start", "开始"],
   // auth
   authSignIn:   ["Log in", "登录"],
   authSignUp:   ["Sign up", "注册"],

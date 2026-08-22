@@ -5,10 +5,10 @@ import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
 import Field from "../shared/Field";
 
-export default function AuthScreen() {
+export default function AuthScreen({ initialMode = "signIn" }) {
   const { t } = useI18n();
   const { signUp, signIn, authError, clearAuthError } = useAuth();
-  const [mode, setMode] = useState("signIn"); // "signIn" | "signUp"
+  const [mode, setMode] = useState(initialMode); // "signIn" | "signUp"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
