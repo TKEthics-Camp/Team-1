@@ -55,6 +55,7 @@ export default function SignUpFlow({ onBack }) {
 
   return (
     <div className="login-screen">
+      <button type="button" className="login-back" aria-label={t("back")} onClick={() => setStep("accountType")}>←</button>
       <div className="login-header">
         <Mascot size={68} />
         <h1 className="login-title">{t("setupAccountTitle")}</h1>

@@ -38,7 +38,7 @@ function avatarForGender(gender) {
 export default function Onboarding() {
   const { t, lang } = useI18n();
   const { saveProfile, addInterest } = useStore();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const accountType = (user && user.accountType) || "individual";
   const [step, setStep] = useState(0);
   const [gender, setGender] = useState(null);
@@ -108,9 +108,13 @@ export default function Onboarding() {
   return (
     <>
       <TopBar>
-        {step > 0 && (
-          <button className="icon" aria-label={t("back")} onClick={() => setStep(step - 1)}>←</button>
-        )}
+        <button
+          className="icon"
+          aria-label={t("back")}
+          onClick={() => (step > 0 ? setStep(step - 1) : signOut())}
+        >
+          ←
+        </button>
         <h1>{t("appName")}</h1>
         <LangToggle />
       </TopBar>
