@@ -25,12 +25,15 @@ export function AuthProvider({ children }) {
   }, []);
 
   const actions = useMemo(() => ({
-    async signUp(email, password) {
+    // `metadata` (username, accountType) rides in Supabase's user_metadata —
+    // it's how Onboarding knows who's signing up without asking again, and
+    // survives a page reload since it's part of the session/JWT itself.
+    async signUp(email, password, metadata) {
       setAuthError(null);
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({ email, password, options: { data: metadata } });
       if (error) { setAuthError(error.message); return { ok: false }; }
       // With email confirmation on, signUp succeeds but returns no session yet.
-      return { ok: true, needsConfirmation: !data.session };
+      return { ok: true, needsConfirmation: !data.session, userId: data.user ? data.user.id : null };
     },
     async signIn(email, password) {
       setAuthError(null);

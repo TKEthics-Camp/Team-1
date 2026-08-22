@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useAuth } from "../../store/AuthContext";
-import { supabase } from "../../lib/supabase";
 import { PALETTE, DEFAULT_THEME, CLASS_CODES } from "../../lib/constants";
 import { uid } from "../../lib/id";
 import { askNotifications } from "../../lib/useReminderTimers";
@@ -11,22 +10,24 @@ import LangToggle from "../shared/LangToggle";
 import WelcomeStep from "./WelcomeStep";
 import IntroStep from "./IntroStep";
 import GenderStep from "./GenderStep";
-import AccountTypeStep from "./AccountTypeStep";
-import NameStep from "./NameStep";
 import InterestsStep from "./InterestsStep";
 import ConfirmHobbiesStep from "./ConfirmHobbiesStep";
 import ScheduleStep from "./ScheduleStep";
 import LookStep from "./LookStep";
 
-// A school/group account is the educator running a class, not a student
-// joining one — so it skips the hobby steps (interests/confirm/schedule) and
-// the gender/avatar-hairstyle question, since neither applies to the adult
-// running the dashboard. Their class code is minted automatically at finish()
-// rather than typed in; students join *that* code later from Me → Join a class.
+// Account type and username are settled before this ever mounts — see
+// AuthFlow, which collects them at signup along with the one real branch
+// point (an educator gives a real email, an individual never does).
+// Onboarding just reads `user.user_metadata` for both. A school/group
+// account is the educator running a class, not a student joining one — so
+// it skips the hobby steps (interests/confirm/schedule) and the gender/
+// avatar-hairstyle question, since neither applies to the adult running the
+// dashboard. Their class code is minted automatically at finish() rather
+// than typed in; students join *that* code later from Me → Join a class.
 function stepsFor(accountType) {
-  const base = ["welcome", "intro", "account"];
-  if (accountType === "org") return base.concat(["name", "look"]);
-  return base.concat(["gender", "name", "interests", "confirm", "schedule", "look"]);
+  const base = ["welcome", "intro"];
+  if (accountType === "org") return base.concat(["look"]);
+  return base.concat(["gender", "interests", "confirm", "schedule", "look"]);
 }
 
 // Gender only ever picks a starting hair style for the avatar — everything
@@ -42,27 +43,15 @@ export default function Onboarding() {
   const { t, lang } = useI18n();
   const { saveProfile, addInterest } = useStore();
   const { user } = useAuth();
+  const meta = (user && user.user_metadata) || {};
+  const accountType = meta.accountType || "individual";
+  const name = meta.username || "";
   const [step, setStep] = useState(0);
   const [gender, setGender] = useState(null);
-  const [accountType, setAccountType] = useState(null);
-  const [name, setName] = useState("");
   const [drafts, setDrafts] = useState([]);
   const [theme, setTheme] = useState(DEFAULT_THEME);
   const [hobbyBlocked, setHobbyBlocked] = useState(false);
-  const [nameError, setNameError] = useState(null);
-  const [finishing, setFinishing] = useState(false);
-  const [checkingName, setCheckingName] = useState(false);
-  // Sidesteps re-checking a name that was already reserved server-side —
-  // cleared whenever the field changes, so a mid-flow rename to something
-  // else re-runs the uniqueness check instead of trusting a stale pass.
-  const [nameReserved, setNameReserved] = useState(false);
   const steps = stepsFor(accountType);
-
-  function handleNameChange(v) {
-    setName(v);
-    setNameReserved(false);
-    setNameError(null);
-  }
 
   function addDraft(raw) {
     const nm = (raw || "").trim();
@@ -84,60 +73,10 @@ export default function Onboarding() {
     if (at >= 0) removeDraft(at); else addDraft(nm);
   }
 
-  // The `users` row already exists (created by the on_auth_user_created
-  // trigger the moment this account signed up) — this just fills in the
-  // display name and account type collected during onboarding. A unique-
-  // index violation (23505) means the name is taken, regardless of whether
-  // that other account is visible to us under RLS.
-  async function reserveName(trimmedName) {
-    if (!user) return { ok: true };
-    const { error } = await supabase
-      .from("users")
-      .update({ display_name: trimmedName, account_type: accountType || "individual" })
-      .eq("id", user.id);
-    if (error) {
-      console.error("Failed to sync profile:", error);
-      return { ok: false, code: error.code };
-    }
-    return { ok: true };
-  }
-
-  // Reserve the name as soon as it's entered rather than waiting until the
-  // very end of onboarding — otherwise a taken username only surfaces after
-  // gender, hobbies, and theme are all filled in, sending the user all the
-  // way back to redo it.
-  async function tryAdvanceFromName() {
-    if (checkingName) return;
-    if (nameReserved) { setStep(step + 1); return; }
-    setCheckingName(true);
-    const { ok, code } = await reserveName(name.trim());
-    setCheckingName(false);
-    if (!ok) {
-      setNameError(code === "23505" ? "usernameTaken" : "usernameError");
-      return;
-    }
-    setNameReserved(true);
-    setStep(step + 1);
-  }
-
-  async function finish() {
-    if (finishing) return;
-    const trimmedName = name.trim();
-
-    if (!nameReserved) {
-      setFinishing(true);
-      const { ok, code } = await reserveName(trimmedName);
-      setFinishing(false);
-      if (!ok) {
-        setNameError(code === "23505" ? "usernameTaken" : "usernameError");
-        setStep(steps.indexOf("name"));
-        return;
-      }
-    }
-
+  function finish() {
     saveProfile({
-      key: "profile", name: trimmedName, lang, color: PALETTE[0], theme,
-      accountType: accountType || "individual",
+      key: "profile", name, lang, color: PALETTE[0], theme,
+      accountType,
       classCode: accountType === "org" ? CLASS_CODES[0] : null,
       coins: 0, ownedDecorations: [], equippedDecoration: null, createdAt: Date.now(),
       avatar: avatarForGender(gender),
@@ -167,21 +106,8 @@ export default function Onboarding() {
 
         {current === "welcome" && <WelcomeStep onBegin={() => setStep(step + 1)} />}
         {current === "intro" && <IntroStep onNext={() => setStep(step + 1)} />}
-        {current === "account" && (
-          <AccountTypeStep value={accountType} setType={setAccountType} onNext={() => setStep(step + 1)} />
-        )}
         {current === "gender" && (
           <GenderStep value={gender} setGender={setGender} onNext={() => setStep(step + 1)} />
-        )}
-        {current === "name" && (
-          <NameStep
-            name={name}
-            setName={handleNameChange}
-            onNext={tryAdvanceFromName}
-            busy={checkingName}
-            error={nameError}
-            clearError={() => setNameError(null)}
-          />
         )}
         {current === "interests" && (
           <InterestsStep

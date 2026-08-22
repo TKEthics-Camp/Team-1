@@ -7,7 +7,7 @@ import { useReminderTimers } from "./lib/useReminderTimers";
 import { UIProvider, useUI } from "./ui/UIContext";
 import { DEFAULT_THEME } from "./lib/constants";
 import { useResolvedTheme } from "./lib/useResolvedTheme";
-import AuthScreen from "./components/auth/AuthScreen";
+import AuthFlow from "./components/auth/AuthFlow";
 import Onboarding from "./components/onboarding/Onboarding";
 import HomeScreen from "./components/home/HomeScreen";
 import EducatorDashboard from "./components/home/EducatorDashboard";
@@ -58,7 +58,7 @@ export default function App() {
     <div className="stage" data-theme={resolvedTheme}>
       <div className="app">
         {!session ? (
-          <AuthScreen />
+          <AuthFlow />
         ) : profile ? (
           <BrowserRouter basename={import.meta.env.BASE_URL}>
             <UIProvider>
