@@ -8,7 +8,7 @@ import { UIProvider, useUI } from "./ui/UIContext";
 import { DEFAULT_THEME } from "./lib/constants";
 import WelcomeScreen from "./components/auth/WelcomeScreen";
 import LoginScreen from "./components/auth/LoginScreen";
-import AuthScreen from "./components/auth/AuthScreen";
+import SignUpFlow from "./components/auth/SignUpFlow";
 import Onboarding from "./components/onboarding/Onboarding";
 import HomeScreen from "./components/home/HomeScreen";
 import EducatorDashboard from "./components/home/EducatorDashboard";
@@ -76,7 +76,7 @@ export default function App() {
           ) : authView === "signIn" ? (
             <LoginScreen onBack={() => setAuthView("welcome")} />
           ) : (
-            <AuthScreen />
+            <SignUpFlow onBack={() => setAuthView("welcome")} />
           )
         ) : profile ? (
           <BrowserRouter basename={import.meta.env.BASE_URL}>

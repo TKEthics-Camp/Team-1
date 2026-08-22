@@ -22,7 +22,10 @@ const DEBUG_SESSION = { user: { id: "00000000-0000-0000-0000-000000000001", user
 const SESSION_KEY = "forestLocalSessionUsername";
 
 function toUser(account) {
-  return { id: account.id, username: account.displayName || account.username, isLocal: true };
+  return {
+    id: account.id, username: account.displayName || account.username, isLocal: true,
+    accountType: account.accountType || "individual", email: account.email || null,
+  };
 }
 
 export function AuthProvider({ children }) {
@@ -40,9 +43,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   const actions = useMemo(() => ({
-    async signUp(username, password) {
+    async signUp(username, password, extra) {
       setAuthError(null);
-      const result = await createLocalAccount(username, password);
+      const result = await createLocalAccount(username, password, extra);
       if (!result.ok) {
         setAuthError(result.reason === "taken" ? t("authUsernameTaken") : t("authUsernameRequired"));
         return { ok: false };

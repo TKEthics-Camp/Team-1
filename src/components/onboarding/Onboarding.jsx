@@ -9,25 +9,21 @@ import { askNotifications } from "../../lib/useReminderTimers";
 import { isBlockedHobby } from "../../lib/hobbyFilter";
 import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
-import WelcomeStep from "./WelcomeStep";
 import GenderStep from "./GenderStep";
-import AccountTypeStep from "./AccountTypeStep";
-import NameStep from "./NameStep";
 import InterestsStep from "./InterestsStep";
 import ScheduleStep from "./ScheduleStep";
 import ThemeStep from "./ThemeStep";
 
-// A school/group account is the educator running a class, not a student
-// joining one — so it skips straight from name to theme, with no hobby
-// picking (interests/schedule) and no gender/avatar-hairstyle question,
-// since neither applies to the adult running the dashboard. Their class
-// code is minted automatically at finish() rather than typed in; students
-// join *that* code later from Me → Join a class.
+// Account type and username/password are collected earlier now, in
+// SignUpFlow, before this component ever mounts — this only finishes
+// setting up the profile. A school/group account skips straight to theme:
+// no hobby picking (interests/schedule) and no gender/avatar-hairstyle
+// question, since neither applies to the adult running the dashboard.
+// Their class code is minted automatically at finish() rather than typed
+// in; students join *that* code later from Me → Join a class.
 function stepsFor(accountType) {
-  const base = ["welcome", "account"];
-  if (accountType !== "org") base.push("gender");
-  if (accountType === "org") return base.concat(["name", "theme"]);
-  return base.concat(["name", "interests", "schedule", "theme"]);
+  if (accountType === "org") return ["theme"];
+  return ["gender", "interests", "schedule", "theme"];
 }
 
 // Gender only ever picks a starting hair style for the avatar — everything
@@ -43,14 +39,12 @@ export default function Onboarding() {
   const { t, lang } = useI18n();
   const { saveProfile, addInterest } = useStore();
   const { user } = useAuth();
+  const accountType = (user && user.accountType) || "individual";
   const [step, setStep] = useState(0);
   const [gender, setGender] = useState(null);
-  const [accountType, setAccountType] = useState(null);
-  const [name, setName] = useState("");
   const [drafts, setDrafts] = useState([]);
   const [theme, setTheme] = useState(DEFAULT_THEME);
   const [hobbyBlocked, setHobbyBlocked] = useState(false);
-  const [nameError, setNameError] = useState(null);
   const [finishing, setFinishing] = useState(false);
   const steps = stepsFor(accountType);
 
@@ -71,34 +65,32 @@ export default function Onboarding() {
 
   async function finish() {
     if (finishing) return;
-    const trimmedName = name.trim();
+    const trimmedName = (user && user.username) || "";
 
     // The `users` row already exists (created by the on_auth_user_created
     // trigger the moment this account signed up) — this just fills in the
-    // display name and account type collected during onboarding. Checked
-    // *before* anything local commits: a taken username needs to send them
-    // back to fix the name, not finish onboarding with a name that never
-    // actually saved server-side (see users_display_name_unique_idx).
-    // Debug and local-only accounts (Plan A — no backend yet) have no real
-    // row to update; skip straight to the local save.
+    // display name and account type collected during sign up. Username
+    // uniqueness is already checked at sign-up time (SignUpFlow), not
+    // here — there's no "name" step left in this flow to send someone
+    // back to on a conflict. Debug and local-only accounts (Plan A — no
+    // backend yet) have no real row to update; skip straight to the local
+    // save.
     if (user && !user.isDebug && !user.isLocal) {
       setFinishing(true);
       const { error } = await supabase
         .from("users")
-        .update({ display_name: trimmedName, account_type: accountType || "individual" })
+        .update({ display_name: trimmedName, account_type: accountType })
         .eq("id", user.id);
       setFinishing(false);
       if (error) {
         console.error("Failed to sync profile:", error);
-        setNameError(error.code === "23505" ? "usernameTaken" : "usernameError");
-        setStep(steps.indexOf("name"));
         return;
       }
     }
 
     saveProfile({
       key: "profile", name: trimmedName, lang, color: PALETTE[0], theme,
-      accountType: accountType || "individual",
+      accountType,
       classCode: accountType === "org" ? CLASS_CODES[0] : null,
       coins: 0, ownedDecorations: [], equippedDecoration: null, createdAt: Date.now(),
       avatar: avatarForGender(gender),
@@ -124,21 +116,8 @@ export default function Onboarding() {
       </TopBar>
       <div className="view">
         <div className="onb">
-          {steps[step] === "welcome" && <WelcomeStep onBegin={() => setStep(step + 1)} />}
           {steps[step] === "gender" && (
             <GenderStep value={gender} setGender={setGender} onNext={() => setStep(step + 1)} />
-          )}
-          {steps[step] === "account" && (
-            <AccountTypeStep value={accountType} setType={setAccountType} onNext={() => setStep(step + 1)} />
-          )}
-          {steps[step] === "name" && (
-            <NameStep
-              name={name}
-              setName={setName}
-              onNext={() => setStep(step + 1)}
-              error={nameError}
-              clearError={() => setNameError(null)}
-            />
           )}
           {steps[step] === "interests" && (
             <InterestsStep

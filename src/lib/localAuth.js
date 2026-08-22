@@ -23,7 +23,7 @@ async function hashPassword(password, salt) {
   return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-export async function createLocalAccount(rawUsername, password) {
+export async function createLocalAccount(rawUsername, password, { accountType = "individual", email = null } = {}) {
   const username = normalize(rawUsername);
   if (!username || !password) return { ok: false, reason: "empty" };
   if (await db.accounts.get(username)) return { ok: false, reason: "taken" };
@@ -31,6 +31,7 @@ export async function createLocalAccount(rawUsername, password) {
   const account = {
     username, displayName: rawUsername.trim(),
     salt, passwordHash: await hashPassword(password, salt),
+    accountType, email,
     id: uid(), createdAt: Date.now(),
   };
   await db.accounts.put(account);

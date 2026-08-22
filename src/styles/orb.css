@@ -141,8 +141,6 @@
 /* ---------- trees (hobbies as living things) ----------
    Laid out as a two-column grid, like a profile grid — scrolls down with
    the rest of the page instead of swiping sideways one at a time. */
-/* the little onboarding grove (WelcomeStep) reuses this as a plain grid */
-.tree-wall { display: grid; gap: 6px; padding: 6px 0 4px; align-items: end; }
 .tree-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; padding: 4px 0 20px; }
 .tree-cell {
   background: var(--card); border: 1px solid var(--line); border-radius: 20px;
