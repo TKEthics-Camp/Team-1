@@ -79,7 +79,9 @@ export default function Onboarding() {
     // *before* anything local commits: a taken username needs to send them
     // back to fix the name, not finish onboarding with a name that never
     // actually saved server-side (see users_display_name_unique_idx).
-    if (user) {
+    // Debug and local-only accounts (Plan A — no backend yet) have no real
+    // row to update; skip straight to the local save.
+    if (user && !user.isDebug && !user.isLocal) {
       setFinishing(true);
       const { error } = await supabase
         .from("users")

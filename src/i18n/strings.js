@@ -281,16 +281,18 @@ export const STR = {
   welcomeHaveAccount: ["Already have an account?", "已有账号？"],
   welcomeStart: ["Start", "开始"],
   // auth
-  authSignIn:   ["Log in", "登录"],
+  authSignIn:   ["Log In", "登录"],
   authSignUp:   ["Sign up", "注册"],
-  authEmail:    ["Email", "邮箱"],
-  authEmailPh:  ["you@example.com", "you@example.com"],
+  authUsername: ["Username", "用户名"],
+  authUsernamePh: ["Pick a username", "起一个用户名"],
   authPassword: ["Password", "密码"],
   authPasswordPh: ["At least 6 characters", "至少6个字符"],
-  authSwitchToSignUp: ["New here? Create an account", "第一次来？创建账号"],
-  authSwitchToSignIn: ["Already have an account? Log in", "已有账号？登录"],
-  authConfirmSent: ["Check your email for a confirmation link, then log in.", "请查收邮箱中的确认链接，然后登录。"],
+  authContinue: ["Continue", "继续"],
   authWorking:  ["Working…", "处理中…"],
+  authNoAccount: ["No account found with that username.", "找不到这个用户名对应的账号。"],
+  authWrongPassword: ["Incorrect username or password.", "用户名或密码不正确。"],
+  authUsernameTaken: ["That username is already taken.", "这个用户名已经被使用了。"],
+  authUsernameRequired: ["Enter a username and password.", "请输入用户名和密码。"],
 };
 
 // Sunday-first, matching Date#getDay().

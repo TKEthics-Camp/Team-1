@@ -5,30 +5,24 @@ import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
 import Field from "../shared/Field";
 
-export default function AuthScreen({ initialMode = "signIn" }) {
+// Sign-up only for now — the log-in half of this flow has moved to its own
+// screen (LoginScreen), reached from the Welcome screen instead of a toggle
+// here, so there's exactly one place each flow lives. This screen still
+// uses the app's older visual style; a matching redesign is a follow-up.
+export default function AuthScreen() {
   const { t } = useI18n();
-  const { signUp, signIn, authError, clearAuthError } = useAuth();
-  const [mode, setMode] = useState(initialMode); // "signIn" | "signUp"
-  const [email, setEmail] = useState("");
+  const { signUp, authError, clearAuthError } = useAuth();
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const [confirmSent, setConfirmSent] = useState(false);
-
-  function switchMode() {
-    clearAuthError();
-    setConfirmSent(false);
-    setMode((m) => (m === "signIn" ? "signUp" : "signIn"));
-  }
 
   async function submit(e) {
     e.preventDefault();
-    if (!email.trim() || !password) return;
+    if (!username.trim() || !password) return;
+    clearAuthError();
     setBusy(true);
-    const result = mode === "signIn"
-      ? await signIn(email.trim(), password)
-      : await signUp(email.trim(), password);
+    await signUp(username.trim(), password);
     setBusy(false);
-    if (result.ok && result.needsConfirmation) setConfirmSent(true);
   }
 
   return (
@@ -39,21 +33,21 @@ export default function AuthScreen({ initialMode = "signIn" }) {
       </TopBar>
       <div className="view">
         <form className="onb" onSubmit={submit}>
-          <h2>{mode === "signIn" ? t("authSignIn") : t("authSignUp")}</h2>
+          <h2>{t("authSignUp")}</h2>
 
-          <Field label={t("authEmail")}>
+          <Field label={t("authUsername")}>
             <input
-              type="email"
-              autoComplete="email"
-              placeholder={t("authEmailPh")}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              autoComplete="username"
+              placeholder={t("authUsernamePh")}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
             />
           </Field>
           <Field label={t("authPassword")}>
             <input
               type="password"
-              autoComplete={mode === "signIn" ? "current-password" : "new-password"}
+              autoComplete="new-password"
               minLength={6}
               placeholder={t("authPasswordPh")}
               value={password}
@@ -62,14 +56,10 @@ export default function AuthScreen({ initialMode = "signIn" }) {
           </Field>
 
           {authError && <div className="sub" style={{ color: "var(--danger, #d33)" }}>{authError}</div>}
-          {confirmSent && <div className="sub">{t("authConfirmSent")}</div>}
 
           <div className="grow" />
-          <button className="btn" type="submit" disabled={busy || !email.trim() || !password}>
-            {busy ? t("authWorking") : mode === "signIn" ? t("authSignIn") : t("authSignUp")}
-          </button>
-          <button className="btn2" type="button" onClick={switchMode}>
-            {mode === "signIn" ? t("authSwitchToSignUp") : t("authSwitchToSignIn")}
+          <button className="btn" type="submit" disabled={busy || !username.trim() || !password}>
+            {busy ? t("authWorking") : t("authSignUp")}
           </button>
         </form>
       </div>

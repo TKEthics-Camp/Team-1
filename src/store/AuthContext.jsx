@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { supabase } from "../lib/supabase";
+import { useI18n } from "../i18n/I18nContext";
+import { db } from "../db/db";
+import { createLocalAccount, verifyLocalAccount } from "../lib/localAuth";
 
 const AuthCtx = createContext(null);
 
@@ -9,42 +11,65 @@ const AuthCtx = createContext(null);
 // import.meta.env.DEV guard: this can never activate in a production build,
 // even if the env var leaks into a deployed environment.
 const DEBUG_SKIP_AUTH = import.meta.env.DEV && import.meta.env.VITE_DEBUG_SKIP_AUTH === "true";
-// isDebug tells StoreContext to skip all real Supabase sync for this fake
-// user — those calls aren't authenticated and would just fail RLS.
-const DEBUG_SESSION = { user: { id: "00000000-0000-0000-0000-000000000001", email: "debug@local.test", isDebug: true } };
+const DEBUG_SESSION = { user: { id: "00000000-0000-0000-0000-000000000001", username: "debug", isDebug: true } };
+
+// Plan A: accounts are local to this device — username + password, no email,
+// no backend (see localAuth.js). Whoever's logged in is remembered here so a
+// page reload doesn't sign them out; signing out clears it. The `isLocal`
+// flag on the resulting user is what tells StoreContext/Onboarding to skip
+// every real-backend call, the same way `isDebug` already does — neither of
+// these users has a row in a database that doesn't exist yet.
+const SESSION_KEY = "forestLocalSessionUsername";
+
+function toUser(account) {
+  return { id: account.id, username: account.displayName || account.username, isLocal: true };
+}
 
 export function AuthProvider({ children }) {
+  const { t } = useI18n();
   const [session, setSession] = useState(DEBUG_SKIP_AUTH ? DEBUG_SESSION : undefined); // undefined = not checked yet, null = signed out
   const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
     if (DEBUG_SKIP_AUTH) return;
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => setSession(sess));
-    return () => sub.subscription.unsubscribe();
+    const savedUsername = localStorage.getItem(SESSION_KEY);
+    if (!savedUsername) { setSession(null); return; }
+    db.accounts.get(savedUsername).then((account) => {
+      setSession(account ? { user: toUser(account) } : null);
+    });
   }, []);
 
   const actions = useMemo(() => ({
-    async signUp(email, password) {
+    async signUp(username, password) {
       setAuthError(null);
-      const { data, error } = await supabase.auth.signUp({ email, password });
-      if (error) { setAuthError(error.message); return { ok: false }; }
-      // With email confirmation on, signUp succeeds but returns no session yet.
-      return { ok: true, needsConfirmation: !data.session };
+      const result = await createLocalAccount(username, password);
+      if (!result.ok) {
+        setAuthError(result.reason === "taken" ? t("authUsernameTaken") : t("authUsernameRequired"));
+        return { ok: false };
+      }
+      localStorage.setItem(SESSION_KEY, result.account.username);
+      setSession({ user: toUser(result.account) });
+      return { ok: true, needsConfirmation: false };
     },
-    async signIn(email, password) {
+    async signIn(username, password) {
       setAuthError(null);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) { setAuthError(error.message); return { ok: false }; }
+      const result = await verifyLocalAccount(username, password);
+      if (!result.ok) {
+        setAuthError(result.reason === "notFound" ? t("authNoAccount") : t("authWrongPassword"));
+        return { ok: false };
+      }
+      localStorage.setItem(SESSION_KEY, result.account.username);
+      setSession({ user: toUser(result.account) });
       return { ok: true };
     },
     async signOut() {
-      await supabase.auth.signOut();
+      localStorage.removeItem(SESSION_KEY);
+      setSession(null);
     },
     clearAuthError() {
       setAuthError(null);
     },
-  }), []);
+  }), [t]);
 
   const value = useMemo(
     () => ({ session, user: session ? session.user : null, loading: session === undefined, authError, ...actions }),

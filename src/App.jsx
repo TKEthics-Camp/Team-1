@@ -7,6 +7,7 @@ import { useReminderTimers } from "./lib/useReminderTimers";
 import { UIProvider, useUI } from "./ui/UIContext";
 import { DEFAULT_THEME } from "./lib/constants";
 import WelcomeScreen from "./components/auth/WelcomeScreen";
+import LoginScreen from "./components/auth/LoginScreen";
 import AuthScreen from "./components/auth/AuthScreen";
 import Onboarding from "./components/onboarding/Onboarding";
 import HomeScreen from "./components/home/HomeScreen";
@@ -28,6 +29,7 @@ export default function App() {
   const { lang, setLang, nameOf, t } = useI18n();
   const syncedLang = useRef(false);
   const lastUserId = useRef(null);
+  const lastUserWasLocal = useRef(false);
   // Signed-out visitors land on the Welcome screen first; picking Start or
   // "Already have an account?" reveals the actual sign up/log in form.
   const [authView, setAuthView] = useState("welcome"); // "welcome" | "signUp" | "signIn"
@@ -45,9 +47,16 @@ export default function App() {
   // out (shared computer, different student next), wipe the local cache so
   // the next login on this device doesn't inherit the previous user's data —
   // there's no per-user sync yet, so this is the only thing preventing a leak.
+  // Local-only accounts (Plan A — no backend yet) are the one exception:
+  // their data has no server copy to re-fetch, so wiping it on sign-out
+  // would destroy it permanently instead of just clearing a cache. This
+  // still leaves a real gap on a shared device with multiple local
+  // accounts — one local user's data isn't isolated from the next one
+  // logging in on the same device yet. Known follow-up, not solved here.
   useEffect(() => {
-    if (lastUserId.current && !user) clearAllData();
+    if (lastUserId.current && !user && !lastUserWasLocal.current) clearAllData();
     lastUserId.current = user ? user.id : null;
+    lastUserWasLocal.current = user ? !!user.isLocal : false;
   }, [user, clearAllData]);
 
   // A fresh sign-out should land back on Welcome, not reopen straight into
@@ -64,8 +73,10 @@ export default function App() {
         {!session ? (
           authView === "welcome" ? (
             <WelcomeScreen onStart={() => setAuthView("signUp")} onLogIn={() => setAuthView("signIn")} />
+          ) : authView === "signIn" ? (
+            <LoginScreen onBack={() => setAuthView("welcome")} />
           ) : (
-            <AuthScreen initialMode={authView} />
+            <AuthScreen />
           )
         ) : profile ? (
           <BrowserRouter basename={import.meta.env.BASE_URL}>

@@ -9,6 +9,16 @@ db.version(1).stores({
   photos: "id",
   entries: "id",
 });
+// Local-only login credentials (Plan A: no backend yet — see localAuth.js).
+// Keyed by the lowercased, trimmed username so lookups are case-insensitive
+// and two people can't claim "Sam" and "sam" as separate accounts.
+db.version(2).stores({
+  meta: "key",
+  interests: "id",
+  photos: "id",
+  entries: "id",
+  accounts: "username",
+});
 
 export function getAll(store) {
   return db[store].toArray();

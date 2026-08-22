@@ -25,11 +25,11 @@ export function StoreProvider({ children }) {
 
   // Actions read this instead of `user` directly so the memoized action
   // functions below don't need `user` in their dep array to stay fresh.
-  // The debug skip-auth user is deliberately excluded: it isn't a real
-  // Supabase session, so every push/delete against the real project would
-  // just fail RLS and spam the console.
+  // Debug and local-only (Plan A — no backend yet) users are deliberately
+  // excluded: neither is a real Supabase session, so every push/delete
+  // against the real project would just fail RLS and spam the console.
   const userRef = useRef(user);
-  useEffect(() => { userRef.current = user && user.isDebug ? null : user; }, [user]);
+  useEffect(() => { userRef.current = user && (user.isDebug || user.isLocal) ? null : user; }, [user]);
 
   useEffect(() => {
     Promise.all([getAll("meta"), getAll("interests"), getAll("photos"), getAll("entries")])
@@ -65,7 +65,7 @@ export function StoreProvider({ children }) {
     if (!user) reconciledForRef.current = null;
   }, [user]);
   useEffect(() => {
-    if (loading || !user || user.isDebug || reconciledForRef.current === user.id) return;
+    if (loading || !user || user.isDebug || user.isLocal || reconciledForRef.current === user.id) return;
     reconciledForRef.current = user.id;
 
     (async () => {
