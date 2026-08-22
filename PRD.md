@@ -1,360 +1,374 @@
-# Product Requirements Document — "Forest" (working title)
+Product Requirements Document — "Leaves" (叶子)
+A private garden that grows from what you actually do — one tree for every interest you keep alive, planted for a rural-China classroom and built to work for anyone.
+
+
+1. Vision
+Open the app and see a garden. Every tree in it is something you love — Piano, Basketball, Watercolors — and every tree only grows because you actually went and did the thing. Log ten minutes of practice, water the tree. Skip too many days, the tree wilts, and eventually dies. Bring it back to life if you want to, but it costs you something to do it.
+
+The garden is private by default. Nobody sees it unless you decide, tree by tree, that they can. Next to the garden sits a second world — Explore — where a student can see hobby ideas curated for them, watch other students in their class light up a web of shared interests, and (if their teacher set them up with an account) post to a small, low-stakes community feed. A student earns coins for logging real activity and spends them on hair, outfits, and hobby badges for their avatar — the only thing money buys in this app is you, cosmetically, never an advantage or a shortcut around the core loop.
+
+It competes with a phone's default gravity — games, short video — not by matching their loop-closing tricks beat for beat, but by pointing the same mechanics (streaks, unlocks, a small reward waiting for you) at things a student actually made or practiced in the real world.
+2. Problem
+Two problems, not one:
+
+Motivation decays faster than interest does. A student picks up a hobby, does it for two weeks, and then life gets busy — homework, a slow week, no one around to practice with — and the habit quietly dies. Nothing in their day reminds them the hobby (or their progress in it) still exists.
+Rural students have a thinner support structure for sustaining a hobby. Fewer teachers who can specialize in a given interest, fewer peers doing the same thing, less disposable income for lessons or equipment, and long unstructured hours that default to a phone. The gap between "wants to keep doing this" and "actually does" is wider here than it is for a well-resourced student.
+
+Low-effort dopamine (games, short video) is not the enemy exactly — it's just winning by default because it's frictionless and immediately rewarding. This app's bet is that if real activity is made just as frictionless to log and just as immediately rewarding to see grow, it can compete for the same idle attention.
+3. Target users & account types
+Two account types exist in the product today, and they are not symmetric — they are two different apps sharing a shell.
+3.1 Individual / student account
+Age range: secondary-school students, roughly 13–18.
+Originally framed for rural Jiangxi students specifically; nothing about the product requires that context, and it works as a general hobby tracker for anyone.
+Primary device: phone, shared or personal. The app is mobile-first responsive web.
+Has, or wants, at least one hobby they'd like to keep alive but struggle to sustain without a nudge.
+Lands on their own Home — the garden.
+3.2 Org / educator account
+A teacher or school running a class.
+Does not get a garden. Their Home is a dashboard: a class code to hand out, a roster, and rollup stats.
+Skips the parts of onboarding that only make sense for a student logging their own hobbies (no gender/avatar-hairstyle question, no "pick your first interests," no reminder schedule).
+A class code is minted automatically for them at the end of onboarding, rather than typed in.
+3.3 How the two connect
+A student can join a class by entering a class code (via a "Join a class" flow reachable from their profile, or during onboarding). Once joined, their profile carries a classCode, which unlocks the School tab in Explore — a web of classmates and shared hobbies — and surfaces them (in the current build, via fixture data) on the educator's roster. Today the classroom "roster" and "classmates" are represented by a fixed demo dataset (STUDENTS — six named students with pre-set hobbies), rather than live data from other real accounts; the class-code check itself is a static allow-list rather than a real per-teacher registry. This is flagged explicitly under Known limitations (§14) — the feature scaffolding for a real classroom social graph exists, but it isn't wired to live multi-account data yet.
+4. Goals & non-goals
+Goals (current build)
+Let a student create interests ("trees") and see them all at a glance, as a garden.
+Let a student log real activity against an interest — a journal entry with a duration, a photo, or both — in well under a minute.
+Make the consequence of not showing up visible: a tree that isn't tended visibly wilts, and can die. This is the product's central point of difference from a plain streak counter — neglect has a visible cost, not just a broken number.
+Reward real logging with a light in-app currency (coins), spendable only on cosmetics (avatar hair/outfit, hobby badges) — never on anything that changes the core loop's difficulty or outcome.
+Let a student mark an interest, or an individual journal entry, as public — visible inside their class's Explore surfaces — while keeping everything private by default.
+Give a student low-stakes ways to find their next interest: curated hobby ideas, a view of what classmates are into, and (optionally) a small community feed.
+Give a teacher a zero-setup way to stand up a class: one code, a dashboard, nothing else to configure.
+Work reliably offline for the core loop (garden, logging, avatar) via local-first storage, with best-effort background sync to an account once signed in.
+Support English and Chinese as first-class, toggle-anytime languages throughout the entire product, including all curated content (hobby ideas, captions, UI copy).
+Non-goals — deliberately not built, and not planned near-term
+No direct messaging, no comments, no free-text reply between users. The riskiest feature class in any product aimed at minors, and not required for the value the app delivers.
+No follower counts, public leaderboards, or like counts visible to others. Coins and cosmetics are a private-to-you reward loop, not a public performance metric.
+No infinite feed anywhere. Explore's community tab and the school web are both small, finite, low-frequency surfaces — nothing here is built to be scrolled for more than a minute or two.
+No real location, no age field, no school-identifying data, no contact details collected or shown in any profile.
+No push notifications that require a server. Reminders today are local, in-browser, opt-in notification prompts tied to a tree's own schedule — not a backend notification service.
+No pay-to-win mechanic of any kind. Coins only ever buy appearance. This is a hard line, not a v1-vs-v2 scoping decision.
+No public global discovery across schools/classes. Whatever social surface exists is scoped to "your class," never "everyone using the app."
+5. The core loops
+There are three loops layered on top of each other. The first is the product. The second and third exist to feed it.
+5.1 Cultivate (primary loop)
+Open → see your garden, each tree at whatever health it's actually at → tap a tree → see its "why," its recent photos/entries, its streak → log today's activity (photo and/or journal entry, with a duration) in well under a minute → watch the tree's growth stage and health respond, and earn coins.
+
+Hard quality bar carried over from the product's origins and still true today: logging activity must be fast. A student who has to fight the UI to record five minutes of piano practice will simply not do it on a day when they only have five minutes.
+5.2 Tend (the stakes loop — new relative to a plain photo-journal app)
+Every tree has a schedule (which days of the week the student intends to work on it) and a health state derived from how recently it was actually logged against that schedule. Miss the schedule for long enough and the tree visibly wilts; miss it for longer and it dies. A dead tree can be revived by spending coins, which both restores it and resets its decay clock.
+
+This loop is what makes the garden feel alive rather than decorative — the absence of activity is visible, not just its presence. It is also the loop that has to be tuned most carefully: too punishing and it becomes a source of guilt rather than motivation (a known risk, see §14); too forgiving and it stops mattering.
+5.3 Discover (secondary, deliberately small)
+Open Explore → see a short list of hobby ideas (some personally recommended based on interests the student doesn't have yet, some just a shuffled sample of the full curated list) → optionally see a web of classmates and what they're each into, if the student is in a class → optionally post to, or read, a small community feed, styled anonymous-by-default → tap an idea to see a description → start a new tree from it.
+
+Design principle carried from the product's own internal safe-note copy: Explore is scoped to be a finder, not a feed. Nothing in it is designed to be scrolled indefinitely; it's designed to end in either "I'll try that" or "nothing today," both fine outcomes.
+6. Screens & features
+6.1 Home — the garden (individual accounts)
+A grid/cluster of tree cards, one per interest, each rendered at a growth stage and health state derived from its logging history (see §7.2 and §8).
+A resurfaced memory banner at the top — a warm prompt pulling back a past photo or entry ("Remember this?"), the emotional hook that's meant to pull a student back into the app on days they weren't planning to open it.
+A nudge banner — separate from the memory banner — surfaces something more actionable: a tree that's close to wilting, or a reminder that today is one of a tree's scheduled days.
+"＋ New interest" entry point to add a tree.
+Empty state: for a brand-new student with no trees yet, a friendly prompt with a small number of suggested starter interests, plus a path into Explore.
+Demo garden: a one-tap, clearly-labeled sample garden (DemoGardenCard) a student can plant to see what an established garden looks like — several trees at different stages, a streak already going — without touching their real data. It can be removed as a single unit (removeDemoGarden), is excluded from reminders/notifications, and is never synced to the account, so trying it can't corrupt or leak into real data.
+The mascot tour (MascotTour) runs once, automatically, for any profile that hasn't seen it yet (tourSeen), walking a new student through the main surfaces.
+6.2 Home — dashboard (org/educator accounts)
+No garden; the educator's Home is the dashboard (EducatorDashboard).
+Their class code, front and center, with a one-tap copy button.
+Rollup stats: number of students, total hobbies logged across the class.
+A roster list — tapping a student opens a read-only sheet (StudentSheet) showing that student's top hobby and hours.
+In the current build, the roster is fixture data (STUDENTS in constants.js), not a live query against real student accounts under that class code — see §14.
+6.3 Interest detail — a tree's page
+Header: tree name, its color, its "why I love this" line (editable), and a visual growth-stage/species representation.
+Visibility control for the tree as a whole: private or public. Public means the tree (and, unless overridden, its contents) can appear in the class's discovery surfaces; private is the default for every new tree.
+Two independent tabs:
+Journal tab — dated, reverse-chronological entries, each with a duration in minutes and optional text. Old entries created before duration-tracking existed are backfilled with a nominal 30 minutes so historical streaks/hours still compute sensibly.
+Album tab — a photo grid; add from camera or gallery; tap to view full-size in a dedicated photo viewer; delete via long-press or menu.
+Per-entry sharing is independent of the tree's own visibility — a journal entry has its own visibility field distinct from the interest's, so a student can keep a tree public (its "why," its photo album) while keeping a specific entry that says something more personal private. This mirrors the product's broader stance that public/private is a decision made at the smallest sensible unit, not inherited blindly downward.
+A small streak/stat line, private to the owner.
+A "friends" field on the tree, letting a student note who else (by name) they do this activity with — currently informational text, not a link to another account.
+A reminder schedule — which days of the week this tree expects activity — editable from the tree's own edit sheet (OrbSheet), same schedule concept introduced at onboarding.
+Header menu: edit or delete the tree. Delete is undoable via a toast for a short window before it commits for real (see §6.9).
+A revive action appears once a tree has died from neglect, costing coins.
+6.4 Public interest view — someone else's tree, read-only
+Reached via /user/:userId/interest/:interestId, e.g. from the School web or a public profile.
+Shows only what that owner made public: the tree's name, color, "why," and whichever photos/entries were individually shared.
+No edit affordances, obviously — read-only.
+6.5 Explore — three tabs, gated by account state
+Ideas tab (individual accounts only — org accounts skip straight to a classmate web, since an educator isn't the one picking a hobby):
+A personalized "For you" section: hobby ideas recommended based on categories adjacent to interests the student already has (e.g. already doing a sport → recommend another sport or a movement-adjacent hobby), with a short "because you..." reason shown to the student.
+A full list of everything else, shuffled, with a reshuffle button and a search-adjacent absence — deliberately no search box, so this stays a place to browse ideas rather than look for people.
+Ideas the student already has, or that already appeared in "For you," never repeat in the full list.
+Every idea has a short plain-language description in both languages and belongs to one of seven categories (sport, art, music, mind, food, outdoor, dance/movement).
+A user-search bar (UserSearch) sits above the tabs for any signed-in user, letting a student look up another user by display name — gated by that other user's own opt-in discoverable flag, enforced server-side by row-level security, not just hidden client-side.
+Community tab: a small feed of posts (communityPosts, currently a fixture data source rather than live user-generated posts). A student chooses, for their own future posts, whether to appear anonymous or named — shown as a live preview of their own choice before they post. Other users' existing posts always render named, per PostCard. A persistent safety note is shown above the feed.
+School tab (visible once a student has a class code, or always for org accounts): a radial web visualization — the student at the center, classmates arranged in a ring around them, with a connecting line drawn to any classmate who shares at least one hobby in common. Tapping a classmate opens a read-only sheet about them. Currently backed by the same fixture STUDENTS dataset as the educator dashboard, not live classmates.
+6.6 Profile ("Me")
+Avatar preview, name, account-level stats.
+Avatar customization: skin tone and base hair/outfit colors are always free (identity shouldn't cost coins); additional hair and outfit styles beyond the free basics cost coins and are purchased/equipped from a dedicated sheet (AvatarSheet).
+Language toggle (English/Chinese), affecting the entire app's copy, not just this screen.
+Theme picker — eight named visual themes (Marshmallow, Sunset, Meadow, Ocean, Berry, Midnight, Dusk, Forest), each a distinct gradient/color identity applied app-wide via a data-theme attribute.
+Username change flow (UsernameSheet), which checks availability server-side before committing locally — a taken name is rejected before the UI ever shows it as saved.
+Discoverability toggle — opts the account in or out of appearing in Explore's user search. Off by default.
+"Join a class" entry point (JoinClassSheet) for individual accounts that skipped it at onboarding.
+Year-in-review (YearReviewSheet) — a retrospective recap of the student's activity, designed as a shareable, celebratory moment.
+Entry point to the Market.
+"Clear all data" — wipes local storage and, if signed in, the synced remote copy too (distinct from the local-only wipe that happens automatically on sign-out, see §7.4).
+6.7 Market
+Spends the coin economy. Grid of hobby-badge decorations (Piano, Painting, Basketball, Football, Guitar, Reading, Swimming, Cooking), each a colored/gradient ring plus an emoji badge, meant to visibly say "this is a piano kid," equippable on the avatar.
+Owned-but-not-equipped items show an equip button; unowned items show their price and are disabled if the student can't afford them.
+Coin balance shown persistently in the header.
+6.8 Onboarding
+A branching, multi-step flow (Onboarding.jsx) that differs meaningfully by account type:
+
+Welcome — the pitch, shown to everyone.
+Account type — individual vs. org/educator.
+Gender (individual only) — used solely to pick a starting hair style default; never stored or shown as a demographic field elsewhere, and freely changeable afterward from the avatar editor. "Prefer not to say" keeps the shared default.
+Name — display name, checked for availability server-side before onboarding can complete; a collision sends the student back to this step with an inline error rather than silently finishing with an unsaved name.
+Interests (individual only) — pick a first set of trees to plant, with a content filter (isBlockedHobby) rejecting inappropriate free-text entries before they're allowed to become a real tree.
+Schedule (individual only) — pick which days of the week each drafted tree expects activity, feeding directly into the tend/decay loop from day one.
+Theme — pick one of the eight app-wide visual themes; the final step for everyone, and finishing it is what actually creates the account's profile and (for individuals) their first trees.
+
+Org accounts skip gender, interests, and schedule entirely — none of the "plant your own hobby" steps make sense for someone who isn't logging their own activity — and go welcome → account type → name → theme. Their class code is minted automatically, not chosen.
+6.9 Shared interaction patterns
+Undo toast: destructive actions (deleting a tree, a photo, an entry) hide the item immediately but hold the real delete behind a short undo window (UndoToast), rather than committing instantly or requiring a confirmation dialog on every delete.
+Sheets: nearly every "add/edit" interaction (entry, photo, tree, avatar, idea detail, joining a class, student detail, another user's profile, username change, year review) is a bottom sheet (SheetHost + individual sheet components) rather than a full page navigation — kept lightweight and fast to dismiss, in service of the "log something in under a minute" quality bar.
+Language toggle is available from nearly every top bar, not buried in settings — switching is meant to be a one-tap, anywhere action.
+7. Data model
+7.1 users (remote, Supabase-backed)
+field
+type
+notes
+id
+uuid
+primary key, from Supabase auth
+display_name
+string
+unique; chosen at onboarding, changeable later
+account_type
+string
+individual | org
+discovery_enabled
+boolean
+opts into Explore's user search; off by default
+created_at
+timestamp
+
+
+
+
+The local profile record (Dexie meta store, key "profile") mirrors and extends this: name, lang, color, theme, accountType, classCode, coins, ownedDecorations, equippedDecoration, avatar (skin/hair/hairColor/outfit/outfitColor, plus owned-hair/owned-outfit lists), discoverable, tourSeen, createdAt, and a userId linking it to the signed-in account it belongs to (used to detect and prevent a second account's data bleeding into a shared device's local cache).
+7.2 interests (a tree)
+field
+type
+notes
+id
+uuid
+primary key
+userId
+string
+owner (local-only linkage; remote uses user_id)
+name
+string
+e.g. "Piano"
+why
+string
+optional "why I love this" line; public when the tree is public
+color
+string
+palette key driving the tree's gradient
+time
+string
+reminder time of day, e.g. "16:00"
+days
+array
+which weekdays this tree expects activity — drives decay/health
+species
+string
+optional cosmetic tree variant
+leafColor
+string
+optional cosmetic override
+friends
+array of strings
+freeform names of who else shares this hobby
+visibility
+string
+private | public; default private
+category
+string
+one of the seven Explore categories, when set
+inspiredBy
+string
+optional id of the interest this one was inspired by
+revivedAt
+timestamp
+set when a dead tree is revived; resets the decay clock
+createdAt / updatedAt
+timestamp
+
+
+
+7.3 entries (a journal log)
+field
+type
+notes
+id
+uuid
+primary key
+interestId
+string
+which tree it belongs to
+date
+string
+the day being journaled
+text
+string
+the entry itself, optional
+minutes
+number
+duration logged; defaults to 30 for pre-existing rows that predate this field
+visibility
+string
+independent of the parent tree's visibility; default private
+isPinned
+boolean
+eligible for the "resurfaced memory" banner
+createdAt / updatedAt
+timestamp
+
+
+
+7.4 photos (local-only, not yet synced)
+field
+type
+notes
+id
+uuid
+primary key
+interestId
+string
+which tree it belongs to
+blob
+Blob
+stored directly in IndexedDB via Dexie
+caption
+string
+optional
+isPinned
+boolean
+eligible for the "resurfaced memory" banner
+createdAt
+timestamp
+
+
+
+
+Photos are the one object type that does not currently sync to the backend — they remain a local Blob only. This means a student's photo album does not survive a cleared browser cache or follow them to a second device, unlike their trees and journal entries. This is a known, explicitly-flagged gap (the sync code notes it needs object storage plus an upload/download path as a follow-up) — see §14.
+7.5 Sync model
+Local-first: every write lands in IndexedDB (via Dexie) first and immediately reflects in the UI; a signed-in session pushes interests and entries to Supabase in the background, fire-and-forget — a failed push is logged, not surfaced to the student, and the local copy stays authoritative until the next successful sync. On sign-in, a one-time reconciliation pass runs: local records not yet on the server get pushed (claimed under that account); server records not cached locally get pulled down (adopted) — covering both "used the app offline before creating an account" and "signing in on a second device." Signing out wipes the local cache (so a shared device doesn't leak the previous student's garden to the next person who signs in on it); the remote copy is untouched unless the student explicitly chooses "clear all data" from their profile.
+7.6 Derived, not stored
+Tree growth stage and health, streaks, hour totals, the daily-recommended Explore set, and the "resurfaced memory" candidate are all computed from the above at render/load time rather than persisted as their own fields.
+8. The coin economy & decay system
+This is the layer that most differentiates the current build from a plain photo-journal app, so it's worth documenting as its own section rather than folding it into "features."
+
+Earning: every logged entry or photo earns a fixed number of coins (COINS_PER_LOG). This is the only way to earn coins — there is no other faucet (no daily login bonus, no ad-watching, nothing that decouples the reward from the activity it's meant to reinforce).
+Spending: coins buy hobby-badge decorations for the avatar, and non-default hair/outfit styles. Every priced item is purely cosmetic. Nothing purchasable affects decay rate, reminder behavior, streaks, or how much a logged entry is worth.
+Decay: a tree that goes unattended relative to its own schedule (days) moves through wilting states and can eventually "die." This is the mechanism meant to make neglect felt rather than just silently accumulating as a missed streak number.
+Revival: a dead tree can be brought back to life for a flat coin cost (REVIVE_COST), which also resets its decay clock via revivedAt. Reviving fails cleanly (no state change) if the student can't afford it.
+Design tension to watch, and actively manage: a decay mechanic that's meant to motivate can just as easily read as punitive to a student who missed a week because of exams, illness, or a hard week at home — a context the app has no way to know about. This is the single biggest product-risk item in the whole system and is treated as such in §14, not as a minor tuning note.
+9. Social, discovery & safety design
+The social surface here is intentionally much smaller and more constrained than a typical "discover" feature, in direct response to the target age group.
+
+No direct messaging or comments anywhere in the product.
+No follow-a-person primitive. The School tab links students by shared hobby, not by a follow relationship, and there's no way to accumulate an audience.
+Community posts default to anonymous, and the choice belongs to the poster for their own content only — a student can't choose how someone else's post displays.
+Discoverability is opt-in and off by default (discoverable flag), gating whether a student's account can even be found via search; enforced by backend row-level security, not just hidden in the UI.
+Visibility is granular down to the individual journal entry, not just the tree — the product's explicit position is that a tree being public should never silently make everything under it public too.
+A content filter runs on freeform hobby names at the point a student would create a tree from typed text (isBlockedHobby), rejecting inappropriate entries before they can exist anywhere in the app.
+Class scoping: whatever social surface exists (School web, roster) is scoped to a class code, not to the whole app's user base — there is no cross-class or cross-school discovery today.
+Explicitly out of scope, and treated as a hard line rather than a "not yet": DMs, public leaderboards, comments, location, real names, school-identifying fields, and any pay-to-win mechanic.
+
+What's missing relative to a production-safe version of this social layer (see §14 for the full list): no report button, no block mechanism, no moderation queue, and no automated image screening on upload. The current community/school data is fixture-backed rather than live multi-user content, which is exactly why this gap hasn't bitten yet — but it is the first thing that needs to exist before the community tab or school web could safely carry real, unmoderated student-generated content and photos at any scale.
+10. Tech stack & architecture
+Framework: React 18, built with Vite.
+Backend: Supabase (Postgres + auth + row-level security). RLS policies are the enforcement point for what's public — e.g. users_select restricts who a user search can return to the searcher's own row plus opted-in, non-blocked accounts; interest/entry visibility is similarly meant to be enforced at the database layer rather than trusted to the client.
+Local-first storage: IndexedDB via Dexie.js, holding the full local cache of interests/entries/photos/profile — deliberately not localStorage, whose ~5MB cap and inability to store binary blobs would rule out the photo album entirely.
+Routing: React Router — /, /interest/:id, /user/:userId/interest/:interestId, /explore, /profile, /market, plus modal/sheet state layered on top rather than routed.
+Internationalization: a custom I18nContext with a full English/Chinese string table (strings.js) covering UI copy, onboarding, and every curated content item (hobby ideas, descriptions, captions) — language is a first-class, anytime-togglable setting, not a locale detected once at load.
+PWA: web manifest + service worker (sw.js) present, enabling "add to home screen" behavior.
+Deployment: GitHub Pages via a GitHub Actions workflow (deploy-pages.yml), with a 404.html redirect trick to make client-side deep links survive GitHub Pages' lack of server-side rewrites.
+Reminders: browser Notification API, requested opt-in at the end of onboarding (askNotifications) and scheduled per-tree client-side (useReminderTimers) based on each tree's own day/time schedule — not a server-pushed notification.
+Component structure (actual, current)
+App (auth gate → Onboarding or routed shell; theme + reminders wired at the top)
+
+├─ AuthScreen
+
+├─ Onboarding (welcome → account type → [gender] → name → [interests → schedule] → theme)
+
+├─ HomeScreen (individual)              │  EducatorDashboard (org)
+
+│  ├─ MemoryBanner, NudgeBanner         │  ├─ class code + copy
+
+│  ├─ OrbWall → Tree/Orb cards          │  ├─ Stats (students, hobbies logged)
+
+│  └─ DemoGardenCard                    │  └─ roster → StudentSheet
+
+├─ InterestScreen (own tree: header, visibility, AlbumTab, JournalTab)
+
+├─ PublicInterestScreen (read-only, someone else's public tree)
+
+├─ ExploreScreen
+
+│  ├─ UserSearch
+
+│  ├─ IdeasTab   → IdeaCard → IdeaSheet
+
+│  ├─ CommunityTab → PostCard
+
+│  └─ SchoolTab  → radial web → Avatar → StudentSheet
+
+├─ ProfileScreen → AvatarSheet, UsernameSheet, JoinClassSheet, YearReviewSheet
+
+├─ MarketScreen (decorations, coin balance)
+
+└─ shared: BottomNav, Sheet/SheetHost, PhotoViewer, MascotTour, UndoToast, Stats, DayPicker, TopBar, LangToggle
+
+data layer: db.js (Dexie schema) + store/StoreContext.jsx (all mutations, local+remote) + lib/remote.js (Supabase row mapping) + store/AuthContext.jsx
+11. Localization
+English and Chinese (Simplified) are both fully supported, including all curated content — every hobby idea, category label, and caption exists as an [en, zh] pair, not just the chrome around them. The language toggle is available from nearly every screen's top bar and takes effect immediately across the whole app, including content that was rendered before the switch. This reflects the target audience directly: the product is written to be used natively in Chinese, with English maintained as an equally real second language rather than a fallback.
+12. Current build status vs. original phased plan
+Earlier planning documents for this product (see PRD.md in the repo root, an earlier "Forest"-titled version) laid out a phased build order: skeleton → journal → album → "the soul" (growth stages, memory banner, streaks) → accounts & sync → visibility → discovery → safety → polish. Comparing that plan against the actual codebase today:
+
+Substantially further along than the original plan assumed:
+
+Accounts, auth, and Supabase sync are live, not a later-phase item.
+Visibility exists down to the individual journal entry, which is a finer grain than the original plan called for.
+A second account type (org/educator) exists and is not mentioned at all in the earlier plan.
+A full coin/decay/revival economy and avatar customization system exist and were not part of the earlier plan's scope.
+Two entirely separate discovery surfaces (Ideas and School) exist beyond the single "Discover" screen the earlier plan described.
+
+Behind the original plan's stated bar for what "safety" requires before a social layer ships:
+
+No report button, no block mechanism, no moderation queue, no automated image screening — all called out as prerequisites for shipping discovery/community features with real user-generated content, and none exist yet.
+The classroom social graph (roster, School web) is fixture data, not live.
+Photos don't sync — the "known risk" the earlier plan flagged (local storage can be lost) is materially true today specifically for the photo album, since it has no backend copy at all.
+13. Success criteria
+The core log-an-entry loop is fast on a real phone. This should be measured, not assumed — time an actual student adding a photo or journal entry from a cold app open.
+Decay feels motivating, not punishing, over a multi-week real-world trial, including at least one student who has a genuinely bad week. If the reaction to a dead tree is guilt rather than "oh, let me revive that and get back to it," the tuning is wrong regardless of how the mechanic tests in a two-day demo.
+A student's real garden survives real conditions: closing the tab, losing wifi mid-session, switching devices after signing in, sharing a device with a sibling who also uses the app under their own account.
+At least one real student uses it unprompted for more than a week and can articulate, in their own words, what made them come back or what made them stop.
+Visibility is provably correct: demonstrate, live, that a private tree and a private journal entry are genuinely invisible to a second account — not just hidden by the UI.
+14. Known limitations & open questions
+Ranked roughly by how much they matter before this could carry real, unmoderated content from real students at scale — not by how hard they are to fix.
+
+No safety operations layer for social content. No report, no block, no moderation queue, no image screening. Fine today because the Community and School surfaces are fixture-backed; becomes the top priority the moment either surface carries live, unmoderated student content or photos.
+Photos don't sync. They're local-only Blobs. A cleared cache or a second device silently loses the album, with no warning to the student that this could happen. Needs object storage (e.g. Supabase Storage) plus an upload/download path, and ideally EXIF-stripping and downscaling on upload (flagged as a best practice in the earlier planning doc but not yet implemented for any photo path).
+The classroom social graph is fixture data, not live per-class rosters or a real class-code registry. The UI and interaction patterns (roster, radial web, shared-hobby lines) are built and working — what's missing is wiring them to real multi-student data per class, which is also a prerequisite for #1 to matter in practice.
+Decay tuning is unvalidated with real students under real stress conditions (exams, illness, a bad week). This is a product-design risk, not just a numbers-tuning task — get this wrong and the app becomes a source of guilt rather than motivation, which is close to the opposite of the intended effect.
+The class-code check is a static allow-list (CLASS_CODES in constants.js), not a real per-teacher-generated code system tied to actual educator accounts — an educator's own dashboard already shows their generated code, but a student joining doesn't yet validate against that specific code, just against the fixed list.
+No moderation or review path for the freeform hobby-name filter's false positives/negatives — isBlockedHobby is a first line of defense, not a substitute for human review once real user-generated hobby names are flowing at any volume.
+Export/backup of a student's data doesn't exist yet — "clear all data" exists, but there's no way for a student (or a parent, or a teacher) to get a copy of what's in the garden before it's gone.
+Branding note: the shipped app title and copy call it "Leaves" (叶子), while the codebase's internal naming (interests, Orb/OrbWall, "orbs") still reflects an earlier tree-vs-orb naming decision. Not a functional issue, but worth a pass so internal naming matches the shipped metaphor before onboarding new contributors who'll otherwise reasonably assume "orb" means something different from "tree."
 
-*A personal sanctuary for the things you love — and a window into what others love. Version 2.0 — competition build.*
 
----
-
-## 1. Vision
-
-Open the app and see everything you love represent by saplings Tap into any one — Watercolors, Piano, Basketball — and you enter a space to tend that interest: an album of what you've made, and a journal of the days you spent on it.
-
-Each sapling is yours to curate. You decide whether it stays **private** — a sealed room only you enter — or goes **public**, where it can be discovered by someone who has never tried watercolors and doesn't yet know they'd love it.
-
-The app exists for two motions:
-
-1. **Cultivate.** Remind you of everything you care about, so that when your attention drifts toward games or scrolling, you have a place that pulls you back to the real things you make.
-2. **Discover.** Show you that other people are quietly cultivating things too — and let their orbs become the seed of your next interest.
-
-It competes with instant gratification not by being louder, but by making real activity visible and contagious. The thesis in one line: *you are more than the thing that fills your idle minutes, and so is everyone else.*
-
----
-
-## 2. Problem
-
-People carry many interests they never get to cultivate, simply because it's easy to forget what you were even interested in. Low-effort dopamine — games, short video — fills the gaps by default.
-
-There are two failures here, and v1 only solved the first:
-
-- **You forget what you love.** There's no single, warm place holding all of it.
-- **You never find out what you *could* love.** Interests spread by exposure — you see a friend playing guitar, you want a guitar. Most people's exposure surface is tiny, especially with fewer teachers, peers, and resources nearby. The feeds that *do* have reach optimize for consumption, not for making anything.
-
-Existing social apps make you a spectator of other people's highlights. Orbs makes you a spectator for about eight seconds, then hands you a way to start your own.
-
----
-
-## 3. Target user
-
-**This is the single most important open decision in v2 — resolve it before writing auth code.** See §12, Q1.
-
-The v1 doc framed the user as secondary-school students (13–18) in rural Jiangxi. That framing is still the right *emotional* target, but a public discovery surface populated by minors is a materially different product from a private notebook, legally and ethically. Two viable paths:
-
-- **Path A — General audience, 16+ (recommended for a public build).** Same emotional pitch, no minor-safety architecture required beyond the standard. Demo it with student users; ship it open.
-- **Path B — Teen product, built like one.** Keep 13–18. Then the safety design in §9 is not optional polish, it is a P0 feature set, and the realistic v1 is *sharing within a closed circle* (a class, a school, an invite code) rather than an open network.
-
-Everything below is written to work under either path. Path B's extra constraints are marked **[B]**.
-
-Common to both:
-
-- Has a smartphone (personal or shared), sometimes a computer. Phone is primary.
-- Has at least one interest they'd like to keep alive but struggle to sustain.
-- Is *not* looking for another social network — no follower counts to chase, no performance. They want a home for their hobbies, with a door they control.
-
-Mobile-first responsive web; works fine on desktop.
-
----
-
-## 4. Goals & non-goals
-
-### Goals (v2)
-
-- Let a user create interests ("orbs") and see them all at a glance.
-- Let a user add photos and journal entries inside each orb, in under 30 seconds.
-- **Let a user set each orb to public or private, and change it at any time.**
-- **Let a user discover public orbs from other people, and turn a discovery into an orb of their own.**
-- Make progress feel visible and rewarding (streaks, a growing gallery, resurfaced memories).
-- Keep the private half of the app fully functional even when discovery is off or offline.
-
-### Non-goals — deliberately NOT built (write these down and let them go)
-
-- **No direct messaging.** Not in v1, not in v2. This is the single highest-risk feature in any social app and it is not needed for the core value.
-- **No follower counts, like counts, or public rankings.** Vanity metrics turn cultivation into performance, which is the exact failure mode we're replacing.
-- **No infinite feed.** Discovery is a small, finite, daily set (see §6.3). If discovery can be doom-scrolled, we have built the thing we set out to fight.
-- No nearby / location-based matching. Ever.
-- No real-name profiles, no age or school fields, no contact details in profiles.
-- **[B]** No comments or free-text replies between users in v1 — reactions only, if anything.
-- No badges/points gamification.
-- No hobby-news or English-learning page.
-- No push notifications (stretch).
-
----
-
-## 5. The core loops
-
-There are now two loops. **The cultivate loop is the product; the discover loop feeds it.** If you only get one working, get the first one working.
-
-### 5.1 Cultivate (primary)
-
-Open → see your orbs plus one resurfaced memory → tap an orb → browse its album and journal → add a photo or entry in under 30 seconds → watch the gallery and streak grow.
-
-**Hard quality bar: adding an entry or photo takes under 30 seconds.** Everything else serves that.
-
-### 5.2 Discover (secondary, and deliberately short)
-
-Open Discover → see a handful of public orbs, today's set → tap one → see what someone has actually made and a little of why they love it → **either "Start my own orb of this" (converts to the cultivate loop) or "Keep an eye on it" (a light save) → the set runs out.**
-
-Design principle: **the discover loop must terminate in creating, not in more scrolling.** The set is finite by design. When it ends, the app says so and points you home. A user who ends a Discover session with a new empty orb is a success; a user who ends it having seen forty orbs is a failure, no matter how long they stayed.
-
----
-
-## 6. Screens & features
-
-Six screens.
-
-### 6.1 Home (the orb view) — *your space*
-
-- A soft cluster/grid of circular orb cards, each with a color gradient and gentle glow (gentle float animation if time allows).
-- Orb face: name + most recent photo as background; falls back to the color gradient when empty. The home screen becomes a wall of your own creations.
-- **A small, quiet visibility marker on each orb — public orbs glow slightly outward, private orbs have a soft closed ring.** No text labels; it should read as atmosphere, not administration. The user must be able to tell at a glance which of their orbs the world can see.
-- "Resurfaced memory" banner at the top: one pinned or recent moment with a warm prompt ("Remember this?"). This is the emotional payoff and the thing that pulls users back.
-- "＋ New interest" button.
-- Empty state: friendly prompt to add your first interest, with 2–3 suggestions — **plus an entry point to Discover, since a brand-new user has nothing of their own to look at yet.**
-
-### 6.2 Interest detail — *your orb*
-
-- Header: orb name, color, "why I love this" line (editable), and **the visibility control**.
-- **Visibility control.** A clear two-state toggle: *Private* / *Public*. Changing to public shows a plain-language confirmation of exactly what becomes visible and what does not. Changing back to private takes effect immediately and removes the orb from all discovery surfaces. **Default for every new orb is Private.** Making something public is always a deliberate act.
-- Two independent tabs, each with its own "＋ Add":
-  - **Album tab** — photo grid. Add from camera or gallery. Tap to view full-size; long-press or menu to delete. No text or date required.
-  - **Journal tab** — dated entries, reverse-chronological. Tap to edit; swipe or menu to delete.
-- **Sharing granularity — important.** Orb-level visibility governs the *album and the "why"*. **Journal entries are private by default even inside a public orb**, with a per-entry "share this one" toggle. The journal is where someone writes "I felt like giving up today." That must never be published by a toggle the user flipped for a different reason.
-- Small streak/stat line ("12 photos · journaled 5 days this month"). **Private to you** — not shown on your public orb.
-- Edit / delete the orb from a header menu.
-
-### 6.3 Discover — *other people's orbs*
-
-- **A finite daily set: 6–9 public orbs, refreshed once a day.** Presented as a slow drift of orbs, not a scrolling list. When the set is exhausted: a gentle end card ("that's everything for today") with a button back Home.
-- Each card shows: orb name, its color, 1–3 photos, the owner's display name and avatar, the "why I love this" line. Nothing else. No counts, no timestamps that create urgency.
-- Filters, if time allows: a few broad categories (Making, Music, Movement, Words, Growing things). Not a search box in v1 — search invites looking for *people*, and this is a place to look for *interests*.
-- **Two actions per orb, and only two:**
-  - **"Start my own"** — creates a private orb in your space pre-named after the interest, with the source noted ("inspired by Lin's Watercolors"). This is the money action. It is the reason Discover exists.
-  - **"Keep an eye on it"** — a light save. Saved orbs surface occasionally on Home ("Lin added something to Watercolors"). Cap it: **a user can keep an eye on at most ~20 orbs**, so it never becomes a feed.
-- **No follow-the-person primitive.** You follow *interests*, never people. This is a product decision as much as a safety one: it keeps attention on the thing being made rather than the person making it.
-
-### 6.4 Public orb view — *someone else's orb, opened*
-
-- Read-only version of the Interest detail: name, color, "why", shared photos, shared journal entries.
-- Owner's display name + avatar, tappable to their public space (§6.5).
-- Actions: "Start my own", "Keep an eye on it", and **"Report"** (always present, always one tap from the content).
-- **No comment field. No message button. No reaction beyond an optional single quiet "this is lovely" tap** that the owner sees only as an aggregate count in their own private stats. If reactions add build risk, cut them — the product survives fine without them.
-
-### 6.5 Public space — *someone else's wall*
-
-- Shows only that person's **public** orbs, their display name, avatar, and a one-line bio. **Private orbs are absent — not greyed out, not counted, not hinted at.**
-- No stats, no join date, no activity graph, no follower count.
-- Report button.
-
-### 6.6 Profile — *you*
-
-- Avatar (chosen color or emoji is fine — no upload needed), display name, one-line bio.
-- **"How I appear to others"** — a preview of your own public space exactly as a stranger sees it. Cheap to build, and it does more for user trust than any privacy policy.
-- Private activity summary: number of interests, total entries, total photos, current streak.
-- Settings: default visibility for new orbs (default: Private), discovery on/off (**a user can turn Discover off entirely and use the app as the v1 private notebook**), blocked users, clear all data, (stretch) export my data.
-
----
-
-## 7. Data model
-
-Objects that belong to a user, plus the join tables that make discovery work.
-
-### users
-
-| field | type | notes |
-|---|---|---|
-| id | string (uuid) | primary key |
-| displayName | string | not a real name; no uniqueness pressure |
-| avatar | string | color or emoji key |
-| bio | string | optional, short, one line |
-| discoveryEnabled | boolean | false disables Discover entirely for this user |
-| defaultVisibility | string | `private` \| `public`; ships as `private` |
-| createdAt | number | timestamp |
-
-### interests
-
-| field | type | notes |
-|---|---|---|
-| id | string (uuid) | primary key |
-| userId | string | owner |
-| name | string | e.g. "Watercolors" |
-| color | string | gradient/theme key |
-| why | string | "why I love this", optional; **public when the orb is public** |
-| **visibility** | string | `private` \| `public`. Default `private` |
-| **category** | string | optional, from a fixed list; powers Discover filters |
-| **inspiredBy** | string | optional interest id, set by "Start my own" |
-| createdAt | number | timestamp |
-| updatedAt | number | timestamp |
-
-### photos
-
-| field | type | notes |
-|---|---|---|
-| id | string (uuid) | primary key |
-| interestId | string | which orb it belongs to |
-| blob / storageUrl | Blob or URL | local blob offline, object-storage URL when synced |
-| caption | string | optional |
-| isPinned | boolean | shows in "resurfaced memory" |
-| createdAt | number | timestamp |
-
-Photos inherit their orb's visibility. Simple, and it matches what users expect from an album.
-
-### entries
-
-| field | type | notes |
-|---|---|---|
-| id | string (uuid) | primary key |
-| interestId | string | which orb it belongs to |
-| date | number | the day being journaled (user-set) |
-| text | string | the entry |
-| **isShared** | boolean | **default false, even in a public orb** |
-| isPinned | boolean | shows in "resurfaced memory" |
-| createdAt / updatedAt | number | timestamps |
-
-### watches ("keeping an eye on")
-
-| field | type | notes |
-|---|---|---|
-| id | string (uuid) | primary key |
-| userId | string | the watcher |
-| interestId | string | the watched orb |
-| createdAt | number | timestamp |
-
-Note the shape: **a watch points at an interest, never at a user.** There is no `follows` table. That absence is the safety design.
-
-### reports
-
-| field | type | notes |
-|---|---|---|
-| id | string (uuid) | primary key |
-| reporterId | string | |
-| targetType | string | `interest` \| `photo` \| `entry` \| `user` |
-| targetId | string | |
-| reason | string | from a fixed list |
-| status | string | `open` \| `actioned` \| `dismissed` |
-| createdAt | number | timestamp |
-
-### blocks
-
-`(userId, blockedUserId)`. A block hides that user's orbs from Discover and their public space, in both directions.
-
-**Derived, not stored:** orb face photo (newest photo), streaks (from entry dates), counts, the daily Discover set.
-
----
-
-## 8. Tech stack & architecture
-
-**The honest headline: v1's "no backend, no accounts, no network" is gone.** Discovery requires other people's data, which requires a server, accounts, hosted images, and moderation. This is the real cost of the social pivot and it roughly doubles the build. Plan for it deliberately.
-
-- **Framework:** React + Vite.
-- **Backend:** **Supabase** (Postgres + auth + object storage + row-level security in one). Its row-level security is the right primitive here — visibility rules live in the database as policies, not in UI code that can be forgotten. Alternative: Firebase. Do not hand-roll auth.
-- **The rule that matters:** *the client must never be the thing that decides what is public.* A policy on the `interests` table gates every read. If the RLS policy is right, a bug in a React component cannot leak a private orb.
-- **Local-first storage:** keep **IndexedDB via Dexie.js** as the local layer. Your own orbs are written locally first and sync up; the app stays fully usable offline for the cultivate loop. Do not use localStorage (≈5 MB cap, can't hold blobs).
-- **Photos:** `<input type="file" accept="image/*" capture>`; **downscale to ~1600px on the long edge and strip EXIF before storing or uploading** — EXIF carries GPS coordinates, and publishing those with a teenager's photo is exactly the failure we are designing against. Render with `URL.createObjectURL(blob)`, revoke on unmount.
-- **Routing:** React Router — `/`, `/interest/:id`, `/discover`, `/orb/:id` (public), `/u/:id`, `/profile`, plus modals.
-- **Styling:** Tailwind or CSS modules. Soft, warm, glowing: rounded, gradients, generous spacing.
-- **PWA (optional polish):** manifest + icon for "add to home screen". Small change, big "it feels like a real app" payoff.
-
-### Suggested component structure
-
-```
-App (router, bottom nav: Home · Discover · Profile)
-├─ HomeScreen
-│  ├─ MemoryBanner          (resurfaced pinned/recent moment)
-│  ├─ OrbGrid → OrbCard     (name + latest photo, visibility ring)
-│  └─ AddInterestModal
-├─ InterestScreen           (own orb)
-│  ├─ InterestHeader        (name, "why", VisibilityToggle, edit menu)
-│  ├─ Tabs
-│  │  ├─ AlbumTab   → PhotoGrid, PhotoViewer, AddPhotoSheet
-│  │  └─ JournalTab → EntryList, EntryEditor (per-entry share toggle)
-├─ DiscoverScreen
-│  ├─ DailySet → DiscoverOrbCard
-│  └─ EndOfSetCard
-├─ PublicOrbScreen          (read-only + StartMyOwn, Watch, Report)
-├─ PublicSpaceScreen
-├─ ProfileScreen            (incl. "How I appear to others")
-└─ shared: Modal, Button, BottomNav, EmptyState, ReportSheet
-   data layer: db.js (Dexie local) + api.js (Supabase, RLS-backed)
-```
-
-**Known risks to note in your write-up:**
-
-1. Local browser storage can be cleared, losing unsynced data. Sync mitigates this for account holders; JSON export remains a good stretch feature.
-2. **A single wrong visibility check publishes a child's photo album.** Mitigated by putting the rule in RLS rather than the client, defaulting to private, and the "How I appear to others" preview. Say this out loud in the write-up — judges reward teams who can name their own scariest failure mode.
-
----
-
-## 9. Safety & trust design
-
-This section exists because §4 of the v1 document ruled discovery out of scope on child-safety grounds. That concern was correct, and adding discovery doesn't dissolve it — it means the concern has to be answered in the design. **Under Path B this is P0 work, not polish.** Under Path A it's still the right default.
-
-**Structural choices (these do most of the work):**
-
-- **No DMs, no comments, no free-text between users.** The overwhelming majority of harm in teen social products flows through private or semi-private text channels. There isn't one here to abuse.
-- **You watch interests, not people.** There is no way to accumulate an audience, and no way to find a specific person unless they gave you their name outside the app.
-- **Private by default, everywhere.** New orbs, new journal entries, new accounts.
-- **No location, no age, no school, no real names, no contact fields.** Not collected, so not leakable. EXIF stripped from every image.
-- **[B] Closed-circle sharing as the realistic v1 shape:** an invite/class code scopes discovery to a known group. Ships the whole emotional payload of discovery with a fraction of the risk, and is far more demoable than an empty open network — a new social app's real problem on day one is that Discover is empty anyway.
-
-**Operational necessities (unglamorous, non-optional if this ever has real users):**
-
-- Report on every piece of public content, one tap away, with a visible outcome.
-- Block, bidirectional and immediate.
-- A moderation queue someone actually reads, plus the ability to unpublish an orb server-side.
-- Automated image screening on upload before anything becomes public (Supabase can call out to a moderation API).
-- Terms and a plain-language privacy note; **[B]** parental-consent handling wherever the jurisdiction requires it.
-
-**A note for the write-up:** if this is a student competition build with a public deployment, the honest position is that Path B without the operational half of this list is not shippable to real minors. Building it as a closed-circle demo, and *saying* that's why, is a stronger answer than pretending the risk isn't there. Judges reward teams who understand the consequences of their own product.
-
----
-
-## 10. Build plan (phased — build in this order)
-
-The ordering principle is unchanged and matters more now that scope has grown: **the private app must be complete and lovable before the social layer starts.** An app that only works when other people are using it has nothing to show on day one.
-
-- **Phase 0 — Setup.** Vite + React + Router + Dexie schema + styling system. Blank app routing between empty screens.
-- **Phase 1 — Interests skeleton.** Create/edit/delete interests. Home shows orbs as colored cards. Tapping opens the (empty) detail screen. Walking skeleton of the whole loop.
-- **Phase 2 — Journal.** Add/edit/delete dated entries. Reverse-chronological list.
-- **Phase 3 — Album.** Photo capture/upload, blob storage, grid, full-size viewer, delete. Downscale + strip EXIF on save.
-- **Phase 4 — The soul.** Orb faces show the latest photo; resurfaced-memory banner; pinning; streaks/stats; polished empty states; float/glow animation.
-
-> **Milestone rule: Phases 0–4 must be fully working and demo-ready before Phase 5 begins.** If the deadline arrives here, you have the v1 product, complete. That is a win. A half-built social layer on a half-built app is a loss.
-
-- **Phase 5 — Accounts & sync.** Supabase auth, push local data up, RLS policies written and *tested by trying to read another user's private orb directly against the API*. Do this before any public UI exists.
-- **Phase 6 — Visibility.** The public/private toggle, per-entry sharing, the visibility ring on Home, "How I appear to others". Still no discovery surface — you're just making the concept of public real and verifiable.
-- **Phase 7 — Discovery.** Discover screen with the daily set, public orb view, public space, "Start my own", "Keep an eye on it".
-- **Phase 8 — Safety.** Report, block, moderation queue, image screening. **Ships in the same release as Phase 7, never after it.**
-- **Phase 9 — Frame it.** Profile polish, in-app nudge on open, PWA manifest + icon.
-- **Stretch:** orb floating physics, JSON export/import, categories/filters in Discover, quiet reactions.
-
----
-
-## 11. Success criteria (competition lens)
-
-Judges reward clear problem → specific user → a working core → evidence it helps, told in a tight demo.
-
-- The 30-second cultivate loop works flawlessly on a phone, live.
-- **The discovery loop demonstrably ends in creation.** The metric that matters, and the one to quote on stage: *of users who opened Discover, how many started an orb of their own?* Not time spent. Not orbs viewed. If you instrument one thing, instrument this.
-- **Visibility is provably correct.** Be able to show, live, that a private orb is invisible from a second account. This is a 20-second demo beat that earns enormous trust.
-- One real user quote. Get 2–3 target students using it for a few days; a single honest reaction beats any feature.
-- Emotional resonance — the orb wall and resurfaced memory should make someone smile.
-
-### Suggested 90-second demo script
-
-1. Open to a warm wall of orbs — "everything this student loves." One orb glows outward: it's public. (10s)
-2. Resurfaced-memory banner recalls a watercolor from last week. Tap into Watercolors → growing album, journal streak. (20s)
-3. Add today's entry + a photo, live, under 30 seconds. (20s)
-4. Open Discover: a few orbs from other people. Someone's bonsai. Tap "Start my own" — and it's now sitting on your home wall, waiting. (25s)
-5. Close on the problem and the one user quote: *"I keep opening it instead of the game."* (15s)
-
-Note the shape of beat 4 — the demo ends with the user **making something**, not consuming. That's the whole argument of the product, delivered in five seconds.
-
----
-
-## 12. Open questions to resolve as you build
-
-1. **Age range and network shape (blocking — decide first).** Path A (16+, open network) or Path B (13–18, closed-circle sharing via class/invite code)? This determines auth, moderation load, and legal footing. Recommendation: **Path B with closed circles for the competition build**, since it keeps the target user, makes Discover non-empty on day one, and is defensible on stage.
-2. **Cold-start.** An empty Discover kills the second loop. Options: seed with the team's own real orbs, run the demo inside one school's circle, or hand-curate the first daily sets. Pick one and build for it.
-3. How is the daily set chosen? Recommendation for v1: random among public orbs with ≥3 photos, excluding your own and blocked users, weighted slightly toward categories you don't already have. No ML.
-4. Are quiet reactions worth the build, or is "Start my own" enough signal for an owner? (Leaning: cut them for v1.)
-5. Fixed palette vs. custom orb colors — recommend a curated 8–10 gradients.
-6. Is pinning worth the UI, or should "resurfaced memory" just pull a recent moment automatically?
-7. Localization: is the UI in Chinese? (Recommended for the target users; English copy above is placeholder.)

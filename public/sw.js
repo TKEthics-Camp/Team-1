@@ -4,7 +4,7 @@
 // already cached when offline, and always updating the cache from a
 // successful network response. Good enough for "load once, then it works
 // offline" without pulling in a bundler plugin.
-const CACHE = "leaves-v1";
+const CACHE = "forest-v1";
 // self.registration.scope is the directory this worker was registered
 // under (e.g. "/" at the domain root, or "/Team-1/" on a project subpath) —
 // deriving the shell paths from it keeps this file portable across deploys.
