@@ -315,7 +315,7 @@ export const STR = {
   viewingDemoGarden: ["Viewing the demo garden — your own trees are hidden until you remove it.", "正在查看演示花园 —— 你自己的树暂时隐藏，移除演示花园后恢复。"],
   exitDemoGarden:    ["Exit demo", "退出演示"],
   demoCardTitle:       ["New here?", "第一次来？"],
-  demoCardBody:        ["See Leaves come alive with a sample garden — a few trees at every stage, and a streak going.", "用一个示例花园看看叶子活起来的样子——各个阶段的树，还有正在进行的连续记录。"],
+  demoCardBody:        ["See Forest come alive with a sample garden — a few trees at every stage, and a streak going.", "用一个示例花园看看森林活起来的样子——各个阶段的树，还有正在进行的连续记录。"],
   demoCardBtn:         ["Plant a sample garden", "种一个示例花园"],
   yrFinalTitle:    ["That's your year.", "这就是你的这一年。"],
   yrFinalSub:      ["Keep showing up — next year's recap starts today.", "继续坚持 —— 明年的回顾从今天开始。"],
