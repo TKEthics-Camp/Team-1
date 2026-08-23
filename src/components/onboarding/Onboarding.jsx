@@ -7,7 +7,6 @@ import { uid } from "../../lib/id";
 import { askNotifications } from "../../lib/useReminderTimers";
 import { isBlockedHobby } from "../../lib/hobbyFilter";
 import LangToggle from "../shared/LangToggle";
-import WelcomeStep from "./WelcomeStep";
 import IntroStep from "./IntroStep";
 import GenderStep from "./GenderStep";
 import InterestsStep from "./InterestsStep";
@@ -25,9 +24,8 @@ import LookStep from "./LookStep";
 // dashboard. Their class code is minted automatically at finish() rather
 // than typed in; students join *that* code later from Me → Join a class.
 function stepsFor(accountType) {
-  const base = ["welcome", "intro"];
-  if (accountType === "org") return base.concat(["look"]);
-  return base.concat(["gender", "interests", "confirm", "schedule", "look"]);
+  if (accountType === "org") return ["intro", "look"];
+  return ["intro", "gender", "interests", "confirm", "schedule", "look"];
 }
 
 // Gender only ever picks a starting hair style for the avatar — everything
@@ -42,7 +40,7 @@ function avatarForGender(gender) {
 export default function Onboarding() {
   const { t, lang } = useI18n();
   const { saveProfile, addInterest } = useStore();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const meta = (user && user.user_metadata) || {};
   const accountType = meta.accountType || "individual";
   const name = meta.username || "";
@@ -97,14 +95,17 @@ export default function Onboarding() {
     <div className="view sf-view">
       <div className="sf">
         <div className="sf-bar">
-          {step > 0 && (
-            <button className="sf-back" aria-label={t("back")} onClick={() => setStep(step - 1)}>‹</button>
-          )}
+          <button
+            className="sf-back"
+            aria-label={t("back")}
+            onClick={() => (step > 0 ? setStep(step - 1) : signOut())}
+          >
+            ‹
+          </button>
           <div className="sf-grow" />
           <LangToggle />
         </div>
 
-        {current === "welcome" && <WelcomeStep onBegin={() => setStep(step + 1)} />}
         {current === "intro" && <IntroStep onNext={() => setStep(step + 1)} />}
         {current === "gender" && (
           <GenderStep value={gender} setGender={setGender} onNext={() => setStep(step + 1)} />
