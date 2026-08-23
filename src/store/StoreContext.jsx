@@ -152,12 +152,8 @@ export function StoreProvider({ children }) {
         getAll("interests"), getAll("entries"), pullMine(user.id),
       ]);
 
-      // Demo-garden data (isDemo) is a local-only showcase — never claimed
-      // by the account. Without this filter, signing in after planting one
-      // uploaded the 5 sample trees as real data (and, since the demo tag
-      // doesn't survive the trip, they came back permanent after removal).
       const remoteIntIds = new Set(remote.interests.map((i) => i.id));
-      const toPush = localInterests.filter((i) => !i.isDemo && !remoteIntIds.has(i.id));
+      const toPush = localInterests.filter((i) => !remoteIntIds.has(i.id));
       await Promise.all(toPush.map((rec) => pushInterest(rec, user.id)));
 
       const localIntIds = new Set(localInterests.map((i) => i.id));
@@ -165,7 +161,7 @@ export function StoreProvider({ children }) {
       await Promise.all(toAdopt.map((rec) => put("interests", rec)));
 
       const remoteEntryIds = new Set(remote.entries.map((e) => e.id));
-      const entriesToPush = localEntries.filter((e) => !e.isDemo && !remoteEntryIds.has(e.id));
+      const entriesToPush = localEntries.filter((e) => !remoteEntryIds.has(e.id));
       await Promise.all(entriesToPush.map((rec) => pushEntry(rec)));
 
       const localEntryIds = new Set(localEntries.map((e) => e.id));
@@ -257,36 +253,6 @@ export function StoreProvider({ children }) {
       setInterests((list) => list.map((x) => (x.id === rec.id ? rec : x)));
       put("interests", rec);
       if (userRef.current) pushInterest(rec, userRef.current.id);
-    },
-    // Bulk-add throwaway demo data in one shot: one state update instead of
-    // ~75, and deliberately NO remote sync — this is a showcase you're meant
-    // to clear, not real data worth uploading (and syncing it would race the
-    // interest inserts against the entries' foreign key).
-    seedDemo(newInterests, newEntries) {
-      newInterests.forEach((rec) => put("interests", rec));
-      newEntries.forEach((rec) => put("entries", rec));
-      setInterests((list) => [...list, ...newInterests].sort((a, b) => a.createdAt - b.createdAt));
-      setEntries((list) => [...list, ...newEntries]);
-    },
-    // The other half of seedDemo: pulls out every interest it planted (and,
-    // cascading the same way deleteInterest does, their entries/photos too)
-    // so a demo garden can be undone as a single unit instead of deleting
-    // five trees by hand or nuking real data along with it via clearAllData.
-    removeDemoGarden() {
-      setInterests((list) => {
-        const demoIds = new Set(list.filter((x) => x.isDemo).map((x) => x.id));
-        if (!demoIds.size) return list;
-        demoIds.forEach((id) => del("interests", id));
-        setPhotos((ph) => {
-          ph.filter((p) => demoIds.has(p.interestId)).forEach((p) => del("photos", p.id));
-          return ph.filter((p) => !demoIds.has(p.interestId));
-        });
-        setEntries((en) => {
-          en.filter((e) => demoIds.has(e.interestId)).forEach((e) => del("entries", e.id));
-          return en.filter((e) => !demoIds.has(e.interestId));
-        });
-        return list.filter((x) => !x.isDemo);
-      });
     },
     // Bring a dead tree back for REVIVE_COST coins. Returns false (and changes
     // nothing) if the user can't afford it. revivedAt resets the decay clock.

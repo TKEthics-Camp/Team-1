@@ -30,11 +30,7 @@ export default function App() {
   const lastUserId = useRef(null);
   const resolvedTheme = useResolvedTheme((profile && profile.theme) || DEFAULT_THEME);
 
-  // Demo trees carry a real reminder time ("16:00") same as any other —
-  // without excluding them, a planted demo garden could fire a genuine OS
-  // push notification for a tree that doesn't exist for the user.
-  const realInterests = interests.some((x) => x.isDemo) ? interests.filter((x) => !x.isDemo) : interests;
-  useReminderTimers(realInterests, entries, photos, lang, nameOf, t);
+  useReminderTimers(interests, entries, photos, lang, nameOf, t);
 
   useEffect(() => {
     if (!syncedLang.current && profile && profile.lang) {
