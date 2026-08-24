@@ -5,6 +5,7 @@ import { useAuth } from "./AuthContext";
 import {
   pushInterest, deleteRemoteInterest, pushEntry, deleteRemoteEntry,
   deleteAllMine, pullMine, pullUserRow, updateDiscovery, updateDisplayName,
+  classCodeExists, joinClass as joinClassRemote,
 } from "../lib/remote";
 
 const StoreCtx = createContext(null);
@@ -227,6 +228,26 @@ export function StoreProvider({ children }) {
       setProfileState((p) => {
         if (!p) return p;
         const next = { ...p, name: trimmed };
+        put("meta", next);
+        return next;
+      });
+      return { ok: true };
+    },
+    // Same wait-before-commit shape as changeUsername: a code has to be
+    // confirmed real before the local profile claims to be in that class,
+    // or the UI would show a membership that never actually took.
+    async joinClass(code) {
+      const trimmed = (code || "").trim().toUpperCase();
+      if (!trimmed) return { ok: false, reason: "empty" };
+      const exists = await classCodeExists(trimmed);
+      if (!exists) return { ok: false, reason: "invalid" };
+      if (userRef.current) {
+        const pushed = await joinClassRemote(userRef.current.id, trimmed);
+        if (!pushed) return { ok: false, reason: "error" };
+      }
+      setProfileState((p) => {
+        if (!p) return p;
+        const next = { ...p, classCode: trimmed };
         put("meta", next);
         return next;
       });

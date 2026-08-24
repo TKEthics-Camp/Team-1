@@ -1,22 +1,39 @@
+import { useEffect, useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
-import { STUDENTS, PALETTE } from "../../lib/constants";
-import { shade } from "../../lib/color";
-import { studentShared } from "../../lib/community";
-import Avatar from "./Avatar";
+import { PALETTE } from "../../lib/constants";
+import { shade, paletteIndexFor } from "../../lib/color";
+import { fetchClassmates } from "../../lib/remote";
+import PersonAvatar from "../shared/PersonAvatar";
 
-// The interconnected web: you at the centre, classmates orbiting, a dotted
-// line to anyone you share a hobby with. Tapping a node opens their sheet.
+// The interconnected web: you at the centre, real classmates (anyone who's
+// joined with the same class code) orbiting. Tapping a node opens their
+// public profile — the same sheet Explore's user search opens, since a
+// classmate is just another real account. No "shared hobby" highlighting
+// yet (the old fixture drew a line to anyone with an overlapping orb) —
+// that needs a second query per classmate for their public interests, left
+// for a follow-up rather than N+1 queries here.
 export default function SchoolTab() {
-  const { t, lang } = useI18n();
-  const { profile, interests } = useStore();
+  const { t } = useI18n();
+  const { profile } = useStore();
   const { openSheet } = useUI();
+  const [state, setState] = useState({ loading: true, classmates: [] });
 
+  useEffect(() => {
+    let cancelled = false;
+    setState({ loading: true, classmates: [] });
+    fetchClassmates(profile.userId, profile.classCode).then((classmates) => {
+      if (!cancelled) setState({ loading: false, classmates });
+    });
+    return () => { cancelled = true; };
+  }, [profile.userId, profile.classCode]);
+
+  const { loading, classmates } = state;
   const cx = 50, cy = 50, R = 37;
-  const placed = STUDENTS.map((st, i) => {
-    const ang = (i / STUDENTS.length) * Math.PI * 2 - Math.PI / 2;
-    return { st, x: cx + R * Math.cos(ang), y: cy + R * Math.sin(ang), shared: studentShared(st, interests) };
+  const placed = classmates.map((u, i) => {
+    const ang = (i / classmates.length) * Math.PI * 2 - Math.PI / 2;
+    return { u, x: cx + R * Math.cos(ang), y: cy + R * Math.sin(ang) };
   });
 
   return (
@@ -27,44 +44,42 @@ export default function SchoolTab() {
       </div>
       <div className="row">
         <div className="grow">
-          <div style={{ fontFamily: "var(--display)", fontWeight: 700, fontSize: 15 }}>{t("schoolName")}</div>
-          <div className="sub">{STUDENTS.length + 1 + " " + t("classmates")}</div>
+          <div className="sub">{classmates.length + 1 + " " + t("classmates")}</div>
         </div>
       </div>
 
-      <div className="web">
-        <svg className="web-lines" viewBox="0 0 100 100">
-          {placed.map(({ st, x, y, shared }) =>
-            shared.length ? (
-              <line key={st.name[0]} x1={cx} y1={cy} x2={x} y2={y} className="web-link" />
-            ) : null
-          )}
-        </svg>
+      {loading ? (
+        <div className="sub">{t("profileLoading")}</div>
+      ) : (
+        <div className="web">
+          {classmates.length === 0 && <div className="sub">{t("schoolEmpty")}</div>}
+          <svg className="web-lines" viewBox="0 0 100 100" />
 
-        {placed.map(({ st, x, y, shared }) => (
-          <button
-            key={st.name[0]}
-            className={"web-node" + (shared.length ? " linked" : "")}
-            aria-label={st.name[lang === "en" ? 0 : 1]}
-            style={{ left: `${x}%`, top: `${y}%` }}
-            onClick={() => openSheet("student", { student: st })}
-          >
-            <Avatar student={st} size={44} />
-          </button>
-        ))}
+          {placed.map(({ u, x, y }) => (
+            <button
+              key={u.id}
+              className="web-node"
+              aria-label={u.display_name}
+              style={{ left: `${x}%`, top: `${y}%` }}
+              onClick={() => openSheet("userProfile", { userId: u.id, displayName: u.display_name, accountType: u.account_type })}
+            >
+              <PersonAvatar color={PALETTE[paletteIndexFor(u.id, PALETTE.length)]} size={44} />
+            </button>
+          ))}
 
-        <div className="web-node me" style={{ left: `${cx}%`, top: `${cy}%` }}>
-          <div
-            className="avatar"
-            style={{
-              width: 52, height: 52, fontSize: 22,
-              background: `radial-gradient(circle at 34% 30%, ${shade(PALETTE[0], 40)}, ${shade(PALETTE[0], -45)})`,
-            }}
-          >
-            {(profile.name || "Y").slice(0, 1).toUpperCase()}
+          <div className="web-node me" style={{ left: `${cx}%`, top: `${cy}%` }}>
+            <div
+              className="avatar"
+              style={{
+                width: 52, height: 52, fontSize: 22,
+                background: `radial-gradient(circle at 34% 30%, ${shade(PALETTE[0], 40)}, ${shade(PALETTE[0], -45)})`,
+              }}
+            >
+              {(profile.name || "Y").slice(0, 1).toUpperCase()}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </>
   );
 }

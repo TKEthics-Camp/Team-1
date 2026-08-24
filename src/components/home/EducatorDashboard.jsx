@@ -1,25 +1,36 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
-import { STUDENTS } from "../../lib/constants";
-import { fmtHours } from "../../lib/derived";
+import { PALETTE } from "../../lib/constants";
+import { paletteIndexFor } from "../../lib/color";
+import { fetchClassmates } from "../../lib/remote";
 import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
 import Stats from "../shared/Stats";
-import Avatar from "../explore/Avatar";
+import PersonAvatar from "../shared/PersonAvatar";
 
 // What an org account lands on instead of the personal tree garden: their
-// class code to hand out, and a roster of the (demo) students who'd join
+// class code to hand out, and a roster of the real students who've joined
 // with it. Educators don't log hobbies themselves, so there's no OrbWall
 // here — this *is* their Home.
 export default function EducatorDashboard() {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   const { profile } = useStore();
   const { openSheet } = useUI();
   const [copied, setCopied] = useState(false);
+  const [state, setState] = useState({ loading: true, students: [] });
 
-  const hobbyCount = STUDENTS.reduce((n, st) => n + st.orbs.length, 0);
+  useEffect(() => {
+    let cancelled = false;
+    setState({ loading: true, students: [] });
+    fetchClassmates(profile.userId, profile.classCode).then((students) => {
+      if (!cancelled) setState({ loading: false, students });
+    });
+    return () => { cancelled = true; };
+  }, [profile.userId, profile.classCode]);
+
+  const { loading, students } = state;
 
   function copyCode() {
     if (navigator.clipboard) navigator.clipboard.writeText(profile.classCode || "").catch(() => {});
@@ -43,31 +54,24 @@ export default function EducatorDashboard() {
         </div>
         <div className="sub">{t("classCodeShareNote")}</div>
 
-        <Stats items={[
-          { n: STUDENTS.length, k: t("studentsCount") },
-          { n: hobbyCount, k: t("hobbiesLogged") },
-        ]} />
+        <Stats items={[{ n: students.length, k: t("studentsCount") }]} />
 
         <div className="label" data-tour="trees">{t("yourStudents")}</div>
-        <div className="sub">{t("dashboardRosterNote")}</div>
+        <div className="sub">{loading ? t("profileLoading") : students.length === 0 ? t("dashboardRosterEmpty") : t("dashboardRosterNote")}</div>
         <div className="ideas">
-          {STUDENTS.map((st) => {
-            const top = st.orbs[0];
-            return (
-              <button
-                key={st.name[0]}
-                type="button"
-                className="idea"
-                onClick={() => openSheet("student", { student: st })}
-              >
-                <Avatar student={st} size={44} />
-                <div className="grow">
-                  <div className="idea-nm">{st.name[lang === "en" ? 0 : 1]}</div>
-                  <div className="idea-cat">{top[lang === "en" ? 0 : 1] + "  ·  " + fmtHours(top[3])}</div>
-                </div>
-              </button>
-            );
-          })}
+          {students.map((u) => (
+            <button
+              key={u.id}
+              type="button"
+              className="idea"
+              onClick={() => openSheet("userProfile", { userId: u.id, displayName: u.display_name, accountType: u.account_type })}
+            >
+              <PersonAvatar color={PALETTE[paletteIndexFor(u.id, PALETTE.length)]} size={44} />
+              <div className="grow">
+                <div className="idea-nm">{u.display_name}</div>
+              </div>
+            </button>
+          ))}
         </div>
       </div>
     </>

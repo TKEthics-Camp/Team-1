@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useAuth } from "../../store/AuthContext";
-import { PALETTE, DEFAULT_THEME, CLASS_CODES } from "../../lib/constants";
-import { uid } from "../../lib/id";
+import { PALETTE, DEFAULT_THEME } from "../../lib/constants";
+import { uid, randomClassCode } from "../../lib/id";
+import { createClass } from "../../lib/remote";
 import { askNotifications } from "../../lib/useReminderTimers";
 import { isBlockedHobby } from "../../lib/hobbyFilter";
 import LangToggle from "../shared/LangToggle";
@@ -71,15 +72,36 @@ export default function Onboarding() {
     if (at >= 0) removeDraft(at); else addDraft(nm);
   }
 
+  // An org account's own class_code row (see the classes table) has to
+  // exist remotely before anyone can join it, so this can't be picked
+  // once and saved locally like everything else in finish() — it retries
+  // against a real uniqueness check. Everything else about signing up
+  // still works while this settles in the background; a student joining a
+  // code that isn't live yet just gets "not found" for the few seconds it
+  // takes.
+  async function mintClassCode(userId, rec) {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const code = randomClassCode();
+      const result = await createClass(userId, code);
+      if (result.ok) {
+        saveProfile({ ...rec, classCode: code });
+        return;
+      }
+      if (!result.taken) break;
+    }
+    console.error("Could not mint a class code after 5 attempts");
+  }
+
   function finish() {
-    saveProfile({
+    const rec = {
       key: "profile", name, lang, color: PALETTE[0], theme,
       accountType,
-      classCode: accountType === "org" ? CLASS_CODES[0] : null,
+      classCode: null,
       coins: 0, ownedDecorations: [], equippedDecoration: null, createdAt: Date.now(),
       avatar: avatarForGender(gender),
       userId: user ? user.id : null,
-    });
+    };
+    saveProfile(rec);
     drafts.forEach((d) => {
       addInterest({
         id: d.id, name: d.name, color: d.color, why: "", time: d.time, days: d.days || [], friends: d.friends,
@@ -87,6 +109,7 @@ export default function Onboarding() {
       });
     });
     askNotifications();
+    if (accountType === "org" && user && !user.isDebug) mintClassCode(user.id, rec);
   }
 
   const current = steps[step];

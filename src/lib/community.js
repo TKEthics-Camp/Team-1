@@ -1,8 +1,4 @@
-import { STUDENTS, CAPTIONS, CLASS_CODES } from "./constants";
-
-export function isValidClassCode(code) {
-  return CLASS_CODES.includes(String(code || "").trim().toUpperCase());
-}
+import { STUDENTS, CAPTIONS } from "./constants";
 
 /* ================= fake community + school =================
    Everything here is fabricated demo content. No real accounts, no network

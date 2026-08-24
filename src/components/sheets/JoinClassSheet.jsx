@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
-import { isValidClassCode } from "../../lib/community";
 import Sheet from "../shared/Sheet";
 import Field from "../shared/Field";
 
@@ -12,17 +11,18 @@ import Field from "../shared/Field";
 // ExploreScreen unlocks the School tab off classCode directly.
 export default function JoinClassSheet() {
   const { t } = useI18n();
-  const { updateProfile } = useStore();
+  const { joinClass } = useStore();
   const { closeSheet } = useUI();
   const [code, setCode] = useState("");
-  const [tried, setTried] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [checking, setChecking] = useState(false);
 
-  const valid = isValidClassCode(code);
-  const showError = tried && !valid;
-
-  function join() {
-    if (!valid) { setTried(true); return; }
-    updateProfile({ classCode: code.trim().toUpperCase() });
+  async function join() {
+    if (checking || !code.trim()) return;
+    setChecking(true);
+    const result = await joinClass(code);
+    setChecking(false);
+    if (!result.ok) { setShowError(true); return; }
     closeSheet();
   }
 
@@ -43,13 +43,15 @@ export default function JoinClassSheet() {
           maxLength={20}
           placeholder={t("classCodePh")}
           value={code}
-          onChange={(e) => { setCode(e.target.value); setTried(false); }}
+          onChange={(e) => { setCode(e.target.value); setShowError(false); }}
         />
         <span className="hint">{t("classCodeHint")}</span>
         {showError && <span className="field-error">{t("classCodeError")}</span>}
       </Field>
 
-      <button className="btn" onClick={join}>{t("join")}</button>
+      <button className="btn" onClick={join} disabled={checking}>
+        {checking ? t("classCodeChecking") : t("join")}
+      </button>
       <button className="btn2" onClick={closeSheet}>{t("cancel")}</button>
     </Sheet>
   );

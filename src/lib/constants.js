@@ -195,11 +195,6 @@ export const CATS = {
   mind: ["Mind", "静心"], food: ["Food & grow", "美食"], outdoor: ["Outdoors", "户外"], dance: ["Movement", "律动"],
 };
 
-// Demo class codes — this app has no server, so there's no real class
-// roster to check against. Any code here "joins" the one fake school
-// (STUDENTS below); anything else is rejected. Case/space-insensitive.
-export const CLASS_CODES = ["PINE2024", "PINECITY"];
-
 // Fake classmates. Hobby names reuse IDEAS so "shared with you" resolves.
 export const STUDENTS = [
   { name: ["Lin", "小林"], color: 4, orbs: [["Basketball", "篮球", "sport", 760], ["Running", "跑步", "sport", 300]] },

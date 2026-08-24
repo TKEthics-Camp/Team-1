@@ -189,6 +189,61 @@ export async function updateDisplayName(userId, name) {
   return { ok: true };
 }
 
+// Mints this educator's one class code. Called once, at the end of org
+// onboarding — the caller retries with a fresh code on { taken: true }.
+export async function createClass(userId, code) {
+  const { error } = await supabase.from("classes").insert({ code, owner_id: userId });
+  if (error) {
+    // 23505 = unique_violation — either the code (classes.code) or this
+    // account (classes.owner_id) already has a row. Only the code
+    // collision is worth retrying with a new code; an owner_id collision
+    // means this account already has one and shouldn't be minting another.
+    return { ok: false, taken: error.code === "23505" };
+  }
+  return { ok: true };
+}
+
+// Whether a typed code belongs to a real class, checked before the typing
+// account has joined anything — see classes_select in the migration for
+// why this can't go through users_select instead.
+export async function classCodeExists(code) {
+  const { data, error } = await supabase.from("classes").select("code").eq("code", code).maybeSingle();
+  if (error) {
+    console.error("Sync (check class code) failed:", error);
+    return false;
+  }
+  return !!data;
+}
+
+export async function joinClass(userId, code) {
+  const { error } = await supabase.from("users").update({ class_code: code }).eq("id", userId);
+  if (error) {
+    console.error("Sync (join class) failed:", error);
+    return false;
+  }
+  return true;
+}
+
+// Everyone else sharing this class_code — RLS's users_select class-code
+// branch already restricts what comes back to real classmates (and
+// nothing blocked either direction), so there's nothing left to filter
+// client-side.
+export async function fetchClassmates(userId, classCode) {
+  // An org account's own code is minted asynchronously right after
+  // onboarding (see Onboarding.jsx) — this can render before it lands.
+  if (!classCode) return [];
+  const { data, error } = await supabase
+    .from("users")
+    .select("id, display_name, account_type")
+    .eq("class_code", classCode)
+    .neq("id", userId);
+  if (error) {
+    console.error("Sync (fetch classmates) failed:", error);
+    return [];
+  }
+  return data || [];
+}
+
 // RLS (users_select) already restricts what comes back to: this user's own
 // row, plus rows with discovery_enabled = true where neither side has
 // blocked the other — so there's nothing left to filter client-side.
