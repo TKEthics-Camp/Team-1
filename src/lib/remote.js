@@ -190,6 +190,17 @@ export async function updateDisplayName(userId, name) {
   return { ok: true };
 }
 
+// The classes row is what makes a code exist and lets a student validate
+// it pre-join; the educator's own users.class_code is what actually lets
+// users_select's classmate branch resolve for their account (it checks
+// "does this row's class_code match *my own* class_code"), so an educator
+// who never gets this set can never see their own students no matter who
+// joins. Both have to be written for a code to actually work end to end.
+export async function setMyClassCode(userId, code) {
+  const { error } = await supabase.from("users").update({ class_code: code }).eq("id", userId);
+  if (error) console.error("Sync (set own class_code) failed:", error);
+}
+
 // Mints this educator's one class code. Called once, at the end of org
 // onboarding — the caller retries with a fresh code on { taken: true }.
 export async function createClass(userId, code) {
@@ -207,6 +218,7 @@ export async function createClass(userId, code) {
     console.error("Sync (create class) failed:", error);
     return { ok: false, taken: false, alreadyMinted: false };
   }
+  await setMyClassCode(userId, code);
   return { ok: true };
 }
 
@@ -233,7 +245,11 @@ export async function mintOrFetchClassCode(userId) {
     const code = randomClassCode();
     const result = await createClass(userId, code);
     if (result.ok) return code;
-    if (result.alreadyMinted) return fetchMyClassCode(userId);
+    if (result.alreadyMinted) {
+      const existing = await fetchMyClassCode(userId);
+      if (existing) await setMyClassCode(userId, existing);
+      return existing;
+    }
     if (!result.taken) break;
   }
   return null;

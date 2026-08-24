@@ -5,7 +5,7 @@ import { useAuth } from "./AuthContext";
 import {
   pushInterest, deleteRemoteInterest, pushEntry, deleteRemoteEntry,
   deleteAllMine, pullMine, pullUserRow, updateDiscovery, updateDisplayName,
-  classCodeExists, joinClass as joinClassRemote,
+  classCodeExists, joinClass as joinClassRemote, setMyClassCode,
 } from "../lib/remote";
 
 const StoreCtx = createContext(null);
@@ -136,9 +136,18 @@ export function StoreProvider({ children }) {
         // nothing here to bring it back, so a returning user looked like
         // they'd never joined at all.
         if ((profileRef.current.classCode || null) !== (userRow.class_code || null)) {
-          const next = { ...profileRef.current, classCode: userRow.class_code || null };
-          setProfileState(next);
-          put("meta", next);
+          if (profileRef.current.accountType === "org" && profileRef.current.classCode) {
+            // An org account's own class_code can be missing here even
+            // though their classes row and local profile both have it
+            // (createClass used to only write the classes row) — local is
+            // the known-good value in that case, so push it up instead of
+            // pulling the gap back down.
+            setMyClassCode(user.id, profileRef.current.classCode);
+          } else {
+            const next = { ...profileRef.current, classCode: userRow.class_code || null };
+            setProfileState(next);
+            put("meta", next);
+          }
         }
         // A local profile that predates this sign-in (built while offline,
         // or from a device that used the app before creating an account)
