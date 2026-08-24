@@ -107,6 +107,7 @@ export function StoreProvider({ children }) {
             theme: DEFAULT_THEME,
             accountType: userRow.account_type || "individual",
             discoverable: !!userRow.discovery_enabled,
+            classCode: userRow.class_code || null,
             coins: 0,
             ownedDecorations: [],
             equippedDecoration: null,
@@ -126,6 +127,16 @@ export function StoreProvider({ children }) {
         // updates.
         if (!!profileRef.current.discoverable !== !!userRow.discovery_enabled) {
           const next = { ...profileRef.current, discoverable: !!userRow.discovery_enabled };
+          setProfileState(next);
+          put("meta", next);
+        }
+        // Same idea for class membership — joining (or, for an org account,
+        // minting) a code writes it remotely first; without this, a cache
+        // wipe on sign-out (see App.jsx) drops the local copy and there was
+        // nothing here to bring it back, so a returning user looked like
+        // they'd never joined at all.
+        if ((profileRef.current.classCode || null) !== (userRow.class_code || null)) {
+          const next = { ...profileRef.current, classCode: userRow.class_code || null };
           setProfileState(next);
           put("meta", next);
         }

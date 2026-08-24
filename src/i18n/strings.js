@@ -58,6 +58,7 @@ export const STR = {
   classCodeHint:  ["Codes are 6 characters, like KX3R7Q.", "代码是 6 位字符，例如 KX3R7Q。"],
   classCodeWarning: ["Once you join, classmates can see which of your hobbies you share with them. Your private entries, photos, and journal stay yours alone — this never shares those.", "加入后，同学能看到你和他们共同拥有的爱好。你的日记、照片这些私密内容始终只属于你 —— 不会被分享。"],
   classCodeError: ["That code doesn't match a class. Check with your teacher and try again.", "这个代码找不到对应的班级。请和老师确认后重试。"],
+  classCodeJoinError: ["Something went wrong joining — try again in a moment.", "加入时出了点问题 —— 请稍后再试。"],
   classCodeChecking: ["Checking…", "正在核对…"],
   join:           ["Join", "加入"],
   joinClass:      ["Join a class", "加入班级"],

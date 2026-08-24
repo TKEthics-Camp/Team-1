@@ -14,7 +14,7 @@ export default function JoinClassSheet() {
   const { joinClass } = useStore();
   const { closeSheet } = useUI();
   const [code, setCode] = useState("");
-  const [showError, setShowError] = useState(false);
+  const [errorReason, setErrorReason] = useState(null); // null | "invalid" | "error"
   const [checking, setChecking] = useState(false);
 
   async function join() {
@@ -22,7 +22,14 @@ export default function JoinClassSheet() {
     setChecking(true);
     const result = await joinClass(code);
     setChecking(false);
-    if (!result.ok) { setShowError(true); return; }
+    if (!result.ok) {
+      // "invalid" (no such code) is the student's problem to fix; "empty"/
+      // "error" (network, RLS, anything on our end) is not the same thing
+      // as a wrong code and shouldn't be reported as one.
+      if (result.reason === "invalid") setErrorReason("invalid");
+      else { console.error("Join class failed:", result.reason); setErrorReason("error"); }
+      return;
+    }
     closeSheet();
   }
 
@@ -43,10 +50,11 @@ export default function JoinClassSheet() {
           maxLength={20}
           placeholder={t("classCodePh")}
           value={code}
-          onChange={(e) => { setCode(e.target.value); setShowError(false); }}
+          onChange={(e) => { setCode(e.target.value); setErrorReason(null); }}
         />
         <span className="hint">{t("classCodeHint")}</span>
-        {showError && <span className="field-error">{t("classCodeError")}</span>}
+        {errorReason === "invalid" && <span className="field-error">{t("classCodeError")}</span>}
+        {errorReason === "error" && <span className="field-error">{t("classCodeJoinError")}</span>}
       </Field>
 
       <button className="btn" onClick={join} disabled={checking}>
