@@ -279,7 +279,9 @@ export async function joinClass(userId, code) {
 // Everyone else sharing this class_code — RLS's users_select class-code
 // branch already restricts what comes back to real classmates (and
 // nothing blocked either direction), so there's nothing left to filter
-// client-side.
+// client-side except the educator themselves: their own account shares
+// this class_code too (see setMyClassCode), but the educator isn't a
+// classmate to anyone.
 export async function fetchClassmates(userId, classCode) {
   // An org account's own code is minted asynchronously right after
   // onboarding (see Onboarding.jsx) — this can render before it lands.
@@ -288,7 +290,8 @@ export async function fetchClassmates(userId, classCode) {
     .from("users")
     .select("id, display_name, account_type")
     .eq("class_code", classCode)
-    .neq("id", userId);
+    .neq("id", userId)
+    .neq("account_type", "org");
   if (error) {
     console.error("Sync (fetch classmates) failed:", error);
     return [];
