@@ -157,11 +157,15 @@ export default function ProfileScreen() {
 
         <div className="grow" />
 
-        <div className="sub">{t("dataNote")}</div>
+        {!isOrg && (
+          <>
+            <div className="sub">{t("dataNote")}</div>
 
-        <button className="btn2 btn-danger" onClick={handleClear}>
-          {armed ? t("confirmClear") : t("clearAll")}
-        </button>
+            <button className="btn2 btn-danger" onClick={handleClear}>
+              {armed ? t("confirmClear") : t("clearAll")}
+            </button>
+          </>
+        )}
         <button className="btn2" onClick={signOut}>{t("logOut")}</button>
       </div>
     </>
