@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
-import { PALETTE } from "../../lib/constants";
-import { shade, paletteIndexFor } from "../../lib/color";
+import { PALETTE, DECORATIONS } from "../../lib/constants";
+import { paletteIndexFor } from "../../lib/color";
 import { fetchClassmates } from "../../lib/remote";
 import PersonAvatar from "../shared/PersonAvatar";
 
@@ -19,6 +19,7 @@ export default function SchoolTab() {
   const { profile } = useStore();
   const { openSheet } = useUI();
   const [state, setState] = useState({ loading: true, classmates: [] });
+  const equippedDecoration = DECORATIONS.find((d) => d.id === (profile && profile.equippedDecoration)) || null;
 
   useEffect(() => {
     let cancelled = false;
@@ -68,15 +69,7 @@ export default function SchoolTab() {
           ))}
 
           <div className="web-node me" style={{ left: `${cx}%`, top: `${cy}%` }}>
-            <div
-              className="avatar"
-              style={{
-                width: 52, height: 52, fontSize: 22,
-                background: `radial-gradient(circle at 34% 30%, ${shade(PALETTE[0], 40)}, ${shade(PALETTE[0], -45)})`,
-              }}
-            >
-              {(profile.name || "Y").slice(0, 1).toUpperCase()}
-            </div>
+            <PersonAvatar color={PALETTE[0]} avatar={profile.avatar} decoration={equippedDecoration} size={52} />
           </div>
         </div>
       )}

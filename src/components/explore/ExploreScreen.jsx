@@ -20,14 +20,16 @@ export default function ExploreScreen() {
   const { profile } = useStore();
   const { user } = useAuth();
 
-  // Org accounts get the classmate web but not the solo idea browser;
-  // everyone else keeps Ideas, and gains School once they're in a class
-  // (their own classCode — set at org onboarding or via Me → Join a class).
+  // An educator isn't a classmate and has their own roster already, on
+  // their dashboard — School and Ideas (the solo hobby browser) are both
+  // just for students, so an org account only ever sees Community.
+  // Individuals keep Ideas, and gain School once they're in a class (their
+  // own classCode — set via Me → Join a class).
   const isOrg = profile && profile.accountType === "org";
   const inClass = !!(profile && profile.classCode);
   const TABS = ALL_TABS.filter(([key]) => {
     if (key === "ideas") return !isOrg;
-    if (key === "school") return isOrg || inClass;
+    if (key === "school") return !isOrg && inClass;
     return true;
   });
 
