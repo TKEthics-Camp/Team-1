@@ -15,7 +15,7 @@ import PersonAvatar from "../shared/PersonAvatar";
 // that needs a second query per classmate for their public interests, left
 // for a follow-up rather than N+1 queries here.
 export default function SchoolTab() {
-  const { t } = useI18n();
+  const { t, nOf } = useI18n();
   const { profile } = useStore();
   const { openSheet } = useUI();
   const [state, setState] = useState({ loading: true, classmates: [] });
@@ -45,7 +45,7 @@ export default function SchoolTab() {
       </div>
       <div className="row">
         <div className="grow">
-          <div className="sub">{classmates.length + 1 + " " + t("classmates")}</div>
+          <div className="sub">{classmates.length + " " + nOf(classmates.length, "classmates")}</div>
         </div>
       </div>
 
