@@ -5,10 +5,21 @@ import { useAuth } from "./AuthContext";
 import {
   pushInterest, deleteRemoteInterest, pushEntry, deleteRemoteEntry,
   deleteAllMine, pullMine, pullUserRow, updateDiscovery, updateDisplayName,
-  classCodeExists, joinClass as joinClassRemote, setMyClassCode,
+  classCodeExists, joinClass as joinClassRemote, setMyClassCode, updateAvatar,
 } from "../lib/remote";
 
 const StoreCtx = createContext(null);
+
+// users.avatar is '' until the first sync, and JSON.parse('') throws —
+// null here means "nothing remote yet", not "reset to defaults".
+function parseAvatar(raw) {
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
 
 export function StoreProvider({ children }) {
   const { user } = useAuth();
@@ -108,6 +119,7 @@ export function StoreProvider({ children }) {
             accountType: userRow.account_type || "individual",
             discoverable: !!userRow.discovery_enabled,
             classCode: userRow.class_code || null,
+            avatar: parseAvatar(userRow.avatar) || {},
             coins: 0,
             ownedDecorations: [],
             equippedDecoration: null,
@@ -127,6 +139,15 @@ export function StoreProvider({ children }) {
         // updates.
         if (!!profileRef.current.discoverable !== !!userRow.discovery_enabled) {
           const next = { ...profileRef.current, discoverable: !!userRow.discovery_enabled };
+          setProfileState(next);
+          put("meta", next);
+        }
+        // Same idea for the avatar — it's edited from Me → customize on
+        // whichever device you're on, so the remote copy is always the
+        // most recent one across every device, and always wins here.
+        const remoteAvatar = parseAvatar(userRow.avatar);
+        if (remoteAvatar && JSON.stringify(remoteAvatar) !== JSON.stringify(profileRef.current.avatar || {})) {
+          const next = { ...profileRef.current, avatar: remoteAvatar };
           setProfileState(next);
           put("meta", next);
         }
@@ -234,6 +255,10 @@ export function StoreProvider({ children }) {
         put("meta", next);
         return next;
       });
+      // Everything else this is used for (theme, sound, tour state...) is
+      // genuinely local-only; the avatar is the one field here a second
+      // device also needs to see, so it's the one that gets pushed.
+      if (patch.avatar && userRef.current) updateAvatar(userRef.current.id, patch.avatar);
     },
     // Unlike setDiscoverable/updateProfile, this waits on the remote write
     // before touching local state — a username collision (users_display_

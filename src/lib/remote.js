@@ -180,6 +180,14 @@ export async function updateDiscovery(userId, enabled) {
   if (error) console.error("Sync (discovery) failed:", error);
 }
 
+// users.avatar is text, not jsonb — the avatar customization (skin, hair,
+// hair colour, outfit, outfit colour) is stored as a JSON string so a
+// device other than the one that made the edit can pick it up too.
+export async function updateAvatar(userId, avatar) {
+  const { error } = await supabase.from("users").update({ avatar: JSON.stringify(avatar) }).eq("id", userId);
+  if (error) console.error("Sync (avatar) failed:", error);
+}
+
 export async function updateDisplayName(userId, name) {
   const { error } = await supabase.from("users").update({ display_name: name }).eq("id", userId);
   if (error) {
