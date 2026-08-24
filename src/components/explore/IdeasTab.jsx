@@ -23,11 +23,6 @@ export default function IdeasTab() {
 
   return (
     <>
-      <div className="safe-note">
-        <span aria-hidden="true">🔒</span>
-        <span>{t("exploreNote")}</span>
-      </div>
-
       {r.list.length > 0 && (
         <section>
           <div className="section-head">

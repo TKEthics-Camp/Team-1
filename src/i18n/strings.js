@@ -217,7 +217,7 @@ export const STR = {
   explore:      ["Explore", "发现"],
   recs:         ["For you", "推荐"],
   recsSub:      ["Picked from what you already love.", "根据你已经喜欢的挑的。"],
-  allHobbies:   ["All hobbies", "所有爱好"],
+  allHobbies:   ["More hobbies", "更多爱好"],
   exploreNote:  ["Ideas to try — not people. Nothing here is shared, and no one can see your garden.", "值得一试的点子 —— 不是别人。这里什么都不会被分享，也没有人能看到你的花园。"],
   exploreSub:   ["A big mix of hobbies. Tap one to make it yours.", "各种爱好随便挑。点一个，就归你了。"],
   recsBecause:  ["Because you love ", "因为你喜欢"],

@@ -135,9 +135,8 @@ export default function InterestScreen() {
         ]} />
 
         {it.why && <div className="sub">{`“${it.why}”`}</div>}
-        {(it.time || (it.friends || []).length > 0) && (
+        {(it.friends || []).length > 0 && (
           <div className="chips">
-            {it.time && <span className="chip friend">{"🔔 " + it.time}</span>}
             {(it.friends || []).map((f) => <span key={f} className="chip friend">{"@" + f}</span>)}
           </div>
         )}

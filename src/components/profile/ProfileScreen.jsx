@@ -118,7 +118,6 @@ export default function ProfileScreen() {
             <button className="btn2" disabled={granted || blocked} onClick={requestReminders}>
               {granted ? "✓ " + t("remindersOn") : blocked ? t("remindersBlocked") : t("turnOn")}
             </button>
-            <div className="sub">{t("remindNote")}</div>
           </>
         )}
 
