@@ -4,7 +4,7 @@ import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
 import { PALETTE } from "../../lib/constants";
 import { paletteIndexFor } from "../../lib/color";
-import { fetchClassmates } from "../../lib/remote";
+import { fetchClassmates, mintOrFetchClassCode } from "../../lib/remote";
 import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
 import Stats from "../shared/Stats";
@@ -16,10 +16,22 @@ import PersonAvatar from "../shared/PersonAvatar";
 // here — this *is* their Home.
 export default function EducatorDashboard() {
   const { t } = useI18n();
-  const { profile } = useStore();
+  const { profile, updateProfile } = useStore();
   const { openSheet } = useUI();
   const [copied, setCopied] = useState(false);
   const [state, setState] = useState({ loading: true, students: [] });
+
+  // Self-heal for an account whose class code never landed — the mint
+  // attempt at the end of onboarding is fire-and-forget, so a network
+  // hiccup or an interrupted signup can leave an org account with no
+  // code and no error the user ever saw. Landing here is the one place
+  // that's guaranteed to happen next, so it's also the retry point.
+  useEffect(() => {
+    if (profile.classCode || !profile.userId) return;
+    mintOrFetchClassCode(profile.userId).then((code) => {
+      if (code) updateProfile({ classCode: code });
+    });
+  }, [profile.classCode, profile.userId, updateProfile]);
 
   useEffect(() => {
     let cancelled = false;

@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { randomClassCode } from "./id";
 
 // DEBUG ONLY: mirrors the flag in AuthContext.jsx. When set, searchUsers and
 // pullPublicProfile serve one fixture "friend" instead of hitting Supabase,
@@ -194,13 +195,48 @@ export async function updateDisplayName(userId, name) {
 export async function createClass(userId, code) {
   const { error } = await supabase.from("classes").insert({ code, owner_id: userId });
   if (error) {
-    // 23505 = unique_violation — either the code (classes.code) or this
-    // account (classes.owner_id) already has a row. Only the code
-    // collision is worth retrying with a new code; an owner_id collision
-    // means this account already has one and shouldn't be minting another.
-    return { ok: false, taken: error.code === "23505" };
+    // 23505 = unique_violation, but from either constraint: the code
+    // itself (classes_pkey) or this account (classes_owner_id_key). Only
+    // a code collision is worth retrying with a fresh code — an owner_id
+    // collision means this account already minted one, and the caller
+    // should look that up instead of generating yet another code for it.
+    if (error.code === "23505") {
+      const ownerCollision = /owner_id/i.test(error.message || "") || /owner_id/i.test(error.details || "");
+      return { ok: false, taken: !ownerCollision, alreadyMinted: ownerCollision };
+    }
+    console.error("Sync (create class) failed:", error);
+    return { ok: false, taken: false, alreadyMinted: false };
   }
   return { ok: true };
+}
+
+// This account's own class code, if it's already minted one — used when
+// createClass reports alreadyMinted instead of generating a code that
+// would just collide again.
+export async function fetchMyClassCode(userId) {
+  const { data, error } = await supabase.from("classes").select("code").eq("owner_id", userId).maybeSingle();
+  if (error) {
+    console.error("Sync (fetch my class code) failed:", error);
+    return null;
+  }
+  return data ? data.code : null;
+}
+
+// This account's class code, minting one if it doesn't have one yet.
+// Called at the end of org onboarding, and again from EducatorDashboard
+// as a self-heal for any account whose original mint attempt failed
+// silently (network hiccup, an interrupted signup) and is stuck without
+// one — same underlying calls either way, just retried from wherever the
+// account actually is.
+export async function mintOrFetchClassCode(userId) {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const code = randomClassCode();
+    const result = await createClass(userId, code);
+    if (result.ok) return code;
+    if (result.alreadyMinted) return fetchMyClassCode(userId);
+    if (!result.taken) break;
+  }
+  return null;
 }
 
 // Whether a typed code belongs to a real class, checked before the typing

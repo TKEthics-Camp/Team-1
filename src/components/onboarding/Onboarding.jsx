@@ -3,8 +3,8 @@ import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useAuth } from "../../store/AuthContext";
 import { PALETTE, DEFAULT_THEME } from "../../lib/constants";
-import { uid, randomClassCode } from "../../lib/id";
-import { createClass } from "../../lib/remote";
+import { uid } from "../../lib/id";
+import { mintOrFetchClassCode } from "../../lib/remote";
 import { askNotifications } from "../../lib/useReminderTimers";
 import { isBlockedHobby } from "../../lib/hobbyFilter";
 import LangToggle from "../shared/LangToggle";
@@ -80,16 +80,9 @@ export default function Onboarding() {
   // code that isn't live yet just gets "not found" for the few seconds it
   // takes.
   async function mintClassCode(userId, rec) {
-    for (let attempt = 0; attempt < 5; attempt++) {
-      const code = randomClassCode();
-      const result = await createClass(userId, code);
-      if (result.ok) {
-        saveProfile({ ...rec, classCode: code });
-        return;
-      }
-      if (!result.taken) break;
-    }
-    console.error("Could not mint a class code after 5 attempts");
+    const code = await mintOrFetchClassCode(userId);
+    if (code) saveProfile({ ...rec, classCode: code });
+    else console.error("Could not mint a class code after 5 attempts");
   }
 
   function finish() {

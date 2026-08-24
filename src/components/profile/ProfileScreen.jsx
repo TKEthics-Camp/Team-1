@@ -75,19 +75,25 @@ export default function ProfileScreen() {
             </span>
             <span aria-hidden="true">✎</span>
           </button>
-          <div className="coin-row">
-            <span className="chip coin-pill">{"🪙 " + coins}</span>
-            <button className="chip" onClick={() => navigate("/market")}>{t("market")}</button>
-          </div>
+          {!isOrg && (
+            <div className="coin-row">
+              <span className="chip coin-pill">{"🪙 " + coins}</span>
+              <button className="chip" onClick={() => navigate("/market")}>{t("market")}</button>
+            </div>
+          )}
         </div>
 
-        <Stats items={[
-          { n: globalStreak(entries, photos), k: t("totalStreak"), flame: true },
-          { n: interests.length, k: nOf(interests.length, "orbsCount") },
-          { n: photos.length, k: nOf(photos.length, "photos") },
-          { n: entries.length, k: nOf(entries.length, "entries") },
-        ]} />
-        <div className="sub">{publicCount + " " + nOf(publicCount, "publicCount")}</div>
+        {!isOrg && (
+          <>
+            <Stats items={[
+              { n: globalStreak(entries, photos), k: t("totalStreak"), flame: true },
+              { n: interests.length, k: nOf(interests.length, "orbsCount") },
+              { n: photos.length, k: nOf(photos.length, "photos") },
+              { n: entries.length, k: nOf(entries.length, "entries") },
+            ]} />
+            <div className="sub">{publicCount + " " + nOf(publicCount, "publicCount")}</div>
+          </>
+        )}
 
         <div className="label">{t("theme")}</div>
         <div className="themes">
@@ -107,10 +113,14 @@ export default function ProfileScreen() {
         </div>
         <div className="sub">{t("themeNote")}</div>
 
-        <button className="btn2" disabled={granted || blocked} onClick={requestReminders}>
-          {granted ? "✓ " + t("remindersOn") : blocked ? t("remindersBlocked") : t("turnOn")}
-        </button>
-        <div className="sub">{t("remindNote")}</div>
+        {!isOrg && (
+          <>
+            <button className="btn2" disabled={granted || blocked} onClick={requestReminders}>
+              {granted ? "✓ " + t("remindersOn") : blocked ? t("remindersBlocked") : t("turnOn")}
+            </button>
+            <div className="sub">{t("remindNote")}</div>
+          </>
+        )}
 
         <button className="btn2" onClick={() => updateProfile({ soundOn: !soundOn })}>
           {soundOn ? "🔊 " + t("soundOn") : "🔈 " + t("soundOff")}
@@ -127,21 +137,24 @@ export default function ProfileScreen() {
         </div>
         <div className="sub">{t("discoverableNote")}</div>
 
-        {isOrg ? (
-          <div className="sub">{t("yourClassCode") + ": " + profile.classCode}</div>
-        ) : profile.classCode ? (
-          <div className="sub">{t("joinedClass")}</div>
-        ) : (
-          <>
-            <button className="btn2" onClick={() => openSheet("joinClass")}>{t("joinClass")}</button>
-            <div className="sub">{t("joinClassNote")}</div>
-          </>
+        {!isOrg && (
+          profile.classCode ? (
+            <div className="sub">{t("joinedClass")}</div>
+          ) : (
+            <>
+              <button className="btn2" onClick={() => openSheet("joinClass")}>{t("joinClass")}</button>
+              <div className="sub">{t("joinClassNote")}</div>
+            </>
+          )
         )}
 
-        <button className="btn2" onClick={() => { updateProfile({ tourSeen: false }); navigate("/"); }}>{t("replayTour")}</button>
-
-        <button className="btn2" data-tour="yearReview" onClick={() => openSheet("yearReview")}>{t("yearReview")}</button>
-        <button className="btn2" onClick={() => openSheet("memories")}>{t("memories")}</button>
+        {!isOrg && (
+          <>
+            <button className="btn2" onClick={() => { updateProfile({ tourSeen: false }); navigate("/"); }}>{t("replayTour")}</button>
+            <button className="btn2" data-tour="yearReview" onClick={() => openSheet("yearReview")}>{t("yearReview")}</button>
+            <button className="btn2" onClick={() => openSheet("memories")}>{t("memories")}</button>
+          </>
+        )}
 
         <div className="grow" />
 

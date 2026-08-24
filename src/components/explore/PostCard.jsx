@@ -13,10 +13,13 @@ import Avatar from "./Avatar";
 // CommunityTab is about the user's *own* journal, not other people's posts.
 export default function PostCard({ post }) {
   const { t, lang } = useI18n();
-  const { interests } = useStore();
+  const { interests, profile } = useStore();
   const { openSheet } = useUI();
   const st = post.student;
   const has = haveHobby(interests, post.hobby);
+  // An educator has no orbs of their own to log or start — this card is a
+  // window into what students are up to, not something for them to act on.
+  const isOrg = profile && profile.accountType === "org";
 
   function act() {
     const mine = interests.find(
@@ -40,7 +43,7 @@ export default function PostCard({ post }) {
         <div className="post-cap">{post.caption[lang === "en" ? 0 : 1]}</div>
         <div className="post-foot">
           <span className="post-min">{"⏱ " + fmtHours(post.minutes) + " · " + hobbyName(post.hobby, lang)}</span>
-          <button className="idea-add" onClick={act}>{has ? t("logYours") : t("startThis")}</button>
+          {!isOrg && <button className="idea-add" onClick={act}>{has ? t("logYours") : t("startThis")}</button>}
         </div>
       </div>
     </div>
