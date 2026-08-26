@@ -342,8 +342,12 @@ export async function pullPublicProfile(userId) {
       entries: DEBUG_ENTRY_ROWS.map(rowToEntry),
     };
   }
+  // No .eq("visibility", "public") here — whether someone else's orbs are
+  // visible at all is now decided by their own discovery_enabled flag, not
+  // a per-orb toggle (see interests_select). RLS already enforces that;
+  // this just asks for everything of theirs it's allowed to hand back.
   const { data: interestRows, error: intErr } = await supabase
-    .from("interests").select("*").eq("user_id", userId).eq("visibility", "public");
+    .from("interests").select("*").eq("user_id", userId);
   if (intErr) {
     console.error("Sync (pull public profile) failed:", intErr);
     return { interests: [], entries: [] };

@@ -11,7 +11,6 @@ import Sheet from "../shared/Sheet";
 import Field from "../shared/Field";
 import Tree from "../shared/Tree";
 import DayPicker from "../shared/DayPicker";
-import VisRow from "../shared/VisRow";
 
 const SPECIES_ICON = {
   oak: "🌳", willow: "🌿", pine: "🌲", birch: "🌱",
@@ -36,7 +35,6 @@ export default function OrbSheet({ interestId, preset = null }) {
   const [time, setTime] = useState(editing ? editing.time || "16:00" : "16:00");
   const [days, setDays] = useState(editing ? editing.days || [] : []);
   const [friendsText, setFriendsText] = useState(editing ? (editing.friends || []).join(", ") : "");
-  const [visibility, setVisibility] = useState(editing ? editing.visibility || "private" : "private");
   const nameRef = useRef(null);
   const previewId = useMemo(() => (editing ? editing.id : uid()), [editing]);
   const [species, setSpecies] = useState(editing ? editing.species || speciesOf(editing) : speciesOf({ id: previewId }));
@@ -51,10 +49,10 @@ export default function OrbSheet({ interestId, preset = null }) {
     if (isBlockedHobby(nm)) { setBlocked(true); nameRef.current?.focus(); return; }
     const friends = friendsText.split(/[,，]/).map((x) => x.trim()).filter(Boolean);
     if (editing) {
-      updateInterest({ ...editing, name: nm, why: why.trim(), color, time, days, species, leafColor, friends, visibility, updatedAt: Date.now() });
+      updateInterest({ ...editing, name: nm, why: why.trim(), color, time, days, species, leafColor, friends, updatedAt: Date.now() });
     } else {
       addInterest({
-        id: previewId, name: nm, why: why.trim(), color, time, days, species, leafColor, friends, visibility,
+        id: previewId, name: nm, why: why.trim(), color, time, days, species, leafColor, friends,
         createdAt: Date.now(), updatedAt: Date.now(),
       });
     }
@@ -146,8 +144,6 @@ export default function OrbSheet({ interestId, preset = null }) {
           onChange={(e) => setFriendsText(e.target.value)}
         />
       </Field>
-      <VisRow value={visibility} onChange={setVisibility} />
-
       <button className="btn" onClick={save}>{t("save")}</button>
       {editing && <button className="btn2 btn-danger" onClick={remove}>{t("deleteOrb")}</button>}
       <button className="btn2" onClick={closeSheet}>{t("cancel")}</button>
