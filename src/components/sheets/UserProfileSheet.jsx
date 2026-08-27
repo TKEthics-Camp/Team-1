@@ -21,13 +21,16 @@ export default function UserProfileSheet({ userId, displayName, accountType }) {
   const [state, setState] = useState({ loading: true, interests: [], entries: [] });
 
   useEffect(() => {
+    // An org account never has hobbies of its own — skip the fetch and the
+    // "no public trees" empty state that would otherwise always show for one.
+    if (accountType === "org") { setState({ loading: false, interests: [], entries: [] }); return; }
     let cancelled = false;
     setState({ loading: true, interests: [], entries: [] });
     pullPublicProfile(userId).then(({ interests, entries }) => {
       if (!cancelled) setState({ loading: false, interests, entries });
     });
     return () => { cancelled = true; };
-  }, [userId]);
+  }, [userId, accountType]);
 
   const { loading, interests, entries } = state;
 
@@ -51,7 +54,7 @@ export default function UserProfileSheet({ userId, displayName, accountType }) {
 
       {loading ? (
         <div className="sub">{t("profileLoading")}</div>
-      ) : interests.length === 0 ? (
+      ) : accountType === "org" ? null : interests.length === 0 ? (
         <div className="sub">{t("profileNoPublicTrees")}</div>
       ) : (
         <div className="ideas">
