@@ -140,7 +140,6 @@ export const STR = {
   orb1:         ["tree", "棵树"],
   quietDays:    ["Untouched for {n} days", "已经 {n} 天没碰了"],
   quietSub:     ["You loved this once. Pick it up again today?", "你曾经很喜欢它。今天再拿起来？"],
-  pickItUp:     ["Log it now", "现在记录"],
   rememberSub:  ["From your album. Tap to open it again.", "来自你的相册。点开再看看。"],
   coverAlt:     ["Cover photo", "封面照片"],
   firstPhoto:   ["Your first photo becomes the cover", "第一张照片会成为封面"],
