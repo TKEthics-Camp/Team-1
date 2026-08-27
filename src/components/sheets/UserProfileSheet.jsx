@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useI18n } from "../../i18n/I18nContext";
 import { useUI } from "../../ui/UIContext";
 import { pullPublicProfile } from "../../lib/remote";
@@ -18,6 +18,7 @@ export default function UserProfileSheet({ userId, displayName, accountType }) {
   const { t, nameOf } = useI18n();
   const { closeSheet } = useUI();
   const navigate = useNavigate();
+  const location = useLocation();
   const [state, setState] = useState({ loading: true, interests: [], entries: [] });
 
   useEffect(() => {
@@ -33,6 +34,18 @@ export default function UserProfileSheet({ userId, displayName, accountType }) {
   }, [userId, accountType]);
 
   const { loading, interests, entries } = state;
+
+  // Carries what's needed to reopen this exact sheet if the user backs out
+  // of the hobby they're about to open — see PublicInterestScreen's back
+  // arrow and RoutedShell's openUserProfile handling in App.jsx. "from" is
+  // wherever this sheet is currently sitting on top of (Explore, Home...),
+  // since a sheet never changes the URL underneath it.
+  function openInterest(interestId) {
+    closeSheet();
+    navigate(`/user/${userId}/interest/${interestId}`, {
+      state: { reopenUserProfile: { userId, displayName, accountType }, from: location.pathname },
+    });
+  }
 
   return (
     <Sheet onClose={closeSheet}>
@@ -70,9 +83,9 @@ export default function UserProfileSheet({ userId, displayName, accountType }) {
                 role="button"
                 tabIndex={0}
                 style={{ cursor: "pointer" }}
-                onClick={() => { closeSheet(); navigate(`/user/${userId}/interest/${it.id}`); }}
+                onClick={() => openInterest(it.id)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") { closeSheet(); navigate(`/user/${userId}/interest/${it.id}`); }
+                  if (e.key === "Enter" || e.key === " ") openInterest(it.id);
                 }}
               >
                 <div style={{ flex: "none" }}>

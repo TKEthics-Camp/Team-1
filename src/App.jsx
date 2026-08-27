@@ -73,7 +73,7 @@ function RoutedShell() {
   const location = useLocation();
   const navigate = useNavigate();
   const { profile } = useStore();
-  const { sheet, viewer, closeSheet, closeViewer } = useUI();
+  const { sheet, viewer, closeSheet, closeViewer, openSheet } = useUI();
 
   // Escape closes whatever's open, the same as tapping the backdrop —
   // useful on a keyboard/desktop where there's no "outside" to tap.
@@ -105,6 +105,19 @@ function RoutedShell() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
+  // PublicInterestScreen's back arrow lands here carrying instructions to
+  // reopen the userProfile sheet it was tapped into from — declared after
+  // (and separately from) the effect above so it re-opens whatever that one
+  // just closed, instead of the two racing within the same render.
+  useEffect(() => {
+    if (location.state && location.state.openUserProfile) {
+      openSheet("userProfile", location.state.openUserProfile);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
+  const hideNav = location.pathname.startsWith("/user/");
+
   return (
     <>
       <Routes>
@@ -116,7 +129,7 @@ function RoutedShell() {
         <Route path="/market" element={<MarketScreen />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <BottomNav />
+      {!hideNav && <BottomNav />}
       {sheet && <SheetHost />}
       {viewer && <PhotoViewer />}
       <UndoToast />

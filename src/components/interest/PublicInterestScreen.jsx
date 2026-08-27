@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useI18n } from "../../i18n/I18nContext";
 import { pullPublicProfile } from "../../lib/remote";
 import { entriesOf, minutesOf, fmtHours } from "../../lib/derived";
@@ -15,6 +15,7 @@ import JournalTab from "./JournalTab";
 export default function PublicInterestScreen() {
   const { userId, interestId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { t, nameOf, nOf } = useI18n();
   const [state, setState] = useState({ loading: true, interests: [], entries: [] });
 
@@ -44,10 +45,22 @@ export default function PublicInterestScreen() {
   const stage = treeStage(it, entries, []);
   const planted = daysPlanted(it);
 
+  // A plain navigate(-1) lands on whatever page was underneath — the sheet
+  // this was opened from (see UserProfileSheet) isn't part of the URL, so
+  // history alone forgets it was ever open. Reopen it explicitly instead.
+  function goBack() {
+    const reopen = location.state && location.state.reopenUserProfile;
+    if (reopen) {
+      navigate((location.state && location.state.from) || "/explore", { state: { openUserProfile: reopen } });
+    } else {
+      navigate(-1);
+    }
+  }
+
   return (
     <>
       <TopBar>
-        <button className="icon" aria-label={t("home")} onClick={() => navigate(-1)}>←</button>
+        <button className="icon" aria-label={t("home")} onClick={goBack}>←</button>
         <h1>{nameOf(it)}</h1>
         <span className="sub">{t("viewOnly")}</span>
       </TopBar>
