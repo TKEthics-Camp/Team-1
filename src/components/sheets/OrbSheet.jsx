@@ -32,9 +32,7 @@ export default function OrbSheet({ interestId, preset = null }) {
   // Colour is assigned automatically (it only tints the tree's blossoms) — we
   // no longer ask the user for it. Existing trees keep whatever they had.
   const color = editing ? editing.color : preset ? preset.color : PALETTE[interests.length % PALETTE.length];
-  const [time, setTime] = useState(editing ? editing.time || "16:00" : "16:00");
   const [days, setDays] = useState(editing ? editing.days || [] : []);
-  const [friendsText, setFriendsText] = useState(editing ? (editing.friends || []).join(", ") : "");
   const nameRef = useRef(null);
   const previewId = useMemo(() => (editing ? editing.id : uid()), [editing]);
   const [species, setSpecies] = useState(editing ? editing.species || speciesOf(editing) : speciesOf({ id: previewId }));
@@ -47,12 +45,11 @@ export default function OrbSheet({ interestId, preset = null }) {
     const nm = name.trim();
     if (!nm) { nameRef.current?.focus(); return; }
     if (isBlockedHobby(nm)) { setBlocked(true); nameRef.current?.focus(); return; }
-    const friends = friendsText.split(/[,，]/).map((x) => x.trim()).filter(Boolean);
     if (editing) {
-      updateInterest({ ...editing, name: nm, why: why.trim(), color, time, days, species, leafColor, friends, updatedAt: Date.now() });
+      updateInterest({ ...editing, name: nm, why: why.trim(), color, days, species, leafColor, updatedAt: Date.now() });
     } else {
       addInterest({
-        id: previewId, name: nm, why: why.trim(), color, time, days, species, leafColor, friends,
+        id: previewId, name: nm, why: why.trim(), color, days, species, leafColor,
         createdAt: Date.now(), updatedAt: Date.now(),
       });
     }
@@ -116,33 +113,10 @@ export default function OrbSheet({ interestId, preset = null }) {
             />
           ))}
         </div>
-        <button
-          type="button"
-          className="chip"
-          style={{ marginTop: 8 }}
-          onClick={() => {
-            setSpecies(SPECIES[Math.floor(Math.random() * SPECIES.length)]);
-            setLeafColor(Object.keys(LEAF_COLORS)[Math.floor(Math.random() * Object.keys(LEAF_COLORS).length)]);
-          }}
-        >
-          {"🎲 " + t("surpriseMe")}
-        </button>
-      </Field>
-      <Field label={t("timeLabel")}>
-        <input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
       </Field>
       <Field label={t("daysLabel")}>
         <DayPicker days={days} onChange={setDays} />
         <span className="hint">{t("daysNote")}</span>
-      </Field>
-      <Field label={t("friendsLabel")}>
-        <input
-          type="text"
-          maxLength={60}
-          placeholder={t("friendsPh")}
-          value={friendsText}
-          onChange={(e) => setFriendsText(e.target.value)}
-        />
       </Field>
       <button className="btn" onClick={save}>{t("save")}</button>
       {editing && <button className="btn2 btn-danger" onClick={remove}>{t("deleteOrb")}</button>}
