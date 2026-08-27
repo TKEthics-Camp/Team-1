@@ -4,7 +4,7 @@ import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useAuth } from "../../store/AuthContext";
 import { useUI } from "../../ui/UIContext";
-import { PALETTE, THEMES, DEFAULT_THEME, DECORATIONS } from "../../lib/constants";
+import { THEMES, DEFAULT_THEME, DECORATIONS } from "../../lib/constants";
 import { globalStreak } from "../../lib/derived";
 import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
@@ -60,7 +60,7 @@ export default function ProfileScreen() {
             aria-label={t("customizeAvatar")}
             onClick={() => openSheet("avatar")}
           >
-            <PersonAvatar color={PALETTE[0]} avatar={profile.avatar} decoration={equippedDecoration} size={76} />
+            <PersonAvatar avatar={profile.avatar} decoration={equippedDecoration} size={76} />
             <span className="avatar-edit-badge" aria-hidden="true">✎</span>
           </button>
           <button

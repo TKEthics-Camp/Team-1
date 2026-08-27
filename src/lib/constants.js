@@ -43,7 +43,7 @@ export const OUTFIT_STYLES = [
   { id: "vest",     name: ["Vest", "背心"], price: 30 },
 ];
 export const OUTFIT_COLORS = ["#FFFFFF", "#4A4E69", "#E07A5F", "#3D9970", "#5AA8F2", "#B48CF2", "#FFD45E"];
-export const DEFAULT_AVATAR = { skin: SKIN_TONES[0], hair: "short", hairColor: HAIR_COLORS[0], outfit: "tee", outfitColor: OUTFIT_COLORS[0] };
+export const DEFAULT_AVATAR = { skin: SKIN_TONES[0], hair: "short", hairColor: HAIR_COLORS[0], outfit: "tee", outfitColor: OUTFIT_COLORS[0], bgColor: PALETTE[0] };
 
 // A conic gradient reads as a painter's rainbow ring — no single "hobby colour" fits painting.
 const RAINBOW_RING = "conic-gradient(from 0deg, #FF3B30, #FF9500, #FFCC00, #34C759, #32ADE6, #5E5CE6, #AF52DE, #FF3B30)";

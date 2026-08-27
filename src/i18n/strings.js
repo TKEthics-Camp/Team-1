@@ -176,6 +176,7 @@ export const STR = {
   profile:      ["Me", "我的"],
   customizeAvatar: ["Customize", "自定义形象"],
   customizeTitle:  ["Make it you", "打造属于你的形象"],
+  bgColorLabel:    ["Background", "背景色"],
   skinLabel:       ["Skin", "肤色"],
   hairLabel:       ["Hair", "发型"],
   outfitLabel:     ["Outfit", "服装"],

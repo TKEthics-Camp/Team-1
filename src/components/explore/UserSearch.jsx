@@ -3,8 +3,6 @@ import { useI18n } from "../../i18n/I18nContext";
 import { useAuth } from "../../store/AuthContext";
 import { useUI } from "../../ui/UIContext";
 import { searchUsers } from "../../lib/remote";
-import { PALETTE } from "../../lib/constants";
-import { paletteIndexFor } from "../../lib/color";
 import PersonAvatar from "../shared/PersonAvatar";
 
 // A minimal name search over other discoverable accounts (users with
@@ -56,7 +54,7 @@ export default function UserSearch() {
                 }
               }}
             >
-              <PersonAvatar color={PALETTE[paletteIndexFor(u.id, PALETTE.length)]} avatar={u.avatar} size={40} />
+              <PersonAvatar avatar={u.avatar} size={40} />
               <div className="grow">
                 <div className="idea-nm">{u.display_name || t("someone")}</div>
                 {u.account_type === "org" && <div className="idea-cat">{t("searchUsersOrg")}</div>}

@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
-import { PALETTE } from "../../lib/constants";
-import { paletteIndexFor } from "../../lib/color";
 import { fetchClassmates, mintOrFetchClassCode } from "../../lib/remote";
 import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
@@ -78,7 +76,7 @@ export default function EducatorDashboard() {
               className="idea"
               onClick={() => openSheet("userProfile", { userId: u.id, displayName: u.display_name, accountType: u.account_type, avatar: u.avatar })}
             >
-              <PersonAvatar color={PALETTE[paletteIndexFor(u.id, PALETTE.length)]} avatar={u.avatar} size={44} />
+              <PersonAvatar avatar={u.avatar} size={44} />
               <div className="grow">
                 <div className="idea-nm">{u.display_name}</div>
               </div>

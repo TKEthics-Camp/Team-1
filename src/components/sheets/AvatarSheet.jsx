@@ -34,10 +34,17 @@ export default function AvatarSheet() {
   return (
     <Sheet onClose={closeSheet}>
       <div className="orb-sheet-preview">
-        <PersonAvatar color={PALETTE[0]} avatar={avatar} size={92} />
+        <PersonAvatar avatar={avatar} size={92} />
       </div>
       <h2>{t("customizeTitle")}</h2>
       <span className="chip coin-pill">{"🪙 " + coins}</span>
+
+      <div className="label">{t("bgColorLabel")}</div>
+      <div className="swatches">
+        {PALETTE.map((c) => (
+          <button key={c} type="button" className="swatch" aria-pressed={avatar.bgColor === c} style={{ background: c }} onClick={() => set({ bgColor: c })} />
+        ))}
+      </div>
 
       <div className="label">{t("skinLabel")}</div>
       <div className="swatches">

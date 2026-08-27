@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
-import { PALETTE, DECORATIONS } from "../../lib/constants";
-import { paletteIndexFor } from "../../lib/color";
+import { DECORATIONS } from "../../lib/constants";
 import { fetchClassmates } from "../../lib/remote";
 import PersonAvatar from "../shared/PersonAvatar";
 
@@ -64,12 +63,12 @@ export default function SchoolTab() {
               style={{ left: `${x}%`, top: `${y}%` }}
               onClick={() => openSheet("userProfile", { userId: u.id, displayName: u.display_name, accountType: u.account_type, avatar: u.avatar })}
             >
-              <PersonAvatar color={PALETTE[paletteIndexFor(u.id, PALETTE.length)]} avatar={u.avatar} size={44} />
+              <PersonAvatar avatar={u.avatar} size={44} />
             </button>
           ))}
 
           <div className="web-node me" style={{ left: `${cx}%`, top: `${cy}%` }}>
-            <PersonAvatar color={PALETTE[0]} avatar={profile.avatar} decoration={equippedDecoration} size={52} />
+            <PersonAvatar avatar={profile.avatar} decoration={equippedDecoration} size={52} />
           </div>
         </div>
       )}

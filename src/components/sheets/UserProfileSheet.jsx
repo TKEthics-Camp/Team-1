@@ -5,8 +5,6 @@ import { useUI } from "../../ui/UIContext";
 import { pullPublicProfile } from "../../lib/remote";
 import { minutesOf, fmtHours } from "../../lib/derived";
 import { treeStage } from "../../lib/tree";
-import { PALETTE } from "../../lib/constants";
-import { paletteIndexFor } from "../../lib/color";
 import Sheet from "../shared/Sheet";
 import Tree from "../shared/Tree";
 import PersonAvatar from "../shared/PersonAvatar";
@@ -51,7 +49,7 @@ export default function UserProfileSheet({ userId, displayName, accountType, ava
   return (
     <Sheet onClose={closeSheet}>
       <div className="row" style={{ gap: 12 }}>
-        <PersonAvatar color={PALETTE[paletteIndexFor(userId, PALETTE.length)]} avatar={avatar} size={46} />
+        <PersonAvatar avatar={avatar} size={46} />
         <div className="grow">
           <h2>{displayName || t("someone")}</h2>
           {accountType === "org" && <div className="sub">{t("searchUsersOrg")}</div>}

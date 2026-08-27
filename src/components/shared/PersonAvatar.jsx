@@ -5,8 +5,13 @@ import { DEFAULT_AVATAR } from "../../lib/constants";
 // Fully drawn from a small set of choices (skin, hair, outfit) instead of an
 // uploaded photo, so it's always the same flat-cute style as the rest of the
 // app and always editable for free-or-coins, never a real photo of a kid.
-export default function PersonAvatar({ size, color = "#FFD45E", avatar = null, decoration = null, style }) {
+// `color` is a fallback for callers with no real avatar data at all (the
+// fake STUDENTS fixture — see Avatar.jsx) — anywhere a real avatar object
+// is passed, its own bgColor wins, so the same account always shows the
+// same background everywhere instead of a different guess per screen.
+export default function PersonAvatar({ size, color, avatar = null, decoration = null, style }) {
   const a = { ...DEFAULT_AVATAR, ...avatar };
+  const bg = avatar ? a.bgColor : (color || DEFAULT_AVATAR.bgColor);
   const w = Math.max(3, Math.round(size * 0.06));
   const cut = `radial-gradient(farthest-side, transparent calc(100% - ${w}px), #000 calc(100% - ${w}px))`;
   const outfitDark = shade(a.outfitColor, -22);
@@ -17,7 +22,7 @@ export default function PersonAvatar({ size, color = "#FFD45E", avatar = null, d
     <span className="person-av" style={{ width: size, height: size, ...style }}>
       <span
         className="person-disc"
-        style={{ background: `linear-gradient(160deg, ${shade(color, 24)}, ${shade(color, -16)})` }}
+        style={{ background: `linear-gradient(160deg, ${shade(bg, 24)}, ${shade(bg, -16)})` }}
       >
         <svg viewBox="0 0 100 100" aria-hidden="true">
           {/* outfit / shoulders — a tight head-and-shoulders crop, so there's
