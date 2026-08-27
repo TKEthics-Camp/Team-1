@@ -6,15 +6,16 @@ import { pullPublicProfile } from "../../lib/remote";
 import { minutesOf, fmtHours } from "../../lib/derived";
 import { treeStage } from "../../lib/tree";
 import { PALETTE } from "../../lib/constants";
-import { shade } from "../../lib/color";
+import { paletteIndexFor } from "../../lib/color";
 import Sheet from "../shared/Sheet";
 import Tree from "../shared/Tree";
+import PersonAvatar from "../shared/PersonAvatar";
 
 // Tap a search result: their public trees only (interests_select's own RLS
 // gate) — tapping one of those trees opens a read-only journal view (no
 // photos yet, those still live local-only, see remote.js), and there's still
 // no way to message them — same hands-off rule as the fake classmate sheet.
-export default function UserProfileSheet({ userId, displayName, accountType }) {
+export default function UserProfileSheet({ userId, displayName, accountType, avatar }) {
   const { t, nameOf } = useI18n();
   const { closeSheet } = useUI();
   const navigate = useNavigate();
@@ -43,22 +44,14 @@ export default function UserProfileSheet({ userId, displayName, accountType }) {
   function openInterest(interestId) {
     closeSheet();
     navigate(`/user/${userId}/interest/${interestId}`, {
-      state: { reopenUserProfile: { userId, displayName, accountType }, from: location.pathname },
+      state: { reopenUserProfile: { userId, displayName, accountType, avatar }, from: location.pathname },
     });
   }
 
   return (
     <Sheet onClose={closeSheet}>
       <div className="row" style={{ gap: 12 }}>
-        <div
-          className="avatar"
-          style={{
-            width: 46, height: 46, fontSize: 18,
-            background: `radial-gradient(circle at 34% 30%, ${shade(PALETTE[0], 40)}, ${shade(PALETTE[0], -45)})`,
-          }}
-        >
-          {(displayName || "?").slice(0, 1).toUpperCase()}
-        </div>
+        <PersonAvatar color={PALETTE[paletteIndexFor(userId, PALETTE.length)]} avatar={avatar} size={46} />
         <div className="grow">
           <h2>{displayName || t("someone")}</h2>
           {accountType === "org" && <div className="sub">{t("searchUsersOrg")}</div>}

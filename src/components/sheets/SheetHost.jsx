@@ -19,7 +19,7 @@ export default function SheetHost() {
   if (sheet.type === "orb") return <OrbSheet key={sheet.id || "new"} interestId={sheet.id} preset={sheet.preset} />;
   if (sheet.type === "student") return <StudentSheet student={sheet.student} />;
   if (sheet.type === "userProfile") {
-    return <UserProfileSheet userId={sheet.userId} displayName={sheet.displayName} accountType={sheet.accountType} />;
+    return <UserProfileSheet userId={sheet.userId} displayName={sheet.displayName} accountType={sheet.accountType} avatar={sheet.avatar} />;
   }
   if (sheet.type === "idea") return <IdeaSheet idea={sheet.idea} />;
   if (sheet.type === "joinClass") return <JoinClassSheet />;

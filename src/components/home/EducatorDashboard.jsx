@@ -76,9 +76,9 @@ export default function EducatorDashboard() {
               key={u.id}
               type="button"
               className="idea"
-              onClick={() => openSheet("userProfile", { userId: u.id, displayName: u.display_name, accountType: u.account_type })}
+              onClick={() => openSheet("userProfile", { userId: u.id, displayName: u.display_name, accountType: u.account_type, avatar: u.avatar })}
             >
-              <PersonAvatar color={PALETTE[paletteIndexFor(u.id, PALETTE.length)]} size={44} />
+              <PersonAvatar color={PALETTE[paletteIndexFor(u.id, PALETTE.length)]} avatar={u.avatar} size={44} />
               <div className="grow">
                 <div className="idea-nm">{u.display_name}</div>
               </div>

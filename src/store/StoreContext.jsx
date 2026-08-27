@@ -6,20 +6,10 @@ import {
   pushInterest, deleteRemoteInterest, pushEntry, deleteRemoteEntry,
   deleteAllMine, pullMine, pullUserRow, updateDiscovery, updateDisplayName,
   classCodeExists, joinClass as joinClassRemote, setMyClassCode, updateAvatar,
+  parseAvatar,
 } from "../lib/remote";
 
 const StoreCtx = createContext(null);
-
-// users.avatar is '' until the first sync, and JSON.parse('') throws —
-// null here means "nothing remote yet", not "reset to defaults".
-function parseAvatar(raw) {
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
 
 export function StoreProvider({ children }) {
   const { user } = useAuth();

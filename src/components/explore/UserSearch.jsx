@@ -4,7 +4,8 @@ import { useAuth } from "../../store/AuthContext";
 import { useUI } from "../../ui/UIContext";
 import { searchUsers } from "../../lib/remote";
 import { PALETTE } from "../../lib/constants";
-import { shade } from "../../lib/color";
+import { paletteIndexFor } from "../../lib/color";
+import PersonAvatar from "../shared/PersonAvatar";
 
 // A minimal name search over other discoverable accounts (users with
 // discovery_enabled = true — see the Me screen toggle and the users_select
@@ -48,22 +49,14 @@ export default function UserSearch() {
               key={u.id}
               role="button"
               tabIndex={0}
-              onClick={() => openSheet("userProfile", { userId: u.id, displayName: u.display_name, accountType: u.account_type })}
+              onClick={() => openSheet("userProfile", { userId: u.id, displayName: u.display_name, accountType: u.account_type, avatar: u.avatar })}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
-                  openSheet("userProfile", { userId: u.id, displayName: u.display_name, accountType: u.account_type });
+                  openSheet("userProfile", { userId: u.id, displayName: u.display_name, accountType: u.account_type, avatar: u.avatar });
                 }
               }}
             >
-              <div
-                className="avatar"
-                style={{
-                  width: 40, height: 40, fontSize: 16,
-                  background: `radial-gradient(circle at 34% 30%, ${shade(PALETTE[0], 40)}, ${shade(PALETTE[0], -45)})`,
-                }}
-              >
-                {(u.display_name || "?").slice(0, 1).toUpperCase()}
-              </div>
+              <PersonAvatar color={PALETTE[paletteIndexFor(u.id, PALETTE.length)]} avatar={u.avatar} size={40} />
               <div className="grow">
                 <div className="idea-nm">{u.display_name || t("someone")}</div>
                 {u.account_type === "org" && <div className="idea-cat">{t("searchUsersOrg")}</div>}

@@ -1,6 +1,18 @@
 import { supabase } from "./supabase";
 import { randomClassCode } from "./id";
 
+// users.avatar is '' until the first sync, and JSON.parse('') throws —
+// null here means "nothing remote yet" (render the default look), not
+// "reset to defaults" as a stored value.
+export function parseAvatar(raw) {
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
 // DEBUG ONLY: mirrors the flag in AuthContext.jsx. When set, searchUsers and
 // pullPublicProfile serve one fixture "friend" instead of hitting Supabase,
 // so the search -> view-another-user's-orb flow can be tested without a
@@ -296,7 +308,7 @@ export async function fetchClassmates(userId, classCode) {
   if (!classCode) return [];
   const { data, error } = await supabase
     .from("users")
-    .select("id, display_name, account_type")
+    .select("id, display_name, account_type, avatar")
     .eq("class_code", classCode)
     .neq("id", userId)
     .neq("account_type", "org");
@@ -304,7 +316,7 @@ export async function fetchClassmates(userId, classCode) {
     console.error("Sync (fetch classmates) failed:", error);
     return [];
   }
-  return data || [];
+  return (data || []).map((u) => ({ ...u, avatar: parseAvatar(u.avatar) }));
 }
 
 // RLS (users_select) already restricts what comes back to: this user's own
@@ -319,7 +331,7 @@ export async function searchUsers(query, excludeUserId) {
   }
   const { data, error } = await supabase
     .from("users")
-    .select("id, display_name, account_type")
+    .select("id, display_name, account_type, avatar")
     .ilike("display_name", `%${q}%`)
     .neq("id", excludeUserId)
     .limit(20);
@@ -327,7 +339,7 @@ export async function searchUsers(query, excludeUserId) {
     console.error("Sync (search users) failed:", error);
     return [];
   }
-  return data || [];
+  return (data || []).map((u) => ({ ...u, avatar: parseAvatar(u.avatar) }));
 }
 
 // Another user's public garden: only their public interests, and only the
