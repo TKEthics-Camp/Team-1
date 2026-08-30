@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { getAll, put, del, clearAll as dbClearAll } from "../db/db";
+import { getAll, put, del, clearAll as dbClearAll, clearGarden as dbClearGarden } from "../db/db";
 import { COINS_PER_LOG, DECORATIONS, REVIVE_COST, PALETTE, DEFAULT_THEME, HAIR_STYLES, OUTFIT_STYLES } from "../lib/constants";
 import { useAuth } from "./AuthContext";
 import {
@@ -478,10 +478,24 @@ export function StoreProvider({ children }) {
     // shared computer — the account's data must survive for next login)
     // from the Profile screen's "Clear all data" button, which promises to
     // erase everything and so must also delete the synced copy.
+    // Signing out: wipe everything, profile included, so the next person on
+    // a shared device doesn't inherit it. Nulling the profile is the point.
     clearAllData(alsoRemote = false) {
       if (alsoRemote && userRef.current) deleteAllMine(userRef.current.id);
       dbClearAll();
       setProfileState(null);
+      setInterests([]);
+      setPhotos([]);
+      setEntries([]);
+    },
+    // "Clear all data" from Me: empties the garden, local and remote, but
+    // keeps the profile. The account is still signed in and still onboarded
+    // — and App renders <Onboarding/> whenever profile is null, so dropping
+    // it here would send someone who just cleared their trees back through
+    // the whole start flow.
+    clearGarden() {
+      if (userRef.current) deleteAllMine(userRef.current.id);
+      dbClearGarden();
       setInterests([]);
       setPhotos([]);
       setEntries([]);

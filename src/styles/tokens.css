@@ -6,8 +6,14 @@
    attribute; App.jsx always sets one explicitly in practice. */
 :root {
   --gold-on: #FFFFFF;
-  --display: ui-rounded, "SF Pro Rounded", "Avenir Next", "Hiragino Maru Gothic ProN", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
-  --body: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  /* One SF stack for everything. --display used to be SF Pro Rounded; the
+     app reads as Apple's own only when headings and body share the system
+     face, so both now point at the same stack and --display just carries
+     the intent. */
+  --display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --body: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui,
+    "PingFang SC", "Microsoft YaHei", sans-serif;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
 }
 
@@ -29,6 +35,22 @@
   --dim:   #AEAEB2;
   --gold:  #FF9500;
   --candy: #FF3B30;
+  --accent: #0088FF;
+  --accent-ink: #FFFFFF;
+
+  /* ---- liquid glass ----
+     A glass pane is four things stacked: a translucent fill, a saturating
+     blur behind it, a hairline stroke, and a light catch along the top
+     edge. Tokens rather than literals so the Black skin can invert the
+     highlight instead of washing the pane out. */
+  --lg-fill:   rgba(255,255,255,.62);
+  --lg-fill-2: rgba(255,255,255,.78);
+  --lg-blur:   saturate(180%) blur(20px);
+  --lg-stroke: rgba(255,255,255,.7);
+  --lg-edge:   rgba(60,60,67,.16);
+  --lg-hi:     rgba(255,255,255,.9);
+  --lg-shadow: 0 8px 26px -12px rgba(28,28,40,.28);
+  --lg-shadow-lg: 0 24px 60px -24px rgba(28,28,40,.42);
 }
 
 /* ---- Black: flat true dark, matching iOS's dark grouped-table values ---- */
@@ -49,4 +71,15 @@
   --dim:   #636366;
   --gold:  #FF9F0A;
   --candy: #FF453A;
+  --accent: #0A84FF;
+  --accent-ink: #FFFFFF;
+
+  --lg-fill:   rgba(58,58,62,.55);
+  --lg-fill-2: rgba(72,72,78,.68);
+  --lg-blur:   saturate(180%) blur(20px);
+  --lg-stroke: rgba(255,255,255,.14);
+  --lg-edge:   rgba(255,255,255,.10);
+  --lg-hi:     rgba(255,255,255,.22);
+  --lg-shadow: 0 8px 26px -12px rgba(0,0,0,.6);
+  --lg-shadow-lg: 0 24px 60px -24px rgba(0,0,0,.75);
 }

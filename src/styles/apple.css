@@ -344,3 +344,196 @@
   font-family: var(--body); font-size: 16px; font-weight: 500;
   letter-spacing: -.01em; color: var(--ink); padding: 12px 20px;
 }
+
+/* ============================================================
+   App-wide Apple / liquid glass
+
+   Everything above this line styles one screen. This section
+   restyles the shared primitives instead, so Explore, Me,
+   Market, the sheets and the auth flow all inherit rather than
+   each needing their own block.
+
+   A glass pane here is always the same four layers: a
+   translucent fill, a saturating blur behind it, a hairline
+   stroke, and a light catch along its top edge. The .lg-* tokens
+   in tokens.css carry them, and the Black skin inverts the
+   highlight rather than washing the pane out.
+   ============================================================ */
+
+/* Glass needs something behind it to refract, and both skins paint a flat
+   ground. These two very soft ambient washes sit behind every screen and
+   give the panes something to pick up — the reason the blur reads as glass
+   and not as a slightly grey rectangle. */
+.app::before, .app::after {
+  content: ""; position: absolute; z-index: 0; pointer-events: none;
+  border-radius: 50%; filter: blur(58px);
+}
+.app::before {
+  width: 340px; height: 230px; left: -90px; top: 90px;
+  background: radial-gradient(ellipse, var(--wash-a), transparent 70%);
+  animation: drift 26s ease-in-out infinite;
+}
+.app::after {
+  width: 360px; height: 250px; right: -120px; bottom: 70px;
+  background: radial-gradient(ellipse, var(--wash-b), transparent 70%);
+  animation: drift 34s ease-in-out infinite reverse;
+}
+.stage, .stage[data-theme="white"] {
+  --wash-a: rgba(0, 136, 255, .26);
+  --wash-b: rgba(255, 122, 168, .20);
+}
+.stage[data-theme="black"] {
+  --wash-a: rgba(10, 132, 255, .34);
+  --wash-b: rgba(255, 122, 168, .20);
+}
+
+/* the device frame itself */
+.app {
+  border: 1px solid var(--lg-edge);
+  box-shadow: var(--lg-shadow-lg), 0 0 0 1px var(--lg-stroke) inset;
+}
+
+/* ---------- the glass recipe, as one reusable block ---------- */
+
+.topbar, .nav, .sheet, .btn2, .chip, .tabs, .seg,
+.stat, .theme-btn, .idea, .post, .setup-row, .nudge, .memory,
+.code-card, .deco-card, .acct-card, .choice, .tree-status,
+.user-search-input, .day-btn, .species-btn {
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+}
+
+/* ---------- chrome ---------- */
+
+.topbar {
+  background: var(--lg-fill);
+  border-bottom: 1px solid var(--lg-edge);
+}
+.topbar h1 { font-family: var(--display); letter-spacing: -.02em; }
+
+.nav {
+  background: var(--lg-fill-2);
+  border: 1px solid var(--lg-edge);
+  box-shadow: var(--lg-shadow), 0 1px 0 var(--lg-hi) inset;
+}
+
+/* ---------- surfaces ---------- */
+
+.sheet {
+  background: var(--lg-fill-2);
+  border-top: 1px solid var(--lg-stroke);
+  border-radius: 26px 26px 0 0;
+  box-shadow: var(--lg-shadow-lg), 0 1px 0 var(--lg-hi) inset;
+}
+.sheet-bg { background: rgba(20, 20, 26, .34); }
+
+.stat, .theme-btn, .idea, .post, .setup-row, .nudge, .memory,
+.code-card, .deco-card, .acct-card, .choice, .tree-status {
+  background: var(--lg-fill);
+  border: 1px solid var(--lg-edge);
+  box-shadow: var(--lg-shadow), 0 1px 0 var(--lg-hi) inset;
+}
+
+/* ---------- controls ---------- */
+
+/* primary: one solid accent, with a top-edge catch so it reads as a lit
+   surface rather than a flat swatch */
+.btn {
+  background: var(--accent); color: var(--accent-ink);
+  border: none; border-radius: 999px;
+  font-family: var(--display); font-size: 17px; font-weight: 600;
+  letter-spacing: -.01em; padding: 14px 20px;
+  box-shadow: 0 8px 20px -10px var(--accent), 0 1px 0 rgba(255,255,255,.32) inset;
+  filter: none;
+}
+.btn:hover { filter: brightness(1.06); }
+.btn[disabled] { opacity: .38; box-shadow: none; }
+
+.btn2 {
+  background: var(--lg-fill); color: var(--ink);
+  border: 1px solid var(--lg-edge); border-radius: 999px;
+  font-family: var(--display); font-size: 15.5px; font-weight: 500;
+  letter-spacing: -.01em; padding: 12px 18px;
+  box-shadow: 0 1px 0 var(--lg-hi) inset;
+}
+.btn2:hover { background: var(--lg-fill-2); }
+.btn-danger { color: var(--candy); border-color: var(--lg-edge); }
+
+.chip {
+  background: var(--lg-fill); border: 1px solid var(--lg-edge);
+  border-radius: 999px; padding: 7px 13px;
+  font-family: var(--display); font-size: 13px; font-weight: 500;
+  letter-spacing: -.01em; color: var(--ink);
+  box-shadow: 0 1px 0 var(--lg-hi) inset;
+}
+.chip:hover { background: var(--lg-fill-2); border-color: var(--lg-edge); }
+.chip[aria-pressed="true"] {
+  background: var(--accent); color: var(--accent-ink);
+  border-color: transparent; font-weight: 600;
+}
+
+.icon { color: var(--accent); }
+
+/* segmented controls: glass track, glass thumb */
+.tabs, .seg {
+  background: var(--lg-fill); border: 1px solid var(--lg-edge);
+  border-radius: 999px; padding: 3px; gap: 0;
+  box-shadow: 0 1px 0 var(--lg-hi) inset;
+}
+.tabs button, .seg button {
+  border-radius: 999px; font-family: var(--display);
+  font-size: 14px; font-weight: 500; letter-spacing: -.01em;
+  color: var(--muted); padding: 8px;
+}
+.tabs button[aria-selected="true"], .seg button[aria-pressed="true"] {
+  background: var(--lg-fill-2); color: var(--ink); font-weight: 600;
+  box-shadow: var(--lg-shadow), 0 1px 0 var(--lg-hi) inset;
+}
+
+/* fields */
+input[type="text"], input[type="date"], input[type="time"], textarea,
+.user-search-input {
+  background: var(--lg-fill); color: var(--ink);
+  border: 1px solid var(--lg-edge); border-radius: 12px;
+  font-family: var(--body);
+}
+input[type="text"]:focus, textarea:focus, .user-search-input:focus {
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.day-btn, .species-btn {
+  background: var(--lg-fill); border: 1px solid var(--lg-edge);
+  box-shadow: 0 1px 0 var(--lg-hi) inset;
+}
+.day-btn[aria-pressed="true"] {
+  background: var(--accent); color: var(--accent-ink); border-color: transparent;
+}
+
+/* ---------- type ---------- */
+
+/* sentence case at a readable size, not the old 10.5px uppercase tracking */
+.label {
+  font-family: var(--display); font-size: 15px; font-weight: 500;
+  letter-spacing: -.01em; text-transform: none; color: var(--ink);
+}
+.sub, .empty { font-family: var(--body); letter-spacing: -.005em; }
+.sub { font-size: 13px; color: var(--muted); }
+
+/* ---------- motion ---------- */
+
+.btn:active, .btn2:active, .chip:active { transform: scale(.975); }
+.btn, .btn2, .chip, .tabs button, .seg button, .day-btn, .species-btn {
+  transition: background .18s ease, color .18s ease,
+              border-color .18s ease, transform .12s ease;
+}
+
+/* selection reads in the accent, not the old candy red — the red ring stays
+   only on the species picker, where the Figma actually draws it that way */
+.theme-btn[aria-pressed="true"] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+.theme-btn[aria-pressed="true"] .nm::after { color: var(--accent); }
+.avatar-edit-badge { background: var(--accent); }
+.tree-dots .dot.on { background: var(--accent); }

@@ -25,3 +25,9 @@ export function del(store, id) {
 export function clearAll() {
   return Promise.all(["meta", "interests", "photos", "entries"].map((s) => db[s].clear()));
 }
+
+// Everything the user planted, but not the `meta` row that holds their
+// profile — see StoreContext's clearGarden for why the two differ.
+export function clearGarden() {
+  return Promise.all(["interests", "photos", "entries"].map((s) => db[s].clear()));
+}

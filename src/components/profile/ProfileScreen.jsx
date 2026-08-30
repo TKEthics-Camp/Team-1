@@ -13,7 +13,7 @@ import PersonAvatar from "../shared/PersonAvatar";
 
 export default function ProfileScreen() {
   const { t, lang, nOf } = useI18n();
-  const { profile, interests, photos, entries, clearAllData, updateProfile, setDiscoverable } = useStore();
+  const { profile, interests, photos, entries, clearGarden, updateProfile, setDiscoverable } = useStore();
   const { signOut } = useAuth();
   const { openSheet } = useUI();
   const navigate = useNavigate();
@@ -43,7 +43,7 @@ export default function ProfileScreen() {
 
   function handleClear() {
     if (!armed) { setArmed(true); return; }
-    clearAllData(true);
+    clearGarden();
   }
 
   return (
