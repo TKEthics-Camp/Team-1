@@ -432,8 +432,6 @@ export function StoreProvider({ children }) {
         },
       };
     },
-    // Photos stay local-only for now (still a Blob, not yet a Storage
-    // upload) — see src/lib/remote.js for why that's a separate follow-up.
     addPhoto(rec) {
       setPhotos((list) => [...list, rec]);
       put("photos", rec);
@@ -450,7 +448,7 @@ export function StoreProvider({ children }) {
           put("photos", next);
           setPhotos((list) => list.map((p) => (p.id === rec.id ? next : p)));
           pushPhotoRow(next);
-        });
+        }).catch((err) => console.error("Sync (upload photo) threw:", err));
       }
     },
     // Exactly one cover per tree, so pinning a new one unpins whatever held

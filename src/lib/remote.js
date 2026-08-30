@@ -230,15 +230,22 @@ export async function deleteRemotePhoto(id, storagePath) {
 // stays the source of truth on this device either way.
 export async function uploadPhotoBlob(userId, photoId, blob) {
   const path = `${userId}/${photoId}.jpg`;
-  const { error } = await supabase.storage.from("photos").upload(path, blob, {
-    upsert: true,
-    contentType: blob.type || "image/jpeg",
-  });
-  if (error) {
-    console.error("Sync (upload photo) failed:", error);
+  try {
+    const { error } = await supabase.storage.from("photos").upload(path, blob, {
+      upsert: true,
+      contentType: blob.type || "image/jpeg",
+    });
+    if (error) {
+      console.error("Sync (upload photo) failed:", error);
+      return null;
+    }
+    return path;
+  } catch (err) {
+    // A network/CORS-level failure throws instead of returning `error`,
+    // which would otherwise skip the logging above entirely.
+    console.error("Sync (upload photo) threw:", err);
     return null;
   }
-  return path;
 }
 
 // Fetches a photo's actual bytes — for anything that isn't already a local
@@ -248,12 +255,17 @@ export async function uploadPhotoBlob(userId, photoId, blob) {
 // so this naturally returns nothing for a photo this viewer can't see.
 export async function downloadPhotoBlob(storagePath) {
   if (!storagePath) return null;
-  const { data, error } = await supabase.storage.from("photos").download(storagePath);
-  if (error) {
-    console.error("Sync (download photo) failed:", error);
+  try {
+    const { data, error } = await supabase.storage.from("photos").download(storagePath);
+    if (error) {
+      console.error("Sync (download photo) failed:", error);
+      return null;
+    }
+    return data;
+  } catch (err) {
+    console.error("Sync (download photo) threw:", err);
     return null;
   }
-  return data;
 }
 
 export async function deleteAllMine(userId) {
