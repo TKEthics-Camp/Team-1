@@ -2,17 +2,17 @@ import { useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
-import { useObjectURL } from "../../lib/image";
+import { usePhotoURL } from "../../lib/image";
 
 export default function PhotoViewer() {
   const { t } = useI18n();
-  const { photos, deletePhoto, updatePhotoCaption, setCoverPhoto } = useStore();
+  const { photos, deletePhoto, updatePhotoCaption, setCoverPhoto, cachePhotoBlob } = useStore();
   const { viewer, closeViewer, offerUndo } = useUI();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
 
   const photo = photos.find((x) => x.id === viewer);
-  const url = useObjectURL(photo ? photo.blob : null);
+  const url = usePhotoURL(photo, photo && ((blob) => cachePhotoBlob(photo.id, blob)));
   if (!photo) return null;
 
   function startEdit() {

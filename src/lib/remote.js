@@ -145,6 +145,34 @@ export function rowToEntry(row) {
   };
 }
 
+export function photoToRow(rec) {
+  return {
+    id: rec.id,
+    interest_id: rec.interestId,
+    storage_path: rec.storagePath || null,
+    caption: rec.caption || "",
+    visibility: rec.visibility || "private",
+    is_pinned: !!rec.isPinned,
+    created_at: toIso(rec.createdAt),
+  };
+}
+
+// No `blob` here — a photo pulled from Supabase only ever carries a
+// storage_path at first. The actual bytes are fetched lazily (see
+// lib/image.js's usePhotoURL) the moment something actually tries to
+// display it, not eagerly for every photo on every sign-in.
+export function rowToPhoto(row) {
+  return {
+    id: row.id,
+    interestId: row.interest_id,
+    storagePath: row.storage_path,
+    caption: row.caption,
+    visibility: row.visibility,
+    isPinned: row.is_pinned,
+    createdAt: toMs(row.created_at),
+  };
+}
+
 // Every push is fire-and-forget from the caller's perspective (writes
 // already landed locally first — local-first means the UI never waits on
 // the network); failures are logged, not surfaced, since the local copy
@@ -180,6 +208,52 @@ export async function pushEntry(rec) {
 export async function deleteRemoteEntry(id) {
   const { error } = await supabase.from("entries").delete().eq("id", id);
   if (error) console.error("Sync (delete entry) failed:", error);
+}
+
+export async function pushPhotoRow(rec) {
+  const { error } = await supabase.from("photos").upsert(photoToRow(rec));
+  if (error) console.error("Sync (photo) failed:", error);
+}
+
+export async function deleteRemotePhoto(id, storagePath) {
+  if (storagePath) {
+    const { error: rmErr } = await supabase.storage.from("photos").remove([storagePath]);
+    if (rmErr) console.error("Sync (delete photo file) failed:", rmErr);
+  }
+  const { error } = await supabase.from("photos").delete().eq("id", id);
+  if (error) console.error("Sync (delete photo) failed:", error);
+}
+
+// Uploads the already-downscaled blob (see lib/image.js's downscale, used
+// by PhotoSheet.jsx before this is ever called) and returns the storage
+// path to save on the photo's row, or null on failure — the local blob
+// stays the source of truth on this device either way.
+export async function uploadPhotoBlob(userId, photoId, blob) {
+  const path = `${userId}/${photoId}.jpg`;
+  const { error } = await supabase.storage.from("photos").upload(path, blob, {
+    upsert: true,
+    contentType: blob.type || "image/jpeg",
+  });
+  if (error) {
+    console.error("Sync (upload photo) failed:", error);
+    return null;
+  }
+  return path;
+}
+
+// Fetches a photo's actual bytes — for anything that isn't already a local
+// blob: someone else's photo, or your own on a device that hasn't
+// downloaded it yet. RLS on storage.objects (see the photo_storage
+// migration) enforces the same visibility rule as the photos table itself,
+// so this naturally returns nothing for a photo this viewer can't see.
+export async function downloadPhotoBlob(storagePath) {
+  if (!storagePath) return null;
+  const { data, error } = await supabase.storage.from("photos").download(storagePath);
+  if (error) {
+    console.error("Sync (download photo) failed:", error);
+    return null;
+  }
+  return data;
 }
 
 export async function deleteAllMine(userId) {
@@ -383,28 +457,38 @@ export async function pullPublicProfile(userId) {
     return {
       interests: [rowToInterest(DEBUG_INTEREST_ROW)],
       entries: DEBUG_ENTRY_ROWS.map(rowToEntry),
+      photos: [],
     };
   }
   // No .eq("visibility", "public") here — whether someone else's orbs are
   // visible at all is now decided by their own discovery_enabled flag, not
   // a per-orb toggle (see interests_select). RLS already enforces that;
   // this just asks for everything of theirs it's allowed to hand back.
+  // Same story for photos: photos_select only ever hands back ones that
+  // are both marked public and belong to a discoverable/same-class owner.
   const { data: interestRows, error: intErr } = await supabase
     .from("interests").select("*").eq("user_id", userId);
   if (intErr) {
     console.error("Sync (pull public profile) failed:", intErr);
-    return { interests: [], entries: [] };
+    return { interests: [], entries: [], photos: [] };
   }
   const ids = (interestRows || []).map((r) => r.id);
   let entryRows = [];
+  let photoRows = [];
   if (ids.length) {
-    const { data, error } = await supabase.from("entries").select("*").in("interest_id", ids);
-    if (error) console.error("Sync (pull public entries) failed:", error);
-    else entryRows = data || [];
+    const [entriesRes, photosRes] = await Promise.all([
+      supabase.from("entries").select("*").in("interest_id", ids),
+      supabase.from("photos").select("*").in("interest_id", ids),
+    ]);
+    if (entriesRes.error) console.error("Sync (pull public entries) failed:", entriesRes.error);
+    else entryRows = entriesRes.data || [];
+    if (photosRes.error) console.error("Sync (pull public photos) failed:", photosRes.error);
+    else photoRows = photosRes.data || [];
   }
   return {
     interests: (interestRows || []).map(rowToInterest),
     entries: entryRows.map(rowToEntry),
+    photos: photoRows.map(rowToPhoto),
   };
 }
 
@@ -413,18 +497,25 @@ export async function pullMine(userId) {
     .from("interests").select("*").eq("user_id", userId);
   if (intErr) {
     console.error("Sync (pull interests) failed:", intErr);
-    return { interests: [], entries: [] };
+    return { interests: [], entries: [], photos: [] };
   }
   const ids = (interestRows || []).map((r) => r.id);
   let entryRows = [];
+  let photoRows = [];
   if (ids.length) {
-    const { data, error } = await supabase.from("entries").select("*").in("interest_id", ids);
-    if (error) console.error("Sync (pull entries) failed:", error);
-    else entryRows = data || [];
+    const [entriesRes, photosRes] = await Promise.all([
+      supabase.from("entries").select("*").in("interest_id", ids),
+      supabase.from("photos").select("*").in("interest_id", ids),
+    ]);
+    if (entriesRes.error) console.error("Sync (pull entries) failed:", entriesRes.error);
+    else entryRows = entriesRes.data || [];
+    if (photosRes.error) console.error("Sync (pull photos) failed:", photosRes.error);
+    else photoRows = photosRes.data || [];
   }
   return {
     interests: (interestRows || []).map(rowToInterest),
     entries: entryRows.map(rowToEntry),
+    photos: photoRows.map(rowToPhoto),
   };
 }
 

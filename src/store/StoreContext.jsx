@@ -6,7 +6,7 @@ import {
   pushInterest, deleteRemoteInterest, pushEntry, deleteRemoteEntry,
   deleteAllMine, pullMine, pullUserRow, updateDiscovery, updateDisplayName,
   classCodeExists, joinClass as joinClassRemote, setMyClassCode, updateAvatar,
-  parseAvatar,
+  parseAvatar, pushPhotoRow, uploadPhotoBlob,
 } from "../lib/remote";
 
 const StoreCtx = createContext(null);
@@ -211,14 +211,18 @@ export function StoreProvider({ children }) {
         }
       }
 
-      const [allLocalInterests, allLocalEntries] = await Promise.all([
-        getAll("interests"), getAll("entries"),
+      // `remote` was already fetched above (pullUserRow/pullMine ran
+      // together to decide onboarded-vs-not) — reusing it here instead of
+      // calling pullMine a second time for the same user's same data.
+      const [allLocalInterests, allLocalEntries, allLocalPhotos] = await Promise.all([
+        getAll("interests"), getAll("entries"), getAll("photos"),
       ]);
       // Trashed rows still live in Dexie so they can be restored; pushing
       // them would resurrect them on the server and then back onto every
       // other device.
       const localInterests = allLocalInterests.filter((i) => !i.deletedAt);
       const localEntries = allLocalEntries.filter((e) => !e.deletedAt);
+      const localPhotos = allLocalPhotos.filter((p) => !p.deletedAt);
 
       const remoteIntIds = new Set(remote.interests.map((i) => i.id));
       const toPush = localInterests.filter((i) => !remoteIntIds.has(i.id));
@@ -236,6 +240,24 @@ export function StoreProvider({ children }) {
       const entriesToAdopt = remote.entries.filter((e) => !localEntryIds.has(e.id));
       await Promise.all(entriesToAdopt.map((rec) => put("entries", rec)));
 
+      // A local-only photo might have its blob but never made it to Storage
+      // (e.g. added offline) — upload it first so the row being pushed has
+      // somewhere real to point storage_path at.
+      const remotePhotoIds = new Set(remote.photos.map((p) => p.id));
+      const photosToPush = localPhotos.filter((p) => !remotePhotoIds.has(p.id));
+      await Promise.all(photosToPush.map(async (rec) => {
+        let storagePath = rec.storagePath;
+        if (!storagePath && rec.blob) {
+          storagePath = await uploadPhotoBlob(user.id, rec.id, rec.blob);
+          if (storagePath) put("photos", { ...rec, storagePath });
+        }
+        await pushPhotoRow({ ...rec, storagePath });
+      }));
+
+      const localPhotoIds = new Set(localPhotos.map((p) => p.id));
+      const photosToAdopt = remote.photos.filter((p) => !localPhotoIds.has(p.id));
+      await Promise.all(photosToAdopt.map((rec) => put("photos", rec)));
+
       if (toAdopt.length) {
         setInterests((list) => {
           const ids = new Set(list.map((i) => i.id));
@@ -246,6 +268,12 @@ export function StoreProvider({ children }) {
         setEntries((list) => {
           const ids = new Set(list.map((e) => e.id));
           return [...list, ...entriesToAdopt.filter((e) => !ids.has(e.id))];
+        });
+      }
+      if (photosToAdopt.length) {
+        setPhotos((list) => {
+          const ids = new Set(list.map((p) => p.id));
+          return [...list, ...photosToAdopt.filter((p) => !ids.has(p.id))];
         });
       }
     })();
@@ -410,6 +438,20 @@ export function StoreProvider({ children }) {
       setPhotos((list) => [...list, rec]);
       put("photos", rec);
       bumpCoins(COINS_PER_LOG);
+      // The row goes up right away (caption/visibility/etc. are cheap);
+      // the actual bytes upload separately and the row gets storage_path
+      // filled in once that finishes, so a slow upload never blocks the
+      // rest of the photo's data from syncing.
+      if (userRef.current) {
+        pushPhotoRow(rec);
+        uploadPhotoBlob(userRef.current.id, rec.id, rec.blob).then((storagePath) => {
+          if (!storagePath) return;
+          const next = { ...rec, storagePath };
+          put("photos", next);
+          setPhotos((list) => list.map((p) => (p.id === rec.id ? next : p)));
+          pushPhotoRow(next);
+        });
+      }
     },
     // Exactly one cover per tree, so pinning a new one unpins whatever held
     // it before. Passing the same id again clears it, which falls the cover
@@ -427,6 +469,18 @@ export function StoreProvider({ children }) {
         if (p.id !== id) return p;
         const next = { ...p, caption };
         put("photos", next);
+        if (userRef.current) pushPhotoRow(next);
+        return next;
+      }));
+    },
+    // Caches a blob fetched from Storage (see lib/image.js's usePhotoURL)
+    // back onto the local record, so an own photo that had to be
+    // downloaded once doesn't need downloading again next time.
+    cachePhotoBlob(id, blob) {
+      setPhotos((list) => list.map((p) => {
+        if (p.id !== id || p.blob) return p;
+        const next = { ...p, blob };
+        put("photos", next);
         return next;
       }));
     },
@@ -439,6 +493,10 @@ export function StoreProvider({ children }) {
       });
       return {
         record: removed,
+        // Soft delete, same as interests/entries — recoverable from Recently
+        // Deleted for TRASH_DAYS before the local sweep (see the effect
+        // above) drops it for real. No immediate remote call: nothing
+        // else in the trash system tells the server on delete either.
         commit() { if (removed) put("photos", { ...removed, deletedAt: Date.now() }); },
         restore() {
           if (!removed) return;

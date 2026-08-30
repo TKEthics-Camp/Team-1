@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { downloadPhotoBlob } from "./remote";
 
 export function downscale(file, max, cb) {
   var url = URL.createObjectURL(file);
@@ -25,5 +26,42 @@ export function useObjectURL(blob) {
     setUrl(u);
     return () => URL.revokeObjectURL(u);
   }, [blob]);
+  return url;
+}
+
+// Same as useObjectURL, but for a synced photo record that might not have
+// its bytes on this device yet — someone else's photo, or your own on a
+// device that hasn't downloaded it. Uses the local blob when there is one
+// (instant, no network); otherwise fetches it from Storage via
+// storagePath. onDownloaded (optional) is how a caller with somewhere to
+// cache the result — see AlbumTab/PhotoViewer caching a downloaded blob
+// back to Dexie for your own photos — finds out a fetch actually happened.
+export function usePhotoURL(photo, onDownloaded) {
+  const blob = photo && photo.blob;
+  const storagePath = photo && photo.storagePath;
+  const [url, setUrl] = useState(null);
+
+  useEffect(() => {
+    if (blob) {
+      const u = URL.createObjectURL(blob);
+      setUrl(u);
+      return () => URL.revokeObjectURL(u);
+    }
+    if (!storagePath) { setUrl(null); return; }
+    let cancelled = false;
+    let objectUrl = null;
+    downloadPhotoBlob(storagePath).then((fetched) => {
+      if (cancelled || !fetched) return;
+      objectUrl = URL.createObjectURL(fetched);
+      setUrl(objectUrl);
+      if (onDownloaded) onDownloaded(fetched);
+    });
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [blob, storagePath]);
+
   return url;
 }
