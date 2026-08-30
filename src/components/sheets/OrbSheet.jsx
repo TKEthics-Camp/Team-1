@@ -64,7 +64,7 @@ export default function OrbSheet({ interestId, preset = null }) {
   }
 
   return (
-    <Sheet onClose={closeSheet}>
+    <Sheet onClose={closeSheet} className="tree-sheet">
       <div className="orb-sheet-preview">
         <Tree interest={{ id: previewId, color }} size={92} stage={2} health="healthy" species={species} leafColor={leafColor} className="alive" />
       </div>

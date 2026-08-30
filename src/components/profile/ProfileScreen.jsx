@@ -149,8 +149,7 @@ export default function ProfileScreen() {
 
         {!isOrg && (
           <>
-            <button className="btn2" onClick={() => { updateProfile({ tourSeen: false }); navigate("/"); }}>{t("replayTour")}</button>
-            <button className="btn2" data-tour="yearReview" onClick={() => openSheet("yearReview")}>{t("yearReview")}</button>
+            <button className="btn2" onClick={() => openSheet("yearReview")}>{t("yearReview")}</button>
             <button className="btn2" onClick={() => openSheet("memories")}>{t("memories")}</button>
           </>
         )}

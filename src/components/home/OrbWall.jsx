@@ -25,7 +25,7 @@ export default function OrbWall({ interests, photos, entries }) {
   }
 
   return (
-    <div className="tree-pager-wrap" data-tour="trees">
+    <div className="tree-pager-wrap">
       <div className="tree-pager" ref={pagerRef} onScroll={onScroll}>
         {interests.map((it) => {
           const minutes = minutesOf(entries, it.id);

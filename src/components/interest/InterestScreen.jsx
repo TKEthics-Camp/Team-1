@@ -23,9 +23,6 @@ export default function InterestScreen() {
   const { openSheet, openViewer } = useUI();
 
   const it = interests.find((x) => x.id === id);
-  // Preview: instantly see what this tree looks like at any stage/health,
-  // without waiting for real activity or real neglect.
-  const [preview, setPreview] = useState(null); // { stage, health } | null
   const [replaying, setReplaying] = useState(false);
 
   useEffect(() => {
@@ -41,11 +38,9 @@ export default function InterestScreen() {
   // they ever added — how this interest started, kept at the top of its page.
   const first = ph.length ? ph[ph.length - 1] : null;
 
-  const realStage = treeStage(it, entries, photos);
-  const realHealth = treeHealth(it, entries, photos);
+  const stage = treeStage(it, entries, photos);
+  const health = treeHealth(it, entries, photos);
   const toNext = actsToNextStage(it, entries, photos);
-  const stage = preview ? preview.stage : realStage;
-  const health = preview ? preview.health : realHealth;
   const planted = daysPlanted(it);
   const coins = (profile && profile.coins) || 0;
   const canRevive = coins >= REVIVE_COST;
@@ -58,12 +53,12 @@ export default function InterestScreen() {
 
   return (
     <>
-      <TopBar>
+      <TopBar className="tree-bar">
         <button className="icon" aria-label={t("home")} onClick={() => navigate("/")}>←</button>
         <h1>{nameOf(it)}</h1>
         <button className="icon" aria-label={t("editOrb")} onClick={() => openSheet("orb", it.id)}>⋯</button>
       </TopBar>
-      <div className="view">
+      <div className="view tree-view">
         <InterestCover interest={it} firstPhoto={first} />
 
         <div className="planted-label center-label">
@@ -77,8 +72,6 @@ export default function InterestScreen() {
             <div className="st-health">{t(HEALTH_KEY[health])}</div>
             {health === "dead" ? (
               <div className="st-note">{canRevive ? t("reviveHint") : t("reviveNeed").replace("{n}", REVIVE_COST)}</div>
-            ) : preview ? (
-              <div className="st-note">{t("grewNote")}</div>
             ) : toNext > 0 ? (
               <div className="st-note">{t("growNext").replace("{n}", toNext)}</div>
             ) : (
@@ -87,7 +80,7 @@ export default function InterestScreen() {
           </div>
         </div>
 
-        {realHealth === "dead" && (
+        {health === "dead" && (
           <button
             className="btn revive-btn"
             disabled={!canRevive}
@@ -100,33 +93,6 @@ export default function InterestScreen() {
         {canReplay && (
           <button className="btn2" onClick={() => setReplaying(true)}>{t("watchGrow")}</button>
         )}
-
-        <div className="label">{t("previewLabel")}</div>
-        <div className="preview-row">
-          {[0, 1, 2, 3, 4].map((s) => (
-            <button
-              key={s}
-              className="chip"
-              aria-pressed={stage === s && health === "healthy" && !!preview}
-              onClick={() => setPreview({ stage: s, health: "healthy" })}
-            >
-              {s}
-            </button>
-          ))}
-          {["wilting", "bare", "dead"].map((h) => (
-            <button
-              key={h}
-              className="chip"
-              aria-pressed={preview?.health === h}
-              onClick={() => setPreview({ stage: realStage, health: h })}
-            >
-              {t(HEALTH_KEY[h])}
-            </button>
-          ))}
-          {preview && (
-            <button className="chip" onClick={() => setPreview(null)}>{"↺ " + t("close")}</button>
-          )}
-        </div>
 
         <Stats items={[
           { n: st, k: t("yourStreak"), flame: true },
@@ -162,7 +128,7 @@ export default function InterestScreen() {
           <GrowthReplay
             interest={it}
             frames={timeline}
-            health={realHealth}
+            health={health}
             nameOf={nameOf}
             onClose={() => setReplaying(false)}
           />

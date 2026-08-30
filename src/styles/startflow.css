@@ -202,3 +202,17 @@
   font-size: 24px; font-weight: 600; line-height: 1.18;
   letter-spacing: -.022em; text-wrap: balance;
 }
+
+/* ---------- notifications ask ---------- */
+
+.sf-notif-foot { display: flex; flex-direction: column; gap: 14px; }
+.sf-notif-foot .sf-linkbtn { padding-top: 0; text-align: center; }
+
+/* ---------- reminder time ---------- */
+
+.sf-time-picker { display: flex; justify-content: center; padding: 24px 0; }
+.sf-time-input {
+  width: auto; text-align: center;
+  font-size: 32px; font-weight: 600; letter-spacing: -.01em;
+  padding: 14px 20px;
+}

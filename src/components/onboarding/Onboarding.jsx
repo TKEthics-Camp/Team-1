@@ -4,8 +4,7 @@ import { useStore } from "../../store/StoreContext";
 import { useAuth } from "../../store/AuthContext";
 import { PALETTE, DEFAULT_THEME } from "../../lib/constants";
 import { uid } from "../../lib/id";
-import { mintOrFetchClassCode } from "../../lib/remote";
-import { askNotifications } from "../../lib/useReminderTimers";
+import { mintOrFetchClassCode, markOnboardingComplete } from "../../lib/remote";
 import { isBlockedHobby } from "../../lib/hobbyFilter";
 import LangToggle from "../shared/LangToggle";
 import IntroStep from "./IntroStep";
@@ -14,6 +13,8 @@ import InterestsStep from "./InterestsStep";
 import ConfirmHobbiesStep from "./ConfirmHobbiesStep";
 import ScheduleStep from "./ScheduleStep";
 import LookStep from "./LookStep";
+import NotificationsStep from "./NotificationsStep";
+import ReminderTimeStep from "./ReminderTimeStep";
 
 // Account type and username are settled before this ever mounts — see
 // AuthFlow, which collects them at signup along with the one real branch
@@ -25,8 +26,8 @@ import LookStep from "./LookStep";
 // dashboard. Their class code is minted automatically at finish() rather
 // than typed in; students join *that* code later from Me → Join a class.
 function stepsFor(accountType) {
-  if (accountType === "org") return ["intro", "look"];
-  return ["intro", "gender", "interests", "confirm", "schedule", "look"];
+  if (accountType === "org") return ["intro", "look", "notifications"];
+  return ["intro", "gender", "interests", "confirm", "schedule", "look", "notifications", "reminderTime"];
 }
 
 // Gender only ever picks a starting hair style for the avatar — everything
@@ -49,6 +50,7 @@ export default function Onboarding() {
   const [gender, setGender] = useState(null);
   const [drafts, setDrafts] = useState([]);
   const [theme, setTheme] = useState(DEFAULT_THEME);
+  const [reminderTime, setReminderTime] = useState("18:00");
   const [hobbyBlocked, setHobbyBlocked] = useState(false);
   const steps = stepsFor(accountType);
 
@@ -97,12 +99,12 @@ export default function Onboarding() {
     saveProfile(rec);
     drafts.forEach((d) => {
       addInterest({
-        id: d.id, name: d.name, color: d.color, why: "", time: d.time, days: d.days || [], friends: d.friends,
+        id: d.id, name: d.name, color: d.color, why: "", time: reminderTime, days: d.days || [], friends: d.friends,
         createdAt: Date.now(), updatedAt: Date.now(),
       });
     });
-    askNotifications();
     if (accountType === "org" && user && !user.isDebug) mintClassCode(user.id, rec);
+    if (user && !user.isDebug) markOnboardingComplete(user.id);
   }
 
   const current = steps[step];
@@ -148,7 +150,15 @@ export default function Onboarding() {
         {current === "schedule" && (
           <ScheduleStep drafts={drafts} updateDraft={updateDraft} onEnter={() => setStep(step + 1)} />
         )}
-        {current === "look" && <LookStep value={theme} setTheme={setTheme} onEnter={finish} />}
+        {current === "look" && (
+          <LookStep value={theme} setTheme={setTheme} onEnter={() => setStep(step + 1)} />
+        )}
+        {current === "notifications" && (
+          <NotificationsStep onEnter={step === steps.length - 1 ? finish : () => setStep(step + 1)} />
+        )}
+        {current === "reminderTime" && (
+          <ReminderTimeStep value={reminderTime} setValue={setReminderTime} onEnter={finish} />
+        )}
       </div>
     </div>
   );

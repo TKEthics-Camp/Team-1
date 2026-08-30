@@ -5,6 +5,8 @@
 @import "./explore.css";
 @import "./market.css";
 @import "./startflow.css";
+/* last: overrides .topbar/.view/.nav/.sheet from the sheets above */
+@import "./apple.css";
 
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }

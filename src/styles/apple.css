@@ -1,0 +1,346 @@
+/* ============================================================
+   The "Main Page UI Drawing" Figma, in Apple's idiom.
+
+   The drawing is plain SF system type on flat white: bare
+   headers, grey pills, white bordered cards, one blue action.
+   So these screens drop the app's rounded display face, glass
+   chrome and candy accents.
+
+   Covers the three screens the drawing has frames for:
+     .home-bar / .home-view   Home Page
+     .tree-sheet              Add New Tree 1 + 2
+     .tree-bar / .tree-view   Inside Tree 1 + 2 + 3
+   Explore and Me are deliberately untouched. The tab bar is the
+   one shared piece — see the .nav block in the Home section.
+   ============================================================ */
+
+.home-bar, .home-view, .nav,
+.tree-bar, .tree-view, .tree-sheet {
+  --home-fill: #ececee;
+  --home-line: #d6d6da;
+  --home-blue: #0088ff;
+  /* raised surfaces — cards, fields, the sheet itself. Must be tokens, not
+     literal #fff: --ink flips to white under the Black skin, and a hardcoded
+     white card would leave white text on white. */
+  --home-card: #ffffff;
+  --home-surface: #ffffff;
+}
+.stage[data-theme="black"] .home-bar,
+.stage[data-theme="black"] .home-view,
+.stage[data-theme="black"] .nav,
+.stage[data-theme="black"] .tree-bar,
+.stage[data-theme="black"] .tree-view,
+.stage[data-theme="black"] .tree-sheet {
+  --home-fill: rgba(255, 255, 255, .10);
+  --home-line: rgba(255, 255, 255, .16);
+  --home-blue: #0a84ff;
+  --home-card: #2c2c2e;
+  --home-surface: #1c1c1e;
+}
+
+/* ---------- header: no rule, no glass, just the greeting ---------- */
+
+.topbar.home-bar {
+  border-bottom: none;
+  background: none;
+  backdrop-filter: none;
+  min-height: 0;
+  padding: 20px 18px 6px;
+}
+.topbar.home-bar h1 {
+  font-family: var(--body);
+  font-size: 17px; font-weight: 500;
+  letter-spacing: -.01em;
+}
+
+/* the streak and language pills, flattened to iOS greys */
+.home-bar .chip,
+.home-bar .lang {
+  background: var(--home-fill);
+  border: none; border-radius: 999px;
+  font-family: var(--body);
+  font-size: 13px; font-weight: 600; letter-spacing: -.01em;
+  padding: 6px 12px;
+  color: var(--ink);
+}
+.home-bar .chip.flame-badge { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+/* ---------- body ---------- */
+
+.home-view { padding: 4px 18px 8px; gap: 12px; }
+
+.home-view .tree-page { gap: 12px; }
+.home-view .tree-page .tree-name {
+  font-family: var(--body);
+  font-size: 20px; font-weight: 600; letter-spacing: -.02em;
+  color: var(--ink);
+}
+.home-view .tree-page .tree-meta {
+  font-family: var(--body);
+  font-size: 14px; font-weight: 400; letter-spacing: -.01em;
+  color: var(--muted); font-variant-numeric: tabular-nums;
+}
+.home-view .tree-page .tree-meta .dead { color: var(--candy); }
+
+/* the days-planted pill isn't in the drawing, but it's real information —
+   kept, restyled to the same grey pill as the header's */
+.home-view .planted-label {
+  font-family: var(--body);
+  font-size: 12px; font-weight: 500; letter-spacing: -.01em;
+  color: var(--muted);
+  background: var(--home-fill); border: none;
+  padding: 4px 11px;
+}
+
+/* no dashed outline on the add page — at exactly one page per screen its
+   left border sits on the snap boundary and shows as a stray line down the
+   edge of the tree you're actually looking at. The + carries it instead. */
+.home-view .tree-page.tree-add { border: none; }
+.home-view .tree-add .plus {
+  font-family: var(--body); font-weight: 200; font-size: 34px;
+  width: 78px; height: 78px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--home-fill); color: var(--muted);
+}
+.home-view .tree-add .tree-name { color: var(--muted); }
+
+/* dots: grey track, solid ink for the page you're on */
+.home-view .tree-dots { gap: 7px; padding: 10px 0 4px; }
+.home-view .tree-dots .dot {
+  width: 7px; height: 7px;
+  background: var(--home-line);
+}
+.home-view .tree-dots .dot.on { background: var(--ink); transform: none; }
+
+/* ---------- floating pill tab bar ----------
+   Drawn as a floating pill in the Home frame. BottomNav is a single
+   shared component, so this is the one part of the restyle that also
+   shows on Explore and Me — a bar that changed shape as you switched
+   tabs would read as a bug rather than a design. */
+
+.nav {
+  flex: none;
+  margin: 0 16px 14px;
+  padding: 4px;
+  border: 1px solid var(--home-line);
+  border-top: 1px solid var(--home-line);
+  border-radius: 999px;
+  background: var(--glass2);
+  backdrop-filter: blur(20px);
+}
+.nav button {
+  padding: 9px 6px;
+  border-radius: 999px;
+  font-family: var(--body);
+  font-size: 13px; font-weight: 500; letter-spacing: -.01em;
+  color: var(--muted);
+  gap: 0;
+}
+.nav button .dot { display: none; }
+.nav button[aria-current="page"] { color: var(--ink); font-weight: 600; }
+
+/* ============================================================
+   Add a tree — Figma "Add New Tree 1 / 2"
+   Tree preview, a plain Name field, a 3x3 species grid with a
+   red ring on the pick, a grey day row, then two grey pills.
+   ============================================================ */
+
+/* neutral scrim instead of the app's violet one — :has() rather than a
+   second prop on Sheet, since the backdrop is the sheet's own parent */
+.sheet-bg:has(.tree-sheet) {
+  background: rgba(0, 0, 0, .3);
+  backdrop-filter: blur(6px);
+}
+
+.sheet.tree-sheet {
+  background: var(--home-surface);
+  border-top: none;
+  border-radius: 20px 20px 0 0;
+  padding: 20px 24px 26px;
+  gap: 18px;
+}
+.tree-sheet h2 {
+  font-family: var(--body);
+  font-size: 20px; font-weight: 600; letter-spacing: -.02em;
+  color: var(--ink);
+}
+
+/* section headings: the drawing writes them in sentence case at body
+   size, not the app's tiny uppercase tracking */
+.tree-sheet .field > .label {
+  font-family: var(--body);
+  font-size: 16px; font-weight: 400; letter-spacing: -.01em;
+  text-transform: none; color: var(--ink);
+}
+.tree-sheet .field { gap: 9px; }
+.tree-sheet .field .hint { font-size: 12.5px; color: var(--muted); }
+
+.tree-sheet input[type="text"] {
+  background: var(--home-card); color: var(--ink);
+  border: 1px solid var(--home-line); border-radius: 8px;
+  padding: 10px 12px; font-family: var(--body); font-size: 16px;
+}
+.tree-sheet input[type="text"]::placeholder { color: #b4b4b8; }
+.tree-sheet input[type="text"]:focus {
+  outline: none; border-color: var(--home-blue);
+  box-shadow: 0 0 0 3px rgba(0, 136, 255, .15);
+}
+
+/* species grid: white cards, emoji over a small grey caption */
+.tree-sheet .species-btn {
+  background: var(--home-card);
+  border: 1px solid var(--home-line); border-radius: 10px;
+  padding: 10px 4px 8px; gap: 5px;
+  font-family: var(--body); font-size: 10.5px; font-weight: 500;
+  letter-spacing: -.005em; color: var(--muted);
+  box-shadow: none;
+}
+.tree-sheet .species-btn .ico { font-size: 21px; }
+.tree-sheet .species-btn[aria-pressed="true"] {
+  border-color: var(--candy); color: var(--ink);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--candy) 30%, transparent);
+}
+
+/* day row: flat grey keys, dark letters */
+.tree-sheet .day-picker { gap: 7px; }
+.tree-sheet .day-btn {
+  aspect-ratio: auto; padding: 7px 0;
+  border: none; border-radius: 8px;
+  background: var(--home-fill); color: var(--ink);
+  font-family: var(--body); font-size: 15px; font-weight: 600;
+}
+.tree-sheet .day-btn[aria-pressed="true"] {
+  background: var(--home-blue); color: #fff;
+}
+
+/* both actions are the same grey pill in the drawing */
+.tree-sheet .btn,
+.tree-sheet .btn2 {
+  background: var(--home-fill); color: var(--ink);
+  border: none; border-radius: 999px;
+  box-shadow: none; filter: none;
+  font-family: var(--body); font-size: 16px; letter-spacing: -.01em;
+  padding: 13px 20px;
+}
+.tree-sheet .btn { font-weight: 600; }
+.tree-sheet .btn2 { font-weight: 500; }
+.tree-sheet .btn2.btn-danger { color: #ff3b30; }
+
+/* ============================================================
+   Inside a tree — Figma "Inside Tree 1 / 2 / 3"
+   White bordered cards, a grey stat row, a segmented control,
+   and one blue action pinned at the bottom.
+   ============================================================ */
+
+.topbar.tree-bar {
+  border-bottom: none; background: none; backdrop-filter: none;
+  min-height: 0; padding: 14px 18px 2px;
+}
+.topbar.tree-bar h1 {
+  font-family: var(--body);
+  font-size: 17px; font-weight: 600; letter-spacing: -.01em;
+}
+.tree-bar .icon { color: var(--home-blue); font-size: 19px; }
+
+.tree-view { padding: 8px 18px 16px; gap: 14px; }
+
+/* cover: the drawing shows a plain white card with the name at its
+   foot. Only the photo-less state changes — over a real photo the
+   veil and white caption are still what makes the text readable. */
+.tree-view .cover {
+  border-radius: 12px;
+  box-shadow: none;
+  border: 1px solid var(--home-line);
+}
+.tree-view .cover.blank { background: var(--home-card); }
+.tree-view .cover.blank .mono,
+.tree-view .cover.blank .veil { display: none; }
+.tree-view .cover.blank .cap { color: var(--ink); }
+.tree-view .cover.blank .cap .t {
+  font-family: var(--body); font-weight: 600;
+  font-size: 24px; letter-spacing: -.025em; text-shadow: none;
+}
+.tree-view .cover.blank .cap .s {
+  font-family: var(--body); color: var(--muted);
+  font-size: 12.5px; opacity: 1; text-shadow: none;
+}
+
+.tree-view .planted-label {
+  font-family: var(--body);
+  font-size: 12px; font-weight: 500; letter-spacing: -.01em;
+  color: var(--muted);
+  background: var(--home-fill); border: none; padding: 4px 11px;
+}
+
+.tree-view .tree-status {
+  background: var(--home-card); border: 1px solid var(--home-line);
+  border-radius: 12px; padding: 12px 14px;
+}
+.tree-view .tree-status .st-stage {
+  font-family: var(--body); font-size: 15px; font-weight: 600;
+  letter-spacing: -.01em;
+}
+.tree-view .tree-status .st-health,
+.tree-view .tree-status .st-note {
+  font-family: var(--body); font-size: 12.5px; color: var(--muted);
+}
+
+/* stat row: grey cards, no borders */
+.tree-view .stats { gap: 10px; }
+.tree-view .stat {
+  background: var(--home-fill); border: none;
+  border-radius: 10px; padding: 10px 6px;
+}
+.tree-view .stat .n {
+  font-family: var(--body); font-size: 19px; font-weight: 600;
+  letter-spacing: -.02em;
+}
+.tree-view .stat .k {
+  font-family: var(--body); font-size: 12px; font-weight: 500;
+  letter-spacing: -.005em; color: var(--muted); text-transform: none;
+}
+
+/* segmented control */
+.tree-view .tabs {
+  background: var(--home-fill); border-radius: 999px;
+  padding: 3px; gap: 0;
+}
+.tree-view .tabs button {
+  font-family: var(--body); font-size: 14px; font-weight: 500;
+  letter-spacing: -.01em; color: var(--muted); border-radius: 999px;
+  padding: 7px;
+}
+.tree-view .tabs button[aria-selected="true"] {
+  background: var(--home-card); color: var(--ink); font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .12);
+}
+
+.tree-view .label {
+  font-family: var(--body); font-size: 16px; font-weight: 400;
+  letter-spacing: -.01em; text-transform: none; color: var(--ink);
+}
+.tree-view .sub, .tree-view .empty {
+  font-family: var(--body); color: var(--muted); letter-spacing: -.01em;
+}
+.tree-view .chip {
+  background: var(--home-fill); border: none; border-radius: 999px;
+  font-family: var(--body); font-size: 13px; font-weight: 500;
+  color: var(--ink); padding: 6px 12px;
+}
+.tree-view .chip[aria-pressed="true"] {
+  background: var(--home-blue); color: #fff; font-weight: 600;
+}
+
+/* the one blue action, as drawn */
+.tree-view .btn {
+  background: var(--home-blue); color: #fff;
+  border: none; border-radius: 999px; box-shadow: none; filter: none;
+  font-family: var(--body); font-size: 17px; font-weight: 600;
+  letter-spacing: -.01em; padding: 14px 20px;
+}
+.tree-view .btn[disabled] { opacity: .35; }
+.tree-view .btn2 {
+  background: var(--home-fill); border: none; border-radius: 999px;
+  font-family: var(--body); font-size: 16px; font-weight: 500;
+  letter-spacing: -.01em; color: var(--ink); padding: 12px 20px;
+}

@@ -153,7 +153,6 @@
   background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px;
 }
 .planted-label.center-label { align-self: center; }
-.preview-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .tree-cell .alive { animation: sway 6s ease-in-out infinite; transform-origin: 50% 90%; }
 @keyframes sway { 0%, 100% { transform: rotate(-1.2deg); } 50% { transform: rotate(1.2deg); } }
 .tree-cell .tree-name { font-family: var(--display); font-weight: 700; font-size: 15px; color: var(--ink); text-align: center; line-height: 1.2; }

@@ -46,7 +46,7 @@ export default function ExploreScreen() {
       </TopBar>
       <div className="view">
         {user && <UserSearch />}
-        <div className="tabs" data-tour="exploreTabs">
+        <div className="tabs">
           {TABS.map(([key, label]) => (
             <button key={key} aria-selected={activeTab === key} onClick={() => setTab(key)}>
               {t(label)}

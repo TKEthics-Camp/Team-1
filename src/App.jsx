@@ -19,7 +19,6 @@ import MarketScreen from "./components/market/MarketScreen";
 import BottomNav from "./components/shared/BottomNav";
 import SheetHost from "./components/sheets/SheetHost";
 import PhotoViewer from "./components/interest/PhotoViewer";
-import MascotTour from "./components/shared/MascotTour";
 import UndoToast from "./components/shared/UndoToast";
 
 export default function App() {
@@ -133,7 +132,6 @@ function RoutedShell() {
       {sheet && <SheetHost />}
       {viewer && <PhotoViewer />}
       <UndoToast />
-      {profile && !profile.tourSeen && <MascotTour />}
     </>
   );
 }

@@ -21,12 +21,13 @@ export default function HomeScreen() {
 
   return (
     <>
-      <TopBar>
+      <TopBar className="home-bar">
         <h1>{t("hi") + profile.name}</h1>
-        <span className="chip flame-badge" data-tour="streak">{"🔥 " + streak}</span>
+        {/* number then flame, the order the Figma draws it in */}
+        <span className="chip flame-badge">{streak + " 🔥"}</span>
         <LangToggle />
       </TopBar>
-      <div className="view">
+      <div className="view home-view">
         {due.length > 0 && <NudgeBanner interest={due[0]} />}
         {memory && <MemoryBanner memory={memory} />}
         <OrbWall interests={interests} photos={photos} entries={entries} />

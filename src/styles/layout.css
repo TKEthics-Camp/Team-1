@@ -53,7 +53,9 @@
 /* ---------- chrome ---------- */
 .topbar {
   display: flex; align-items: center; gap: 8px;
-  padding: 15px 16px; min-height: 58px;
+  /* 18px horizontally, the same inset .view and .sheet use — the screen title
+     and the content under it share one left edge instead of staggering by 2px. */
+  padding: 15px 18px; min-height: 58px;
   border-bottom: 1px solid var(--line);
   background: var(--glass);
   backdrop-filter: blur(10px);

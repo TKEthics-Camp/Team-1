@@ -56,7 +56,7 @@ export default function EducatorDashboard() {
       </TopBar>
       <div className="view">
         <div className="label">{t("yourClassCode")}</div>
-        <div className="code-card" data-tour="streak">
+        <div className="code-card">
           <span className="code-value">{profile.classCode}</span>
           <button type="button" className="chip" onClick={copyCode}>
             {copied ? t("codeCopied") : t("copyCode")}
@@ -66,7 +66,7 @@ export default function EducatorDashboard() {
 
         <Stats items={[{ n: students.length, k: t("studentsCount") }]} />
 
-        <div className="label" data-tour="trees">{t("yourStudents")}</div>
+        <div className="label">{t("yourStudents")}</div>
         <div className="sub">{loading ? t("profileLoading") : students.length === 0 ? t("dashboardRosterEmpty") : t("dashboardRosterNote")}</div>
         <div className="ideas">
           {students.map((u) => (

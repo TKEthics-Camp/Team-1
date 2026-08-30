@@ -99,7 +99,12 @@ export function StoreProvider({ children }) {
       }
 
       if (!hasLocalProfile) {
-        if (userRow && userRow.display_name) {
+        // onboarding_completed, not display_name — AuthFlow sets display_name
+        // at signup already (to reserve the username before onboarding even
+        // starts), so it stopped meaning "finished onboarding" the moment
+        // that shipped. Without this, every fresh signup looked
+        // pre-onboarded and skipped straight past it.
+        if (userRow && userRow.onboarding_completed) {
           const rebuilt = {
             key: "profile",
             name: userRow.display_name,
@@ -114,10 +119,6 @@ export function StoreProvider({ children }) {
             ownedDecorations: [],
             equippedDecoration: null,
             createdAt: new Date(userRow.created_at).getTime(),
-            // This account already finished onboarding at some point in the
-            // past (that's the only way display_name got set) — a cache wipe
-            // from signing out shouldn't make the one-time tour replay.
-            tourSeen: true,
             userId: user.id,
           };
           setProfileState(rebuilt);

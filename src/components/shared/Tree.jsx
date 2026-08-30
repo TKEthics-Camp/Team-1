@@ -33,6 +33,15 @@ const GROUND_SCALE = [0.42, 0.54, 0.72, 0.9, 1.08];
 // full tree is visibly bushier than a young one, not just a bigger version
 // of the exact same silhouette.
 const LOBES = [0, 1, 2, 3, 5];
+// Willow-specific per-stage shape: a young one is barely more than an
+// upright dome with a couple of short shoots, and only grows the full
+// drooping "curtain" as it matures — dome width and droop length both grow
+// faster than the trunk itself, not at the trunk's own rate, so stage 4
+// doesn't read as stage 1 just scaled up.
+const WILLOW_DRIPS = [0, 3, 6, 9, 13];
+const WILLOW_DOME_RX = [0, 0.5, 0.8, 0.98, 1.15];
+const WILLOW_DOME_RY = [0, 0.4, 0.56, 0.62, 0.66];
+const WILLOW_DROOP = [0, 0.7, 1.05, 1.3, 1.55];
 
 // A tidy scatter of blossoms, spread evenly across the canopy by area (not a
 // fixed handful of hardcoded spots), so any count from 1 to a busy cherry's
@@ -91,6 +100,10 @@ export default function Tree({ interest, size, stage = 4, health = "healthy", sp
   const noStandardCanopy = kind === "bamboo" || kind === "palm";
   const lobes = LOBES[stage] || 1;
   const groundScale = GROUND_SCALE[stage] || 1;
+  const willowDripN = WILLOW_DRIPS[stage] || 3;
+  const willowDomeRX = g.r * (WILLOW_DOME_RX[stage] || 0.5);
+  const willowDomeRY = g.r * (WILLOW_DOME_RY[stage] || 0.4);
+  const willowDroop = WILLOW_DROOP[stage] || 0.7;
 
   return (
     <svg
@@ -118,13 +131,16 @@ export default function Tree({ interest, size, stage = 4, health = "healthy", sp
 
       {stage === 0 ? (
         // a sprout: short stem + two little leaves (same for every species —
-        // nothing's grown enough yet to tell them apart)
+        // nothing's grown enough yet to tell them apart). Kept deliberately
+        // smaller than stage 1's canopy in both height and spread — a seed
+        // just breaking ground should read as the smallest thing in the
+        // sequence, not wider than the "young sapling" stage right after it.
         <g>
-          <path d={`M50 ${groundY} Q49 ${groundY - 10} 50 ${groundY - 16}`} stroke={dead ? trunk : "#3E9E5E"} strokeWidth="3" fill="none" strokeLinecap="round" />
+          <path d={`M50 ${groundY} Q49.6 ${groundY - 5.5} 50 ${groundY - 9}`} stroke={dead ? trunk : "#3E9E5E"} strokeWidth="2.4" fill="none" strokeLinecap="round" />
           {showLeaves && (
             <>
-              <ellipse cx="43" cy={groundY - 13} rx="8" ry="5" fill={fillUrl} transform={`rotate(-28 43 ${groundY - 13})`} />
-              <ellipse cx="57" cy={groundY - 16} rx="8" ry="5" fill={fillUrl} transform={`rotate(28 57 ${groundY - 16})`} />
+              <ellipse cx="46.6" cy={groundY - 7} rx="3.8" ry="2.4" fill={fillUrl} transform={`rotate(-30 46.6 ${groundY - 7})`} />
+              <ellipse cx="53.4" cy={groundY - 9} rx="3.8" ry="2.4" fill={fillUrl} transform={`rotate(30 53.4 ${groundY - 9})`} />
             </>
           )}
         </g>
@@ -226,16 +242,20 @@ export default function Tree({ interest, size, stage = 4, health = "healthy", sp
                     fill={fillUrl}
                   />
                 ) : kind === "willow" ? (
-                  // a dome up top, then a curtain of overlapping drips — more
-                  // of them, and more overlap, as the tree matures
+                  // a dome up top, then a curtain of drips — but a young
+                  // willow is mostly just the dome with a couple of short
+                  // shoots barely drooping at all. The full weeping curtain
+                  // (many long, cascading fronds under a wide dome) only
+                  // shows up at maturity, so this doesn't just scale one
+                  // fixed silhouette up by stage.
                   <>
-                    {Array.from({ length: 3 + lobes * 2 }).map((_, i, arr) => {
-                      const f = (i / (arr.length - 1) - 0.5) * 2;
-                      const x = 50 + f * g.r * 0.82;
-                      const len = g.r * (1.35 - Math.abs(f) * 0.4);
-                      return <ellipse key={i} cx={x} cy={canopyY + g.r * 0.25 + len * 0.5} rx={g.r * 0.26} ry={len * 0.5} fill={fillUrl} />;
+                    {Array.from({ length: willowDripN }).map((_, i, arr) => {
+                      const f = arr.length > 1 ? (i / (arr.length - 1) - 0.5) * 2 : 0;
+                      const x = 50 + f * willowDomeRX * 0.85;
+                      const len = g.r * willowDroop * (1 - Math.abs(f) * 0.35);
+                      return <ellipse key={i} cx={x} cy={canopyY + willowDomeRY * 0.45 + len * 0.5} rx={g.r * 0.22} ry={len * 0.5} fill={fillUrl} />;
                     })}
-                    <ellipse cx="50" cy={canopyY} rx={g.r * 1.02} ry={g.r * 0.62} fill={fillUrl} />
+                    <ellipse cx="50" cy={canopyY} rx={willowDomeRX} ry={willowDomeRY} fill={fillUrl} />
                   </>
                 ) : kind === "birch" ? (
                   <>
@@ -243,46 +263,63 @@ export default function Tree({ interest, size, stage = 4, health = "healthy", sp
                     {lobes >= 4 && <ellipse cx="50" cy={canopyY + g.r * 0.2} rx={g.r * 0.42} ry={g.r * 0.68} fill={fillUrl} />}
                   </>
                 ) : kind === "maple" ? (
-                  // wide and layered — a fuller, flatter crown than oak's,
-                  // one lobe at a time as the tree matures
+                  // wide and layered — a fuller, flatter crown than oak's.
+                  // Stage 1 is a narrow upright bud (not a circle) for the
+                  // same reason as oak; from stage 2 on the side lobes sit
+                  // further out so the crown visibly widens tier by tier
+                  // instead of just scaling up the same round blob.
                   <>
-                    <circle cx="50" cy={canopyY - g.r * 0.12} r={g.r * 0.88} fill={fillUrl} />
+                    {lobes === 1 ? (
+                      <ellipse cx="50" cy={canopyY - g.r * 0.12} rx={g.r * 0.56} ry={g.r * 0.92} fill={fillUrl} />
+                    ) : (
+                      <circle cx="50" cy={canopyY - g.r * 0.12} r={g.r * 0.8} fill={fillUrl} />
+                    )}
                     {lobes >= 2 && (
                       <>
-                        <circle cx={50 - g.r * 0.68} cy={canopyY + g.r * 0.28} r={g.r * 0.64} fill={fillUrl} />
-                        <circle cx={50 + g.r * 0.68} cy={canopyY + g.r * 0.28} r={g.r * 0.64} fill={fillUrl} />
+                        <circle cx={50 - g.r * 0.82} cy={canopyY + g.r * 0.3} r={g.r * 0.6} fill={fillUrl} />
+                        <circle cx={50 + g.r * 0.82} cy={canopyY + g.r * 0.3} r={g.r * 0.6} fill={fillUrl} />
                       </>
                     )}
-                    {lobes >= 3 && <circle cx="50" cy={canopyY + g.r * 0.38} r={g.r * 0.7} fill={fillUrl} />}
+                    {lobes >= 3 && <circle cx="50" cy={canopyY + g.r * 0.46} r={g.r * 0.68} fill={fillUrl} />}
                     {lobes >= 4 && (
                       <>
-                        <circle cx={50 - g.r * 0.3} cy={canopyY - g.r * 0.55} r={g.r * 0.52} fill={fillUrl} />
-                        <circle cx={50 + g.r * 0.3} cy={canopyY - g.r * 0.55} r={g.r * 0.52} fill={fillUrl} />
+                        <circle cx={50 - g.r * 0.38} cy={canopyY - g.r * 0.68} r={g.r * 0.5} fill={fillUrl} />
+                        <circle cx={50 + g.r * 0.38} cy={canopyY - g.r * 0.68} r={g.r * 0.5} fill={fillUrl} />
                       </>
                     )}
                   </>
                 ) : (
-                  // oak (and cherry, same silhouette): a full, lumpy round canopy
-                  // built from five overlapping lobes, added one tier at a time
+                  // oak (and cherry, same silhouette). Stage 1 is a single
+                  // upright bud — an ellipse, not a circle — so a young
+                  // sapling reads as a genuinely different shape, not a
+                  // scaled-down preview of the round canopy to come. From
+                  // stage 2 on it's built from overlapping lobes, but each
+                  // tier pushes the side lobes further out (0.62r+, not
+                  // 0.45r) so the silhouette actually gets lobier as it
+                  // grows instead of just blending into one bigger blob.
                   <>
-                    <circle cx="50" cy={canopyY} r={g.r} fill={fillUrl} />
+                    {lobes === 1 ? (
+                      <ellipse cx="50" cy={canopyY} rx={g.r * 0.62} ry={g.r * 0.98} fill={fillUrl} />
+                    ) : (
+                      <circle cx="50" cy={canopyY} r={g.r * 0.84} fill={fillUrl} />
+                    )}
                     {lobes >= 2 && (
                       <>
-                        <circle cx={50 - g.r * 0.45} cy={canopyY + g.r * 0.3} r={g.r * 0.78} fill={fillUrl} />
-                        <circle cx={50 + g.r * 0.5} cy={canopyY + g.r * 0.34} r={g.r * 0.74} fill={fillUrl} />
+                        <circle cx={50 - g.r * 0.64} cy={canopyY + g.r * 0.34} r={g.r * 0.62} fill={fillUrl} />
+                        <circle cx={50 + g.r * 0.68} cy={canopyY + g.r * 0.38} r={g.r * 0.6} fill={fillUrl} />
                       </>
                     )}
                     {lobes >= 3 && (
                       <>
-                        <circle cx={50 - g.r * 0.15} cy={canopyY - g.r * 0.42} r={g.r * 0.6} fill={fillUrl} />
-                        <circle cx={50 + g.r * 0.4} cy={canopyY - g.r * 0.28} r={g.r * 0.56} fill={fillUrl} />
+                        <circle cx={50 - g.r * 0.22} cy={canopyY - g.r * 0.58} r={g.r * 0.56} fill={fillUrl} />
+                        <circle cx={50 + g.r * 0.5} cy={canopyY - g.r * 0.4} r={g.r * 0.52} fill={fillUrl} />
                       </>
                     )}
                     {lobes >= 4 && (
                       <>
-                        <circle cx={50 - g.r * 0.72} cy={canopyY} r={g.r * 0.5} fill={fillUrl} />
-                        <circle cx={50 + g.r * 0.78} cy={canopyY - g.r * 0.05} r={g.r * 0.48} fill={fillUrl} />
-                        <circle cx="50" cy={canopyY + g.r * 0.6} r={g.r * 0.58} fill={fillUrl} />
+                        <circle cx={50 - g.r * 0.9} cy={canopyY} r={g.r * 0.46} fill={fillUrl} />
+                        <circle cx={50 + g.r * 0.96} cy={canopyY - g.r * 0.08} r={g.r * 0.44} fill={fillUrl} />
+                        <circle cx="50" cy={canopyY + g.r * 0.7} r={g.r * 0.54} fill={fillUrl} />
                       </>
                     )}
                   </>

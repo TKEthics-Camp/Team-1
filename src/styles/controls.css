@@ -123,40 +123,6 @@ input[type="date"], input[type="time"] { font-family: var(--mono); color-scheme:
 .memory-row .text { font-size: 13px; color: var(--ink); overflow-wrap: anywhere; }
 .memory-row .when { font-family: var(--mono); font-size: 10.5px; color: var(--dim); margin-top: 2px; }
 
-/* ---------- guided tour ---------- */
-.tour-overlay {
-  position: absolute; inset: 0; z-index: 40; cursor: pointer;
-  background: rgba(24, 10, 36, .32);
-}
-.tour-ring {
-  position: absolute; border-radius: 16px; pointer-events: none;
-  box-shadow: 0 0 0 3px var(--candy), 0 0 0 999px rgba(24, 10, 36, .32);
-  transition: top .35s ease, left .35s ease, width .35s ease, height .35s ease;
-  animation: tourPulse 1.6s ease-in-out infinite;
-}
-@keyframes tourPulse {
-  0%, 100% { box-shadow: 0 0 0 3px var(--candy), 0 0 0 999px rgba(24, 10, 36, .32); }
-  50%      { box-shadow: 0 0 0 5px var(--candy), 0 0 0 999px rgba(24, 10, 36, .32); }
-}
-.tour-bubble {
-  position: absolute; left: 16px; right: 16px; z-index: 41;
-  display: flex; gap: 10px; align-items: flex-start;
-  background: var(--card, #fff); border-radius: 18px; padding: 14px;
-  box-shadow: 0 14px 34px -12px rgba(30, 10, 40, .55);
-  transition: top .35s ease;
-}
-.tour-mascot { flex: none; animation: sway 2.4s ease-in-out infinite; transform-origin: 50% 90%; }
-.tour-text p { margin: 0; font-size: 14px; line-height: 1.4; color: var(--ink); }
-.tour-hint {
-  display: block; margin-top: 8px; font-size: 11.5px; font-weight: 700; color: var(--candy);
-  opacity: 0; transition: opacity .4s ease;
-}
-.tour-hint.show { opacity: 1; }
-.tour-progress { position: absolute; top: 10px; left: 14px; right: 14px; z-index: 42; display: flex; gap: 5px; }
-.tour-progress .seg { flex: 1; height: 3px; border-radius: 999px; background: rgba(255,255,255,.35); }
-.tour-progress .seg.done { background: var(--candy); }
-.tour-progress .seg.on { background: rgba(255,255,255,.85); }
-
 /* ---------- year in review (full screen) ---------- */
 .year-full {
   position: absolute; inset: 0; z-index: 25; cursor: pointer;

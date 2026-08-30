@@ -192,6 +192,15 @@ export async function updateDiscovery(userId, enabled) {
   if (error) console.error("Sync (discovery) failed:", error);
 }
 
+// The real signal StoreContext's reconciliation uses to tell "finished
+// onboarding" apart from "just signed up" — display_name alone stopped
+// working for this once AuthFlow started setting it at signup, before
+// onboarding runs, to reserve the username early.
+export async function markOnboardingComplete(userId) {
+  const { error } = await supabase.from("users").update({ onboarding_completed: true }).eq("id", userId);
+  if (error) console.error("Sync (onboarding complete) failed:", error);
+}
+
 // users.avatar is text, not jsonb — the avatar customization (skin, hair,
 // hair colour, outfit, outfit colour) is stored as a JSON string so a
 // device other than the one that made the edit can pick it up too.
