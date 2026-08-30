@@ -43,15 +43,29 @@ export function usePhotoURL(photo, onDownloaded) {
 
   useEffect(() => {
     if (blob) {
+      console.log("[usePhotoURL] using local blob, size=", blob.size, "type=", blob.type);
       const u = URL.createObjectURL(blob);
       setUrl(u);
       return () => URL.revokeObjectURL(u);
     }
-    if (!storagePath) { setUrl(null); return; }
+    if (!storagePath) {
+      console.log("[usePhotoURL] no blob and no storagePath — nothing to show");
+      setUrl(null);
+      return;
+    }
+    console.log("[usePhotoURL] fetching from storage, path=", storagePath);
     let cancelled = false;
     let objectUrl = null;
     downloadPhotoBlob(storagePath).then((fetched) => {
-      if (cancelled || !fetched) return;
+      if (cancelled) {
+        console.log("[usePhotoURL] fetch resolved after cleanup — ignoring, path=", storagePath);
+        return;
+      }
+      if (!fetched) {
+        console.log("[usePhotoURL] downloadPhotoBlob returned nothing (falsy), path=", storagePath);
+        return;
+      }
+      console.log("[usePhotoURL] fetch succeeded, size=", fetched.size, "type=", fetched.type, "path=", storagePath);
       objectUrl = URL.createObjectURL(fetched);
       setUrl(objectUrl);
       if (onDownloaded) onDownloaded(fetched);
