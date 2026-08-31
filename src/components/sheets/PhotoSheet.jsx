@@ -3,6 +3,7 @@ import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
 import { uid } from "../../lib/id";
+import { COINS_PER_LOG } from "../../lib/constants";
 import { downscale, useObjectURL } from "../../lib/image";
 import { actsToNextStage } from "../../lib/tree";
 import { celebrate, levelUpCelebrate } from "../../lib/feedback";
@@ -14,7 +15,7 @@ import VisRow from "../shared/VisRow";
 export default function PhotoSheet({ interestId }) {
   const { t, nameOf } = useI18n();
   const { interests, entries, photos, profile, addPhoto } = useStore();
-  const { closeSheet } = useUI();
+  const { closeSheet, showToast } = useUI();
   const it = interests.find((x) => x.id === interestId);
 
   const fileRef = useRef(null);
@@ -41,6 +42,7 @@ export default function PhotoSheet({ interestId }) {
     };
     addPhoto(rec);
     if (leveledUp) levelUpCelebrate(profile); else celebrate(profile);
+    showToast(t("coinsEarned").replace("{n}", COINS_PER_LOG));
     closeSheet();
   }
 

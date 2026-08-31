@@ -20,6 +20,7 @@ import BottomNav from "./components/shared/BottomNav";
 import SheetHost from "./components/sheets/SheetHost";
 import PhotoViewer from "./components/interest/PhotoViewer";
 import UndoToast from "./components/shared/UndoToast";
+import Toast from "./components/shared/Toast";
 
 export default function App() {
   const { loading, profile, interests, entries, photos, clearAllData } = useStore();
@@ -132,6 +133,7 @@ function RoutedShell() {
       {sheet && <SheetHost />}
       {viewer && <PhotoViewer />}
       <UndoToast />
+      <Toast />
     </>
   );
 }

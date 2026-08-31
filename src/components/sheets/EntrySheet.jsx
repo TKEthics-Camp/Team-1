@@ -3,6 +3,7 @@ import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
 import { uid } from "../../lib/id";
+import { COINS_PER_LOG } from "../../lib/constants";
 import { today } from "../../lib/dates";
 import { actsToNextStage } from "../../lib/tree";
 import { celebrate, levelUpCelebrate } from "../../lib/feedback";
@@ -16,7 +17,7 @@ const DURATIONS = [15, 30, 45, 60, 90, 120];
 export default function EntrySheet({ interestId, entryId }) {
   const { t, nameOf } = useI18n();
   const { interests, entries, photos, profile, addEntry, updateEntry } = useStore();
-  const { closeSheet } = useUI();
+  const { closeSheet, showToast } = useUI();
   const it = interests.find((x) => x.id === interestId);
   const editing = entryId ? entries.find((e) => e.id === entryId) : null;
 
@@ -44,6 +45,7 @@ export default function EntrySheet({ interestId, entryId }) {
         minutes, visibility, isPinned: pinned, createdAt: Date.now(), updatedAt: Date.now(),
       });
       if (leveledUp) levelUpCelebrate(profile); else celebrate(profile);
+      showToast(t("coinsEarned").replace("{n}", COINS_PER_LOG));
     }
     closeSheet();
   }

@@ -572,3 +572,30 @@ input[type="text"]:focus, textarea:focus, .user-search-input:focus {
 .theme-btn[aria-pressed="true"] .nm::after { color: var(--accent); }
 .avatar-edit-badge { background: var(--accent); }
 .tree-dots .dot.on { background: var(--accent); }
+
+/* ---------- coin reward toast ----------
+   Sits above the undo banner's slot so the two can be on screen together
+   (log a photo, delete one, both notes visible) rather than overlapping. */
+.coin-toast {
+  position: absolute; left: 0; right: 0; bottom: 92px; z-index: 36;
+  margin: 0 auto; width: max-content; max-width: calc(100% - 40px);
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: var(--lg-fill-2);
+  border: 1px solid var(--lg-edge);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow: var(--lg-shadow), 0 1px 0 var(--lg-hi) inset;
+  color: var(--ink);
+  font-family: var(--display); font-size: 15px; font-weight: 600;
+  letter-spacing: -.01em; text-align: center;
+  font-variant-numeric: tabular-nums;
+  animation: coinToastIn .34s cubic-bezier(.32, .72, 0, 1);
+}
+/* the undo banner already owns bottom:78px — when both are up, ride above it */
+.undo-toast ~ .coin-toast { bottom: 138px; }
+
+@keyframes coinToastIn {
+  from { opacity: 0; transform: translateY(10px) scale(.94); }
+  to   { opacity: 1; transform: none; }
+}

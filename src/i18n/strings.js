@@ -46,6 +46,7 @@ export const STR = {
   sfGoalPh:     ["Play one song all the way through", "完整弹完一首曲子"],
   sfGoalNote:   ["Optional — one line is plenty.", "可以不填 —— 一句话就够了。"],
   sfSkip:       ["Skip", "跳过"],
+  coinsEarned:  ["🪙 +{n} coins", "🪙 +{n} 金币"],
   sfSignUpTitle: ["Create Your Account", "创建你的账号"],
   sfLoginIdentifier: ["Username or Email", "用户名或邮箱"],
   authConfirmPassword: ["Confirm Password", "确认密码"],

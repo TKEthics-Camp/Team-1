@@ -16,12 +16,19 @@ export function UIProvider({ children }) {
   const [undo, setUndo] = useState(null);
   const undoRef = useRef(null);
   useEffect(() => { undoRef.current = undo; }, [undo]);
+  // A plain "here's what just happened" note — no action attached, unlike
+  // `undo` above. Separate state so a coin toast and a pending delete can
+  // never evict one another; they stack rather than compete.
+  const [toast, setToast] = useState(null); // { id, message }
+  const toastTimer = useRef(null);
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
 
   const value = useMemo(() => ({
     sheet,
     viewer,
     dismissed,
     undo,
+    toast,
     // A string second arg is an interest id; an object carries extra payload
     // (an Explore preset, or the tapped student).
     openSheet: (type, arg) => setSheet({ type, ...(typeof arg === "string" ? { id: arg } : arg) }),
@@ -43,6 +50,14 @@ export function UIProvider({ children }) {
       const timerId = setTimeout(() => { commit(); setUndo(null); }, ms);
       setUndo({ message, timerId, restore, commit });
     },
+    // Fire-and-forget confirmation. The id changes on every call so the
+    // component can re-key and replay its entrance even when the same
+    // message fires twice in a row.
+    showToast: (message, ms = 2600) => {
+      clearTimeout(toastTimer.current);
+      setToast({ id: Date.now(), message });
+      toastTimer.current = setTimeout(() => setToast(null), ms);
+    },
     undoNow: () => {
       setUndo((u) => {
         if (!u) return u;
@@ -51,7 +66,7 @@ export function UIProvider({ children }) {
         return null;
       });
     },
-  }), [sheet, viewer, dismissed, undo]);
+  }), [sheet, viewer, dismissed, undo, toast]);
 
   return <UICtx.Provider value={value}>{children}</UICtx.Provider>;
 }
