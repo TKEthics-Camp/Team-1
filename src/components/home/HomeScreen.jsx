@@ -4,7 +4,7 @@ import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
 import { dueNudges } from "../../lib/reminders";
 import { getResurfacedMemory } from "../../lib/resurfaced";
-import { globalStreak } from "../../lib/derived";
+import { globalStreakDetail } from "../../lib/derived";
 import { isDyingSoon, daysUntilDeath } from "../../lib/tree";
 import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
@@ -24,7 +24,7 @@ export default function HomeScreen() {
 
   const due = dueNudges(interests, entries, dismissed);
   const memory = getResurfacedMemory(interests, photos, entries);
-  const streak = globalStreak(entries, photos);
+  const { streak, restingNow } = globalStreakDetail(entries, photos);
 
   // Only ever warn about one tree — whichever has least time left. A column
   // of near-identical warnings is noise, and the fix is per-tree anyway.
@@ -49,9 +49,13 @@ export default function HomeScreen() {
         )}
         {/* number then flame, the order the Figma draws it in. Keyed on the
             value so the pop replays each time the streak actually moves. */}
-        <span className="chip flame-badge">
+        {/* the flame turns to a leaf while a rest day is holding the chain
+            together, so a protected streak never looks like an unbroken one */}
+        <span className={"chip flame-badge" + (restingNow ? " resting" : "")} title={restingNow ? t("restDayOn") : undefined}>
           {streak}
-          <span key={streak} className="flame" aria-hidden="true">🔥</span>
+          <span key={String(streak) + restingNow} className="flame" aria-hidden="true">
+            {restingNow ? "🍃" : "🔥"}
+          </span>
         </span>
         <LangToggle />
       </TopBar>

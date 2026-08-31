@@ -47,6 +47,8 @@ export const STR = {
   goalSerious:  ["Serious", "认真"],
   goalInsane:   ["Insane", "硬核"],
   goalPerDay:   ["{n} min per day", "每天 {n} 分钟"],
+  // rest day
+  restDayOn:    ["Rest day used — one missed day a week won't break your streak.", "使用了休息日 —— 每周漏记一天不会中断连续记录。"],
   // voice notes
   voiceNote:    ["Voice note", "语音记录"],
   recStart:     ["Record", "录音"],

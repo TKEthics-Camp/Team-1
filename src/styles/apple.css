@@ -905,3 +905,7 @@ input[type="text"]:focus, textarea:focus, .user-search-input:focus {
   font-variant-numeric: tabular-nums;
 }
 .entry .voice-note { margin-top: 8px; }
+
+/* a streak currently held together by a rest day reads calm, not on fire */
+.flame-badge.resting { color: var(--accent); }
+.flame-badge.resting .flame { animation: flameIdle 4.2s ease-in-out infinite; }

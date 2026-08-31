@@ -1,5 +1,6 @@
 import { speciesOf, leafColorOf, LEAF_COLORS } from "../../lib/tree";
 import { shade } from "../../lib/color";
+import { seasonOf, seasonalFoliage } from "../../lib/season";
 
 // A hobby drawn as a tree. `stage` (0–4) sets how big it is; `health` sets how
 // alive it looks; `species`/`leafColor` set what kind of tree it is and what
@@ -74,11 +75,15 @@ function leafPuffs(r, count = 12) {
   return pts;
 }
 
-export default function Tree({ interest, size, stage = 4, health = "healthy", species = null, leafColor = null, className = "" }) {
+export default function Tree({ interest, size, stage = 4, health = "healthy", species = null, leafColor = null, season = null, className = "" }) {
   const color = interest?.color || "#6EE7A8";
   const kind = species || interest?.species || speciesOf(interest);
   const leafKey = leafColor || interest?.leafColor || leafColorOf(interest);
-  const [fLite, fDark] = health === "healthy" ? (LEAF_COLORS[leafKey] || LEAF_COLORS.green) : FOLIAGE[health] || FOLIAGE.wilting;
+  const sea = season || seasonOf();
+  const base = health === "healthy" ? (LEAF_COLORS[leafKey] || LEAF_COLORS.green) : FOLIAGE[health] || FOLIAGE.wilting;
+  // season only shifts a healthy tree — the unhealthy palettes are the app's
+  // only signal that something is wrong, so they stay exactly as drawn
+  const [fLite, fDark] = seasonalFoliage(base, sea, health === "healthy");
   const birchBark = health !== "dead" && kind === "birch";
   const trunk = birchBark ? "#E8E0D0" : TRUNK[health] || TRUNK.healthy;
   const dead = health === "dead";
@@ -86,7 +91,7 @@ export default function Tree({ interest, size, stage = 4, health = "healthy", sp
   const showLeaves = !dead;
   const groundY = 90;
   const g = GEO[stage] || GEO[4];
-  const uid = `t${stage}${health}${kind}${leafKey}${String(color).replace("#", "")}`;
+  const uid = `t${stage}${health}${kind}${leafKey}${sea}${String(color).replace("#", "")}`;
   const fillUrl = `url(#${uid})`;
 
   // blossoms (the hobby colour) only on a lively tree — cherry wears a lot
@@ -335,6 +340,22 @@ export default function Tree({ interest, size, stage = 4, health = "healthy", sp
                       fill={i % 2 === 0 ? shade(fDark, -8) : shade(fLite, 10)}
                       opacity=".5"
                     />
+                  ))}
+                {/* a dusting of snow along the top of the canopy in winter */}
+                {sea === "winter" && health === "healthy" && (
+                  <ellipse
+                    cx={50 - g.r * 0.06}
+                    cy={canopyY - g.r * 0.66}
+                    rx={g.r * 0.66}
+                    ry={g.r * 0.24}
+                    fill="rgba(255,255,255,.82)"
+                  />
+                )}
+                {/* a few blossom specks in spring, on anything that isn't
+                    already a cherry (which wears blossom year-round) */}
+                {sea === "spring" && health === "healthy" && kind !== "cherry" &&
+                  fruitSpots(4, g.r * 0.86).map(([dx, dy], i) => (
+                    <circle key={"bl" + i} cx={50 + dx} cy={canopyY + dy} r={g.r * 0.07} fill="#FFD3E4" opacity=".85" />
                   ))}
                 {/* a soft gloss, the same touch the orbs get, so the canopy reads as more than a flat blob */}
                 <ellipse cx={50 - g.r * 0.28} cy={canopyY - g.r * 0.34} rx={g.r * 0.3} ry={g.r * 0.2} fill="rgba(255,255,255,.25)" />
