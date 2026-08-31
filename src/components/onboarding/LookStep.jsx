@@ -38,7 +38,7 @@ export default function LookStep({ value, setTheme, onEnter }) {
 
   return (
     <>
-      <SfHead>{t("sfLookTitle")}</SfHead>
+      <SfHead action="point">{t("sfLookTitle")}</SfHead>
 
       <div className="sf-options">
         {LOOKS.map(([id, ico, key]) => (

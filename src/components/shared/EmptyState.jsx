@@ -6,7 +6,7 @@ import Mascot from "./Mascot";
 export default function EmptyState({ text }) {
   return (
     <div className="empty">
-      <Mascot size={56} className="empty-mascot" />
+      <Mascot size={56} className="empty-mascot" action="sleep" />
       <div>{text}</div>
     </div>
   );

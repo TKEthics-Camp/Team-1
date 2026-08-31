@@ -15,7 +15,7 @@ export default function DailyGoalStep({ value, setValue, onNext }) {
       <h2 className="sf-title-c goal-title">{t("sfGoalTitle")}</h2>
 
       <div className="goal-row">
-        <Mascot size={116} className="goal-mascot" />
+        <Mascot size={116} className="goal-mascot" action="cheer" />
         <div className="goal-options" role="radiogroup" aria-label={t("sfGoalTitle")}>
           {DAILY_GOALS.map((g) => (
             <button

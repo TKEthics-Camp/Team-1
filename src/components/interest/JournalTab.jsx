@@ -3,6 +3,7 @@ import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
 import { fmtDate } from "../../lib/dates";
 import EmptyState from "../shared/EmptyState";
+import VoiceNote from "../shared/VoiceNote";
 
 export default function JournalTab({ entries, readOnly }) {
   const { t, lang } = useI18n();
@@ -22,7 +23,8 @@ export default function JournalTab({ entries, readOnly }) {
         <div className="entry" key={e.id}>
           <div>
             <div className="d">{fmtDate(e.date, lang) + (e.isPinned ? "  ★" : "") + (e.visibility === "public" ? "  🌐" : "")}</div>
-            <div className="t">{e.text}</div>
+            {e.text && <div className="t">{e.text}</div>}
+            {e.audio && <VoiceNote blob={e.audio} ms={e.audioMs} />}
           </div>
           {!readOnly && (
             <>

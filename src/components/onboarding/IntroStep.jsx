@@ -9,7 +9,7 @@ export default function IntroStep({ onNext }) {
     <>
       <div className="sf-center">
         <h2 className="sf-title-c">{t("sfIntroTitle")}</h2>
-        <Mascot size={132} className="sf-hero" />
+        <Mascot size={132} className="sf-hero" action="wave" />
       </div>
       <div className="sf-foot">
         <button className="sf-btn" onClick={onNext}>{t("sfContinue")}</button>

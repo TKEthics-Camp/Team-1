@@ -13,7 +13,7 @@ export default function AccountTypeStep({ value, setType, onNext }) {
 
   return (
     <>
-      <SfHead>{t("sfWhoTitle")}</SfHead>
+      <SfHead action="wave">{t("sfWhoTitle")}</SfHead>
 
       <div className="sf-options">
         {options.map(([key, label]) => (

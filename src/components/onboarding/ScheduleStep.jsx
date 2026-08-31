@@ -15,7 +15,7 @@ export default function ScheduleStep({ drafts, updateDraft, onEnter }) {
 
   return (
     <>
-      <SfHead>{t("sfWhenTitle")}</SfHead>
+      <SfHead action="point">{t("sfWhenTitle")}</SfHead>
 
       <div className="sf-scroll">
         {drafts.map((d, i) => {

@@ -817,3 +817,91 @@ input[type="text"]:focus, textarea:focus, .user-search-input:focus {
 .trash-row .chip { flex: none; font-size: 12px; padding: 6px 11px; }
 .trash-erase { color: var(--candy); }
 .trash-erase.armed { background: var(--candy); color: #fff; border-color: transparent; }
+
+/* ============================================================
+   Sprig's actions
+
+   Each action animates specific parts rather than the whole SVG, so he
+   reads as moving rather than as a picture being wobbled. transform-box
+   /transform-origin are set explicitly because SVG children default to
+   the *viewport* origin, which sends rotations flying off-centre.
+   ============================================================ */
+
+.sprig .sprig-body, .sprig .sprig-arm-l, .sprig .sprig-arm-r,
+.sprig .sprig-face, .sprig .sprig-tuft, .sprig .sprig-shadow {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* idle — a slow breath, so he's never completely still */
+.sprig[data-action="idle"] .sprig-body { animation: sprigBreathe 3.6s ease-in-out infinite; }
+@keyframes sprigBreathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.035); }
+}
+
+/* wave — one arm swings from its shoulder end */
+.sprig[data-action="wave"] .sprig-arm-l {
+  transform-origin: 100% 50%;
+  animation: sprigWave 1.5s ease-in-out infinite;
+}
+.sprig[data-action="wave"] .sprig-body { animation: sprigBreathe 3.6s ease-in-out infinite; }
+@keyframes sprigWave {
+  0%, 100% { transform: rotate(0deg); }
+  25%      { transform: rotate(-26deg); }
+  60%      { transform: rotate(12deg); }
+}
+
+/* cheer — both arms up, and the whole plant hops off its own shadow */
+.sprig[data-action="cheer"] .sprig-arm-l { transform-origin: 100% 50%; animation: sprigCheerL .9s ease-in-out infinite; }
+.sprig[data-action="cheer"] .sprig-arm-r { transform-origin: 0% 50%;   animation: sprigCheerR .9s ease-in-out infinite; }
+.sprig[data-action="cheer"] .sprig-body  { animation: sprigHop .9s ease-in-out infinite; }
+.sprig[data-action="cheer"] .sprig-shadow { animation: sprigShadow .9s ease-in-out infinite; }
+@keyframes sprigCheerL { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-34deg); } }
+@keyframes sprigCheerR { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(34deg); } }
+@keyframes sprigHop    { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7%); } }
+@keyframes sprigShadow { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(.82); opacity: .7; } }
+
+/* point — leans toward whatever's on his right */
+.sprig[data-action="point"] .sprig-body { animation: sprigLean 2.4s ease-in-out infinite; }
+.sprig[data-action="point"] .sprig-arm-r { transform-origin: 0% 50%; animation: sprigPoint 2.4s ease-in-out infinite; }
+@keyframes sprigLean  { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(7deg); } }
+@keyframes sprigPoint { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-22deg) translateX(8%); } }
+
+/* think — a slow tilt while a question sits on screen */
+.sprig[data-action="think"] .sprig-body { animation: sprigTilt 3.2s ease-in-out infinite; }
+.sprig[data-action="think"] .sprig-tuft { animation: sprigTuft 3.2s ease-in-out infinite; }
+@keyframes sprigTilt { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
+@keyframes sprigTuft { 0%, 100% { transform: rotate(6deg); }  50% { transform: rotate(-6deg); } }
+
+/* sleep — the eyes are already drawn closed; this is just the breathing */
+.sprig[data-action="sleep"] .sprig-body { animation: sprigBreathe 5s ease-in-out infinite; }
+
+/* ---------- voice notes ---------- */
+
+.rec-btn { display: flex; align-items: center; justify-content: center; gap: 8px; }
+/* recording is a state you must be able to see at a glance — red fill plus a
+   pulse, so it never sits recording unnoticed */
+.rec-btn.on {
+  background: var(--candy); color: #fff; border-color: transparent;
+  animation: recPulse 1.4s ease-in-out infinite;
+  font-variant-numeric: tabular-nums;
+}
+@keyframes recPulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--candy) 55%, transparent); }
+  60%      { box-shadow: 0 0 0 8px color-mix(in srgb, var(--candy) 0%, transparent); }
+}
+
+.voice-note {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px; border-radius: 14px;
+  background: var(--lg-fill); border: 1px solid var(--lg-edge);
+  box-shadow: 0 1px 0 var(--lg-hi) inset;
+}
+.voice-ico { font-size: 16px; line-height: 1; flex: none; }
+.voice-audio { flex: 1; min-width: 0; height: 34px; }
+.voice-len {
+  flex: none; font-size: 12px; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.entry .voice-note { margin-top: 8px; }

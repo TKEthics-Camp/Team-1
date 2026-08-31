@@ -11,7 +11,7 @@ export default function ReminderTimeStep({ value, setValue, onEnter }) {
 
   return (
     <>
-      <SfHead>{t("sfReminderTitle")}</SfHead>
+      <SfHead action="think">{t("sfReminderTitle")}</SfHead>
 
       <div className="sf-time-picker">
         <input

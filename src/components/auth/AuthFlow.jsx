@@ -94,7 +94,7 @@ export default function AuthFlow() {
           </div>
           <div className="sf-center">
             <h2 className="sf-wordmark">{t("appName")}</h2>
-            <Mascot size={132} className="sf-hero" />
+            <Mascot size={132} className="sf-hero" action="wave" />
             <p className="sf-tagline">{t("sfTagline")}</p>
           </div>
           <div className="sf-foot">

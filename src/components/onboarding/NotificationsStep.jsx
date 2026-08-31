@@ -22,7 +22,7 @@ export default function NotificationsStep({ onEnter }) {
     <>
       <div className="sf-center">
         <h2 className="sf-title-c">{t("sfNotifTitle")}</h2>
-        <Mascot size={132} className="sf-hero" />
+        <Mascot size={132} className="sf-hero" action="point" />
         <p className="sf-tagline">{t("sfNotifBody")}</p>
       </div>
       <div className="sf-foot sf-notif-foot">

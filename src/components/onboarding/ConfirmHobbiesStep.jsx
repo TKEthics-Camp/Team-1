@@ -23,7 +23,7 @@ export default function ConfirmHobbiesStep({ drafts, updateDraft, removeDraft, a
 
   return (
     <>
-      <SfHead>{t("sfSureTitle")}</SfHead>
+      <SfHead action="think">{t("sfSureTitle")}</SfHead>
 
       <div className="sf-scroll">
         <p className="sf-hobbies-label">{t("sfHobbiesLabel")}</p>

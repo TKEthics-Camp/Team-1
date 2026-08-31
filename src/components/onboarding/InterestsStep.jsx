@@ -26,7 +26,7 @@ export default function InterestsStep({ drafts, toggleDraft, addDraft, blocked, 
 
   return (
     <>
-      <SfHead>{t("sfHobbiesTitle")}</SfHead>
+      <SfHead action="point">{t("sfHobbiesTitle")}</SfHead>
 
       <div className="sf-scroll">
         <div className="sf-checks">

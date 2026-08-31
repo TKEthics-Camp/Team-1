@@ -15,7 +15,7 @@ export default function GenderStep({ value, setGender, onNext }) {
 
   return (
     <>
-      <SfHead>{t("sfQuickTitle")}</SfHead>
+      <SfHead action="think">{t("sfQuickTitle")}</SfHead>
 
       <div className="sf-options">
         {options.map(([key, label]) => (

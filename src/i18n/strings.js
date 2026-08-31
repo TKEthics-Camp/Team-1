@@ -47,6 +47,13 @@ export const STR = {
   goalSerious:  ["Serious", "认真"],
   goalInsane:   ["Insane", "硬核"],
   goalPerDay:   ["{n} min per day", "每天 {n} 分钟"],
+  // voice notes
+  voiceNote:    ["Voice note", "语音记录"],
+  recStart:     ["Record", "录音"],
+  recStop:      ["Stop", "停止"],
+  recDenied:    ["Microphone blocked — allow it in your browser settings to record.", "麦克风被拒绝 —— 请在浏览器设置里允许后再录音。"],
+  recUnsupported: ["Recording isn't available on this device.", "这台设备不支持录音。"],
+  voiceNoteNote: ["Stays on this device — voice notes aren't uploaded yet.", "只保存在这台设备上 —— 语音还不会上传。"],
   // recently deleted
   recentlyDeleted: ["Recently deleted", "最近删除"],
   trashNote:    ["Deleted trees, photos and entries stay here for {n} days before they're gone for good.", "删除的树、照片和日记会在这里保留 {n} 天，之后才会彻底消失。"],
