@@ -47,6 +47,14 @@ export const STR = {
   goalSerious:  ["Serious", "认真"],
   goalInsane:   ["Insane", "硬核"],
   goalPerDay:   ["{n} min per day", "每天 {n} 分钟"],
+  // recently deleted
+  recentlyDeleted: ["Recently deleted", "最近删除"],
+  trashNote:    ["Deleted trees, photos and entries stay here for {n} days before they're gone for good.", "删除的树、照片和日记会在这里保留 {n} 天，之后才会彻底消失。"],
+  trashEmpty:   ["Nothing deleted lately.", "最近没有删除任何东西。"],
+  trashDaysLeft: ["{n} days left", "还剩 {n} 天"],
+  restore:      ["Restore", "恢复"],
+  eraseNow:     ["Erase", "彻底删除"],
+  restoredToast: ["Restored.", "已恢复。"],
   // badges
   badges:       ["Badges", "徽章"],
   badgesEarned: ["{n} of {total} earned", "已获得 {n} / {total}"],

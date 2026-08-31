@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { getAll, put, del, clearAll as dbClearAll, clearGarden as dbClearGarden } from "../db/db";
-import { COINS_PER_LOG, DECORATIONS, REVIVE_COST, PALETTE, DEFAULT_THEME, DEFAULT_DAILY_GOAL, HAIR_STYLES, OUTFIT_STYLES } from "../lib/constants";
+import { COINS_PER_LOG, DECORATIONS, REVIVE_COST, PALETTE, DEFAULT_THEME, DEFAULT_DAILY_GOAL, TRASH_DAYS, HAIR_STYLES, OUTFIT_STYLES } from "../lib/constants";
 import { useAuth } from "./AuthContext";
 import {
   pushInterest, deleteRemoteInterest, pushEntry, deleteRemoteEntry,
@@ -36,6 +36,22 @@ export function StoreProvider({ children }) {
   useEffect(() => {
     Promise.all([getAll("meta"), getAll("interests"), getAll("photos"), getAll("entries")])
       .then(([meta, ints, ph, en]) => {
+        // Deleting sets deletedAt rather than removing the row, so it can be
+        // put back from Recently Deleted. Everything past the window is
+        // dropped for real here — the one place that runs on every start.
+        const cutoff = Date.now() - TRASH_DAYS * 86400000;
+        const sweep = (rows, store) => {
+          const keep = [];
+          rows.forEach((r) => {
+            if (!r.deletedAt) { keep.push(r); return; }
+            if (r.deletedAt < cutoff) del(store, r.id);
+          });
+          return keep;
+        };
+        ints = sweep(ints, "interests");
+        ph = sweep(ph, "photos");
+        en = sweep(en, "entries");
+
         setProfileState(meta.find((m) => m.key === "profile") || null);
         setInterests(ints.sort((a, b) => a.createdAt - b.createdAt));
         setPhotos(ph);
@@ -195,9 +211,14 @@ export function StoreProvider({ children }) {
         }
       }
 
-      const [localInterests, localEntries] = await Promise.all([
+      const [allLocalInterests, allLocalEntries] = await Promise.all([
         getAll("interests"), getAll("entries"),
       ]);
+      // Trashed rows still live in Dexie so they can be restored; pushing
+      // them would resurrect them on the server and then back onto every
+      // other device.
+      const localInterests = allLocalInterests.filter((i) => !i.deletedAt);
+      const localEntries = allLocalEntries.filter((e) => !e.deletedAt);
 
       const remoteIntIds = new Set(remote.interests.map((i) => i.id));
       const toPush = localInterests.filter((i) => !remoteIntIds.has(i.id));
@@ -365,9 +386,13 @@ export function StoreProvider({ children }) {
       return {
         record: removedInterest,
         commit() {
-          del("interests", id);
-          removedEntries.forEach((e) => del("entries", e.id));
-          removedPhotos.forEach((p) => del("photos", p.id));
+          // Soft: the row stays in Dexie carrying deletedAt so Recently
+          // Deleted can offer it back. The remote copy does go, and a
+          // restore re-pushes it on the next reconcile.
+          const at = Date.now();
+          if (removedInterest) put("interests", { ...removedInterest, deletedAt: at });
+          removedEntries.forEach((e) => put("entries", { ...e, deletedAt: at }));
+          removedPhotos.forEach((p) => put("photos", { ...p, deletedAt: at }));
           // Deleting the interest remotely cascades to its entries/photos server-side.
           if (userRef.current) deleteRemoteInterest(id);
         },
@@ -414,7 +439,7 @@ export function StoreProvider({ children }) {
       });
       return {
         record: removed,
-        commit() { del("photos", id); },
+        commit() { if (removed) put("photos", { ...removed, deletedAt: Date.now() }); },
         restore() {
           if (!removed) return;
           setPhotos((list) => (list.some((p) => p.id === id) ? list : [...list, removed]));
@@ -445,7 +470,7 @@ export function StoreProvider({ children }) {
       return {
         record: removed,
         commit() {
-          del("entries", id);
+          if (removed) put("entries", { ...removed, deletedAt: Date.now() });
           if (userRef.current) deleteRemoteEntry(id);
         },
         restore() {
@@ -453,6 +478,71 @@ export function StoreProvider({ children }) {
           setEntries((list) => (list.some((e) => e.id === id) ? list : [...list, removed]));
         },
       };
+    },
+    // ------------------------------------------------ recently deleted
+    // Read straight from Dexie rather than kept in state: trashed rows are
+    // deliberately absent from interests/photos/entries so nothing else has
+    // to learn to skip them, and this list is only ever looked at on demand.
+    async listTrash() {
+      const [ints, ph, en] = await Promise.all([
+        getAll("interests"), getAll("photos"), getAll("entries"),
+      ]);
+      const cutoff = Date.now() - TRASH_DAYS * 86400000;
+      const live = (rows, kind) => rows
+        .filter((r) => r.deletedAt && r.deletedAt >= cutoff)
+        .map((r) => ({ kind, rec: r, deletedAt: r.deletedAt }));
+      // A deleted tree takes its entries and photos with it, and they come
+      // back together too — listing each child separately would mean dozens
+      // of rows for one delete and a way to half-restore a tree.
+      const trashedTreeIds = new Set(ints.filter((i) => i.deletedAt).map((i) => i.id));
+      return [
+        ...live(ints, "interest"),
+        ...live(ph.filter((p) => !trashedTreeIds.has(p.interestId)), "photo"),
+        ...live(en.filter((e) => !trashedTreeIds.has(e.interestId)), "entry"),
+      ].sort((a, b) => b.deletedAt - a.deletedAt);
+    },
+    async restoreTrashed(kind, id) {
+      const strip = (r) => { const { deletedAt, ...rest } = r; return rest; };
+      if (kind === "interest") {
+        const [ints, ph, en] = await Promise.all([getAll("interests"), getAll("photos"), getAll("entries")]);
+        const it = ints.find((x) => x.id === id);
+        if (!it) return;
+        const back = strip(it);
+        put("interests", back);
+        setInterests((list) => (list.some((x) => x.id === id) ? list : [...list, back].sort((a, b) => a.createdAt - b.createdAt)));
+        // its children were trashed in the same breath, so they return too
+        const kids = (rows) => rows.filter((r) => r.interestId === id && r.deletedAt).map(strip);
+        const backPh = kids(ph), backEn = kids(en);
+        backPh.forEach((r) => put("photos", r));
+        backEn.forEach((r) => put("entries", r));
+        setPhotos((list) => [...list, ...backPh.filter((r) => !list.some((x) => x.id === r.id))]);
+        setEntries((list) => [...list, ...backEn.filter((r) => !list.some((x) => x.id === r.id))]);
+        if (userRef.current) pushInterest(back, userRef.current.id);
+        backEn.forEach((r) => { if (userRef.current) pushEntry(r); });
+        return;
+      }
+      const store = kind === "photo" ? "photos" : "entries";
+      const rows = await getAll(store);
+      const rec = rows.find((r) => r.id === id);
+      if (!rec) return;
+      const back = strip(rec);
+      put(store, back);
+      if (kind === "photo") setPhotos((l) => (l.some((x) => x.id === id) ? l : [...l, back]));
+      else {
+        setEntries((l) => (l.some((x) => x.id === id) ? l : [...l, back]));
+        if (userRef.current) pushEntry(back);
+      }
+    },
+    // The one place anything is actually destroyed early, on request.
+    async purgeTrashed(kind, id) {
+      if (kind === "interest") {
+        const [ph, en] = await Promise.all([getAll("photos"), getAll("entries")]);
+        ph.filter((p) => p.interestId === id).forEach((p) => del("photos", p.id));
+        en.filter((e) => e.interestId === id).forEach((e) => del("entries", e.id));
+        del("interests", id);
+        return;
+      }
+      del(kind === "photo" ? "photos" : "entries", id);
     },
     // Returns true/false so the market screen can tell the user why a
     // purchase didn't go through (already owned vs. can't afford it).

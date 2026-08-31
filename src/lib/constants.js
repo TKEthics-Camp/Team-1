@@ -16,6 +16,10 @@ export const DEFAULT_THEME = "system";
 // Coins: earned by logging real activity, spent on purely cosmetic avatar gear.
 export const COINS_PER_LOG = 5;
 
+// How long a deleted tree, photo or entry stays recoverable. Deleting hides
+// it immediately; this is the window before it's actually gone for good.
+export const TRASH_DAYS = 30;
+
 // Daily practice goal, in minutes — the unit entries are already logged in.
 // Four rungs so the choice is a self-assessment ("how serious am I?") rather
 // than arithmetic; DEFAULT_DAILY_GOAL is the one pre-selected in onboarding.

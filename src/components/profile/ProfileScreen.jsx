@@ -152,6 +152,7 @@ export default function ProfileScreen() {
             <button className="btn2" onClick={() => openSheet("badges")}>{t("badges")}</button>
             <button className="btn2" onClick={() => openSheet("yearReview")}>{t("yearReview")}</button>
             <button className="btn2" onClick={() => openSheet("memories")}>{t("memories")}</button>
+            <button className="btn2" onClick={() => openSheet("trash")}>{t("recentlyDeleted")}</button>
           </>
         )}
 

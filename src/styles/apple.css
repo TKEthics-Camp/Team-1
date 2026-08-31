@@ -796,3 +796,24 @@ input[type="text"]:focus, textarea:focus, .user-search-input:focus {
   background: color-mix(in srgb, var(--ink) 12%, transparent);
 }
 .badge-bar span { display: block; height: 100%; border-radius: 999px; background: var(--accent); }
+
+/* ---------- recently deleted ---------- */
+
+.trash-list { display: flex; flex-direction: column; gap: 8px; }
+.trash-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 14px;
+  background: var(--lg-fill); border: 1px solid var(--lg-edge);
+  box-shadow: 0 1px 0 var(--lg-hi) inset;
+}
+.trash-ico { font-size: 19px; line-height: 1; flex: none; }
+.trash-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.trash-txt .t {
+  font-family: var(--display); font-size: 14px; font-weight: 600;
+  letter-spacing: -.01em; color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.trash-txt .sub { font-size: 11.5px; color: var(--muted); }
+.trash-row .chip { flex: none; font-size: 12px; padding: 6px 11px; }
+.trash-erase { color: var(--candy); }
+.trash-erase.armed { background: var(--candy); color: #fff; border-color: transparent; }
