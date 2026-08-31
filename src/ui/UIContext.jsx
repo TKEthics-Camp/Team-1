@@ -20,7 +20,19 @@ export function UIProvider({ children }) {
   // `undo` above. Separate state so a coin toast and a pending delete can
   // never evict one another; they stack rather than compete.
   const [toast, setToast] = useState(null); // { id, message }
+  const toastQueue = useRef([]);
   const toastTimer = useRef(null);
+  const toastShowing = useRef(false);
+  // Held in a ref so it can re-enter itself as the queue drains without
+  // showToast having to change identity between renders.
+  const pumpToast = useRef(() => {});
+  pumpToast.current = () => {
+    const next = toastQueue.current.shift();
+    if (!next) { toastShowing.current = false; setToast(null); return; }
+    toastShowing.current = true;
+    setToast({ id: next.id, message: next.message });
+    toastTimer.current = setTimeout(() => pumpToast.current(), next.ms);
+  };
   useEffect(() => () => clearTimeout(toastTimer.current), []);
 
   const value = useMemo(() => ({
@@ -53,10 +65,14 @@ export function UIProvider({ children }) {
     // Fire-and-forget confirmation. The id changes on every call so the
     // component can re-key and replay its entrance even when the same
     // message fires twice in a row.
+    //
+    // Queued rather than replaced: one action can raise two notes — logging
+    // pays coins *and* can unlock a badge — and whichever landed second used
+    // to stomp the first, so which reward you were actually shown came down
+    // to timing. They now wait their turn.
     showToast: (message, ms = 2600) => {
-      clearTimeout(toastTimer.current);
-      setToast({ id: Date.now(), message });
-      toastTimer.current = setTimeout(() => setToast(null), ms);
+      toastQueue.current.push({ id: Date.now() + Math.random(), message, ms });
+      if (!toastShowing.current) pumpToast.current();
     },
     undoNow: () => {
       setUndo((u) => {

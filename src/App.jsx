@@ -7,6 +7,7 @@ import { useReminderTimers } from "./lib/useReminderTimers";
 import { UIProvider, useUI } from "./ui/UIContext";
 import { DEFAULT_THEME } from "./lib/constants";
 import { useResolvedTheme } from "./lib/useResolvedTheme";
+import { useBadgeWatcher } from "./lib/useBadgeWatcher";
 import AuthFlow from "./components/auth/AuthFlow";
 import Onboarding from "./components/onboarding/Onboarding";
 import HomeScreen from "./components/home/HomeScreen";
@@ -87,8 +88,13 @@ export default function App() {
 function RoutedShell() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { profile } = useStore();
-  const { sheet, viewer, closeSheet, closeViewer, openSheet } = useUI();
+  const { profile, interests, entries, photos, updateProfile } = useStore();
+  const { sheet, viewer, closeSheet, closeViewer, openSheet, showToast } = useUI();
+  const { t } = useI18n();
+
+  // Lives here rather than in App: it needs showToast, and UIProvider only
+  // wraps this half of the tree.
+  useBadgeWatcher({ profile, interests, entries, photos, updateProfile, showToast, t });
 
   // Escape closes whatever's open, the same as tapping the backdrop —
   // useful on a keyboard/desktop where there's no "outside" to tap.
