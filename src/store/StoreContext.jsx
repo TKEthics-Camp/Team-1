@@ -6,7 +6,7 @@ import {
   pushInterest, deleteRemoteInterest, pushEntry, deleteRemoteEntry,
   deleteAllMine, pullMine, pullUserRow, updateDiscovery, updateDisplayName,
   classCodeExists, joinClass as joinClassRemote, setMyClassCode, updateAvatar,
-  parseAvatar, pushPhotoRow, uploadPhotoBlob,
+  parseAvatar, pushPhotoRow, uploadPhotoBlob, updateCoins,
 } from "../lib/remote";
 
 const StoreCtx = createContext(null);
@@ -144,7 +144,7 @@ export function StoreProvider({ children }) {
             discoverable: !!userRow.discovery_enabled,
             classCode: userRow.class_code || null,
             avatar: parseAvatar(userRow.avatar) || {},
-            coins: 0,
+            coins: userRow.coins || 0,
             ownedDecorations: [],
             equippedDecoration: null,
             createdAt: new Date(userRow.created_at).getTime(),
@@ -171,6 +171,23 @@ export function StoreProvider({ children }) {
           const next = { ...profileRef.current, avatar: remoteAvatar };
           setProfileState(next);
           put("meta", next);
+        }
+        // Coins only ever sync as a plain "here's my current total" push
+        // (see updateCoins), so two devices earning/spending at the same
+        // moment could in theory overwrite each other — an acceptable,
+        // rare edge case for a cosmetic currency. Taking the higher of the
+        // two on sign-in at least avoids the common case (offline earning
+        // on one device) silently erasing progress.
+        {
+          const localCoins = profileRef.current.coins || 0;
+          const remoteCoins = userRow.coins || 0;
+          if (remoteCoins > localCoins) {
+            const next = { ...profileRef.current, coins: remoteCoins };
+            setProfileState(next);
+            put("meta", next);
+          } else if (localCoins > remoteCoins) {
+            updateCoins(user.id, localCoins);
+          }
         }
         // Same idea for class membership — joining (or, for an org account,
         // minting) a code writes it remotely first; without this, a cache
@@ -285,6 +302,7 @@ export function StoreProvider({ children }) {
         if (!p) return p;
         const next = { ...p, coins: (p.coins || 0) + delta };
         put("meta", next);
+        if (userRef.current) updateCoins(userRef.current.id, next.coins);
         return next;
       });
     }
@@ -376,8 +394,7 @@ export function StoreProvider({ children }) {
     },
     // Bring a dead tree back for REVIVE_COST coins. Returns false (and changes
     // nothing) if the user can't afford it. revivedAt resets the decay clock.
-    // revivedAt/coins are a local-only game mechanic, not part of the synced
-    // schema — the push here just keeps updated_at fresh remotely.
+    // revivedAt is a local-only game mechanic; coins does sync (see updateCoins).
     reviveInterest(id) {
       const p = profileRef.current;
       if (!p || (p.coins || 0) < REVIVE_COST) return false;
@@ -391,6 +408,7 @@ export function StoreProvider({ children }) {
       const np = { ...p, coins: (p.coins || 0) - REVIVE_COST };
       setProfileState(np);
       put("meta", np);
+      if (userRef.current) updateCoins(userRef.current.id, np.coins);
       return true;
     },
     // Removes the tree from view immediately, but doesn't actually delete
@@ -612,6 +630,7 @@ export function StoreProvider({ children }) {
       const next = { ...p, coins: (p.coins || 0) - deco.price, ownedDecorations: [...owned, id] };
       setProfileState(next);
       put("meta", next);
+      if (userRef.current) updateCoins(userRef.current.id, next.coins);
       return true;
     },
     equipDecoration(id) {
@@ -643,6 +662,7 @@ export function StoreProvider({ children }) {
       };
       setProfileState(next);
       put("meta", next);
+      if (!alreadyOwned && userRef.current) updateCoins(userRef.current.id, next.coins);
       return true;
     },
     // `alsoRemote` distinguishes "wipe this device's cache" (sign-out, on a

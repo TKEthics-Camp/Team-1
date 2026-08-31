@@ -309,6 +309,11 @@ export async function updateDailyGoal(userId, minutes) {
   if (error) console.error("Sync (daily goal) failed:", error);
 }
 
+export async function updateCoins(userId, coins) {
+  const { error } = await supabase.from("users").update({ coins }).eq("id", userId);
+  if (error) console.error("Sync (coins) failed:", error);
+}
+
 // users.avatar is text, not jsonb — the avatar customization (skin, hair,
 // hair colour, outfit, outfit colour) is stored as a JSON string so a
 // device other than the one that made the edit can pick it up too.
