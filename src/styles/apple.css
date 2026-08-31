@@ -691,3 +691,75 @@ input[type="text"]:focus, textarea:focus, .user-search-input:focus {
 .share-toggle[aria-pressed="true"] {
   background: var(--accent); color: var(--accent-ink); border-color: transparent;
 }
+
+/* ---------- zoom toggle, dying warning, streak flame ---------- */
+
+.zoom-btn { font-size: 15px; line-height: 1; padding: 5px 10px; }
+.zoom-btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+
+/* the last warning before a tree is gone — urgent enough to notice, not so
+   loud it reads as an error state */
+.nudge.dying {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  border-color: color-mix(in srgb, var(--candy) 40%, var(--lg-edge));
+  background: color-mix(in srgb, var(--candy) 9%, var(--lg-fill));
+}
+.dying-ico { font-size: 22px; line-height: 1; flex: none; animation: dyingSway 3.4s ease-in-out infinite; }
+.dying-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.dying-txt .t {
+  font-family: var(--display); font-size: 14.5px; font-weight: 600;
+  letter-spacing: -.01em; color: var(--ink);
+}
+.dying-txt .sub { font-size: 12.5px; color: var(--muted); }
+@keyframes dyingSway {
+  0%, 100% { transform: rotate(-7deg); }
+  50%      { transform: rotate(7deg); }
+}
+
+/* the streak flame: a slow idle flicker, plus a pop each time the number
+   actually changes (HomeScreen keys the span on the streak value, so it
+   remounts and the animation replays) */
+.flame-badge { display: inline-flex; align-items: center; gap: 5px; }
+.flame-badge .flame {
+  display: inline-block;
+  animation: flameIdle 2.6s ease-in-out infinite, flamePop .62s cubic-bezier(.32,.72,0,1);
+  transform-origin: 50% 85%;
+}
+@keyframes flameIdle {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  30%      { transform: scale(1.08) rotate(-5deg); }
+  65%      { transform: scale(.97) rotate(4deg); }
+}
+@keyframes flamePop {
+  0%   { transform: scale(.5) rotate(-18deg); opacity: .3; }
+  55%  { transform: scale(1.45) rotate(8deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* zoomed-out grove */
+.home-view .tree-grid { padding: 2px 0 12px; }
+.home-view .tree-cell {
+  background: var(--lg-fill); border: 1px solid var(--lg-edge);
+  border-radius: 18px; padding: 12px 8px 14px;
+  box-shadow: var(--lg-shadow), 0 1px 0 var(--lg-hi) inset;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.home-view .tree-cell .tree-name {
+  font-family: var(--body); font-size: 15px; font-weight: 600; letter-spacing: -.01em;
+}
+.home-view .tree-cell .tree-meta {
+  font-family: var(--body); font-size: 12.5px; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.home-view .tree-cell.tree-add {
+  border-style: dashed; background: none; box-shadow: none;
+  justify-content: center; min-height: 150px;
+}
+.home-view .tree-cell.tree-add .plus {
+  font-family: var(--body); font-weight: 200; font-size: 30px; color: var(--muted);
+}
+
+/* the cover pin, when this photo is already the banner */
+.cover-pin[aria-pressed="true"] {
+  background: var(--accent); color: var(--accent-ink); border-color: transparent;
+}

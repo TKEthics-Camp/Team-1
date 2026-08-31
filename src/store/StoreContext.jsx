@@ -386,6 +386,17 @@ export function StoreProvider({ children }) {
       put("photos", rec);
       bumpCoins(COINS_PER_LOG);
     },
+    // Exactly one cover per tree, so pinning a new one unpins whatever held
+    // it before. Passing the same id again clears it, which falls the cover
+    // back to the tree's first photo.
+    setCoverPhoto(interestId, photoId) {
+      setPhotos((list) => list.map((p) => {
+        if (p.interestId !== interestId) return p;
+        const next = { ...p, isPinned: p.id === photoId && !p.isPinned };
+        if (next.isPinned !== p.isPinned) put("photos", next);
+        return next;
+      }));
+    },
     updatePhotoCaption(id, caption) {
       setPhotos((list) => list.map((p) => {
         if (p.id !== id) return p;

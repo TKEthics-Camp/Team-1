@@ -36,7 +36,9 @@ export default function InterestScreen() {
   const st = globalStreak(entries, photos);
   // Cover: a coloured plate until there's a real photo, then the first one
   // they ever added — how this interest started, kept at the top of its page.
-  const first = ph.length ? ph[ph.length - 1] : null;
+  // A pinned photo is the chosen banner; otherwise fall back to the one this
+  // interest started with, as before.
+  const first = ph.find((p) => p.isPinned) || (ph.length ? ph[ph.length - 1] : null);
 
   const stage = treeStage(it, entries, photos);
   const health = treeHealth(it, entries, photos);

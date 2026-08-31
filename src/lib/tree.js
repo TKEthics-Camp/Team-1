@@ -84,6 +84,22 @@ export function growthTimeline(interest, entries, photos) {
   return frames;
 }
 
+// Days left before this tree dies — 0 once it already has. The banner and
+// the reminder both read this rather than recomputing the DEAD threshold,
+// so "a few days before" stays one number in one place.
+export function daysUntilDeath(interest, entries, photos) {
+  return Math.max(0, DEAD - daysIdle(interest, entries, photos));
+}
+
+// The window in which we warn. Wide enough to be actionable (a weekend can
+// pass without the app being opened), narrow enough not to nag from day one.
+export const DYING_SOON_DAYS = 5;
+
+export function isDyingSoon(interest, entries, photos) {
+  const left = daysUntilDeath(interest, entries, photos);
+  return left > 0 && left <= DYING_SOON_DAYS;
+}
+
 export function treeHealth(interest, entries, photos) {
   const idle = daysIdle(interest, entries, photos);
   if (idle >= DEAD) return "dead";

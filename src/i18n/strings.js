@@ -47,6 +47,14 @@ export const STR = {
   goalSerious:  ["Serious", "认真"],
   goalInsane:   ["Insane", "硬核"],
   goalPerDay:   ["{n} min per day", "每天 {n} 分钟"],
+  // cover, zoom, dying warning
+  useAsCover:   ["Use as cover", "设为封面"],
+  coverIsSet:   ["Cover photo", "封面照片"],
+  zoomOut:      ["See the whole forest", "看整片森林"],
+  zoomIn:       ["Back to one tree", "回到单棵树"],
+  dyingTitle:   ["{name} is nearly gone", "{name} 快枯死了"],
+  dyingDays:    ["{n} days left — log something to save it.", "还剩 {n} 天 —— 记录一次就能救它。"],
+  dyingOneDay:  ["1 day left — log something to save it.", "只剩 1 天 —— 记录一次就能救它。"],
   // explore feed
   shareToExplore: ["Share to Explore", "分享到发现"],
   shareToExploreNote: ["Public keeps it on your profile for anyone who opens it. Sharing also posts it to the Community feed.", "“公开”是让打开你主页的人能看到。分享则会把它发到大家的动态里。"],

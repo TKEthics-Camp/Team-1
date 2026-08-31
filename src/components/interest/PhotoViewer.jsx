@@ -6,7 +6,7 @@ import { useObjectURL } from "../../lib/image";
 
 export default function PhotoViewer() {
   const { t } = useI18n();
-  const { photos, deletePhoto, updatePhotoCaption } = useStore();
+  const { photos, deletePhoto, updatePhotoCaption, setCoverPhoto } = useStore();
   const { viewer, closeViewer, offerUndo } = useUI();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
@@ -40,6 +40,16 @@ export default function PhotoViewer() {
       ) : (
         <button className="cap" style={{ background: "none", border: "none", cursor: "pointer" }} onClick={startEdit}>
           {photo.caption || t("captionAdd")}
+        </button>
+      )}
+      {!editing && (
+        <button
+          className="btn2 cover-pin"
+          style={{ maxWidth: 220 }}
+          aria-pressed={photo.isPinned ? "true" : "false"}
+          onClick={() => setCoverPhoto(photo.interestId, photo.id)}
+        >
+          {(photo.isPinned ? "★ " : "☆ ") + t(photo.isPinned ? "coverIsSet" : "useAsCover")}
         </button>
       )}
       {editing ? (
