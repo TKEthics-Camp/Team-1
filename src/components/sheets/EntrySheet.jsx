@@ -25,6 +25,7 @@ export default function EntrySheet({ interestId, entryId }) {
   const [minutes, setMinutes] = useState(editing ? editing.minutes : 30);
   const [text, setText] = useState(editing ? editing.text : "");
   const [visibility, setVisibility] = useState(editing ? editing.visibility || "private" : "private");
+  const [shared, setShared] = useState(editing ? !!editing.sharedToFeed : false);
   const [pinned, setPinned] = useState(editing ? !!editing.isPinned : false);
   const textRef = useRef(null);
 
@@ -36,13 +37,15 @@ export default function EntrySheet({ interestId, entryId }) {
     const txt = text.trim();
     if (!txt) { textRef.current?.focus(); return; }
     if (editing) {
-      updateEntry({ ...editing, date: date || today(), text: txt, minutes, visibility, isPinned: pinned, updatedAt: Date.now() });
+      updateEntry({ ...editing, date: date || today(), text: txt, minutes, visibility, isPinned: pinned, sharedToFeed: visibility === "public" && shared, updatedAt: Date.now() });
       celebrate(profile);
     } else {
       const leveledUp = actsToNextStage(it, entries, photos) === 1;
       addEntry({
         id: uid(), interestId: it.id, date: date || today(), text: txt,
-        minutes, visibility, isPinned: pinned, createdAt: Date.now(), updatedAt: Date.now(),
+        minutes, visibility, isPinned: pinned,
+        sharedToFeed: visibility === "public" && shared,
+        createdAt: Date.now(), updatedAt: Date.now(),
       });
       if (leveledUp) levelUpCelebrate(profile); else celebrate(profile);
       showToast(t("coinsEarned").replace("{n}", COINS_PER_LOG));
@@ -73,6 +76,21 @@ export default function EntrySheet({ interestId, entryId }) {
         onChange={(e) => setText(e.target.value)}
       />
       <VisRow value={visibility} onChange={setVisibility} />
+      {/* Sharing is a second, deliberate step on top of Public: a public
+          entry sits quietly on your profile until you actually choose to
+          broadcast it. Going back to Private takes the offer away, and
+          save() re-checks so the flag can't survive the switch. */}
+      {visibility === "public" && (
+        <button
+          type="button"
+          className="btn2 share-toggle"
+          aria-pressed={shared ? "true" : "false"}
+          onClick={() => setShared((v) => !v)}
+        >
+          {(shared ? "✓ " : "＋ ") + t("shareToExplore")}
+        </button>
+      )}
+      <span className="sub">{t("shareToExploreNote")}</span>
       <div className="chips">
         <Chip pressed={pinned} onClick={() => setPinned((p) => !p)}>
           {(pinned ? "★ " : "☆ ") + t("pin")}

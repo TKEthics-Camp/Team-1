@@ -112,8 +112,8 @@ export function rowToInterest(row) {
   };
 }
 
-export function entryToRow(rec) {
-  return {
+export function entryToRow(rec, legacy = false) {
+  const row = {
     id: rec.id,
     interest_id: rec.interestId,
     date: rec.date,
@@ -124,6 +124,10 @@ export function entryToRow(rec) {
     created_at: toIso(rec.createdAt),
     updated_at: toIso(rec.updatedAt || rec.createdAt),
   };
+  // shared_to_feed only exists once 20260901000000_feed_posts.sql is applied.
+  // Sending it to a project without the column would fail the whole upsert,
+  // so every entry would stop syncing — see pushEntry's retry.
+  return legacy ? row : { ...row, shared_to_feed: !!rec.sharedToFeed };
 }
 
 export function rowToEntry(row) {
@@ -135,6 +139,7 @@ export function rowToEntry(row) {
     minutes: row.minutes,
     visibility: row.visibility,
     isPinned: row.is_pinned,
+    sharedToFeed: !!row.shared_to_feed,
     createdAt: toMs(row.created_at),
     updatedAt: toMs(row.updated_at),
   };
@@ -162,7 +167,13 @@ export async function deleteRemoteInterest(id) {
 }
 
 export async function pushEntry(rec) {
-  const { error } = await supabase.from("entries").upsert(entryToRow(rec));
+  let { error } = await supabase.from("entries").upsert(entryToRow(rec));
+  // PGRST204 = unknown column: the feed migration isn't applied here yet.
+  // Retry without it so entries still sync (losing only the share flag)
+  // rather than the whole write failing.
+  if (error && error.code === "PGRST204") {
+    ({ error } = await supabase.from("entries").upsert(entryToRow(rec, true)));
+  }
   if (error) console.error("Sync (entry) failed:", error);
 }
 
@@ -415,4 +426,94 @@ export async function pullMine(userId) {
     interests: (interestRows || []).map(rowToInterest),
     entries: entryRows.map(rowToEntry),
   };
+}
+
+// ============================================================ community feed
+
+// Real posts from real accounts: entries their author explicitly shared.
+// RLS does the access work — entries_select already refuses anything whose
+// entry or parent tree isn't public — so this only narrows to the opted-in
+// rows and joins on the author for display.
+//
+// Blocks are filtered here rather than by policy. entries_select checks the
+// parent interest inside its own USING clause, and a policy expression does
+// not re-apply the referenced table's RLS, so interests_select's block check
+// never runs for this path. The data is public either way; blocking is about
+// not being shown it, so a client-side filter is the right shape — but it is
+// a filter, not a permission boundary.
+export async function pullFeed(userId, limit = 40) {
+  const [{ data, error }, blocked] = await Promise.all([
+    supabase
+      .from("entries")
+      .select("id, text, minutes, created_at, interest_id, interests!inner(id, name, color, user_id, users!inner(id, display_name, avatar))")
+      .eq("shared_to_feed", true)
+      .eq("visibility", "public")
+      .order("created_at", { ascending: false })
+      .limit(limit),
+    listBlockedIds(userId),
+  ]);
+  if (error) {
+    // 42703 = column doesn't exist: the feed migration hasn't been applied.
+    // An empty feed is the honest answer, not a crash.
+    if (error.code !== "42703") console.error("Sync (feed) failed:", error);
+    return [];
+  }
+  return (data || [])
+    .filter((r) => r.interests && r.interests.users)
+    .filter((r) => r.interests.user_id !== userId)
+    .filter((r) => !blocked.has(r.interests.user_id))
+    .map((r) => ({
+      id: r.id,
+      text: r.text,
+      minutes: r.minutes,
+      createdAt: toMs(r.created_at),
+      interestId: r.interest_id,
+      hobby: r.interests.name,
+      color: r.interests.color,
+      authorId: r.interests.users.id,
+      authorName: r.interests.users.display_name,
+      authorAvatar: parseAvatar(r.interests.users.avatar),
+    }));
+}
+
+export async function listBlockedIds(userId) {
+  if (!userId) return new Set();
+  const { data, error } = await supabase
+    .from("blocks").select("blocked_user_id").eq("user_id", userId);
+  if (error) {
+    console.error("Sync (blocks) failed:", error);
+    return new Set();
+  }
+  return new Set((data || []).map((b) => b.blocked_user_id));
+}
+
+// Hides that account's posts from this user's feed, both directions, and is
+// enforced server-side for trees and profiles by interests_select.
+export async function blockUser(userId, blockedUserId) {
+  const { error } = await supabase
+    .from("blocks").insert({ user_id: userId, blocked_user_id: blockedUserId });
+  // 23505 = already blocked, which is the state the caller wanted anyway
+  if (error && error.code !== "23505") {
+    console.error("Sync (block) failed:", error);
+    return false;
+  }
+  return true;
+}
+
+// Files a report for a human to review. reports has insert+select-own
+// policies and no update policy at all, so nothing here can change a
+// report's status — that's deliberately service-role-only.
+export async function reportContent(reporterId, targetType, targetId, reason) {
+  const { error } = await supabase.from("reports").insert({
+    id: "rep-" + Math.random().toString(36).slice(2) + Date.now().toString(36),
+    reporter_id: reporterId,
+    target_type: targetType,
+    target_id: targetId,
+    reason,
+  });
+  if (error) {
+    console.error("Sync (report) failed:", error);
+    return false;
+  }
+  return true;
 }

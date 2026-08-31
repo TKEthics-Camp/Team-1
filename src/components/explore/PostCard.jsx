@@ -1,48 +1,101 @@
+import { useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
+import { useAuth } from "../../store/AuthContext";
 import { useUI } from "../../ui/UIContext";
 import { PALETTE } from "../../lib/constants";
 import { fmtHours } from "../../lib/derived";
-import { catLabel, hobbyName, haveHobby, ideaColor } from "../../lib/explore";
-import { scene, relTime } from "../../lib/community";
-import Avatar from "./Avatar";
+import { haveHobby, ideaColor } from "../../lib/explore";
+import { relTime } from "../../lib/community";
+import { blockUser, reportContent } from "../../lib/remote";
+import PersonAvatar from "../shared/PersonAvatar";
 
-// A fabricated community moment: an illustrated scene, its author, and a
-// button that always ends by sending the kid offline — either logging their
-// own or starting the hobby. Always shown named: the anon/named toggle in
-// CommunityTab is about the user's *own* journal, not other people's posts.
-export default function PostCard({ post }) {
+const REPORT_REASONS = ["reportSpam", "reportMean", "reportUnsafe", "reportOther"];
+
+// One real shared moment. The author's name opens their profile — which is
+// where their public trees and entries live; the feed itself only ever shows
+// what was explicitly posted.
+export default function PostCard({ post, onHide, onBlocked }) {
   const { t, lang } = useI18n();
   const { interests, profile } = useStore();
-  const { openSheet } = useUI();
-  const st = post.student;
-  const has = haveHobby(interests, post.hobby);
-  // An educator has no orbs of their own to log or start — this card is a
-  // window into what students are up to, not something for them to act on.
+  const { user } = useAuth();
+  const { openSheet, showToast } = useUI();
+  const [menu, setMenu] = useState(null); // null | "menu" | "report"
   const isOrg = profile && profile.accountType === "org";
+  const has = haveHobby(interests, [post.hobby, post.hobby]);
+  const days = Math.max(0, Math.round((Date.now() - post.createdAt) / 86400000));
 
   function act() {
-    const mine = interests.find(
-      (it) => it.name.toLowerCase() === post.hobby[0].toLowerCase() || (it.nameZh && it.nameZh === post.hobby[1])
-    );
+    const mine = interests.find((it) => it.name.toLowerCase() === post.hobby.toLowerCase());
     if (mine) openSheet("entry", mine.id);
-    else openSheet("orb", { preset: { name: post.hobby[0], nameZh: post.hobby[1], color: PALETTE[ideaColor(post.hobby[0])] } });
+    else openSheet("orb", { preset: { name: post.hobby, nameZh: post.hobby, color: PALETTE[ideaColor(post.hobby)] } });
+  }
+
+  async function block() {
+    setMenu(null);
+    if (!user) return;
+    // hide first — the row is already on screen, and waiting on the network
+    // to remove something the user just asked to never see again reads badly
+    onBlocked(post.authorId);
+    const ok = await blockUser(user.id, post.authorId);
+    showToast(ok ? t("blockedToast") : t("actionFailed"));
+  }
+
+  async function report(reasonKey) {
+    setMenu(null);
+    if (!user) return;
+    onHide(post.id);
+    const ok = await reportContent(user.id, "entry", post.id, reasonKey);
+    showToast(ok ? t("reportedToast") : t("actionFailed"));
   }
 
   return (
     <div className="post">
-      <div className="post-pic" dangerouslySetInnerHTML={{ __html: scene(post.cat, post.seed, post.hobby[0]) }} />
       <div className="post-body">
         <div className="post-who">
-          <Avatar student={st} size={30} />
-          <div>
-            <div className="post-nm">{st.name[lang === "en" ? 0 : 1]}</div>
-            <div className="post-sub">{catLabel(post.cat, lang) + " · " + relTime(post.daysAgo, lang, t)}</div>
+          <button
+            type="button"
+            className="post-author"
+            onClick={() => openSheet("userProfile", { userId: post.authorId, displayName: post.authorName, avatar: post.authorAvatar })}
+          >
+            <PersonAvatar avatar={post.authorAvatar} size={30} />
+            <span>
+              <span className="post-nm">{post.authorName}</span>
+              <span className="post-sub">{post.hobby + " · " + relTime(days, lang, t)}</span>
+            </span>
+          </button>
+          <div className="post-menu-wrap">
+            <button
+              type="button"
+              className="icon post-more"
+              aria-label={t("postOptions")}
+              aria-expanded={menu ? "true" : "false"}
+              onClick={() => setMenu(menu ? null : "menu")}
+            >
+              ⋯
+            </button>
+            {menu === "menu" && (
+              <div className="post-menu" role="menu">
+                <button type="button" role="menuitem" onClick={() => setMenu("report")}>{t("report")}</button>
+                <button type="button" role="menuitem" className="danger" onClick={block}>{t("block")}</button>
+              </div>
+            )}
+            {menu === "report" && (
+              <div className="post-menu" role="menu">
+                <div className="post-menu-head">{t("reportWhy")}</div>
+                {REPORT_REASONS.map((r) => (
+                  <button key={r} type="button" role="menuitem" onClick={() => report(r)}>{t(r)}</button>
+                ))}
+                <button type="button" role="menuitem" onClick={() => setMenu(null)}>{t("cancel")}</button>
+              </div>
+            )}
           </div>
         </div>
-        <div className="post-cap">{post.caption[lang === "en" ? 0 : 1]}</div>
+
+        {post.text && <div className="post-cap">{post.text}</div>}
+
         <div className="post-foot">
-          <span className="post-min">{"⏱ " + fmtHours(post.minutes) + " · " + hobbyName(post.hobby, lang)}</span>
+          <span className="post-min">{"⏱ " + fmtHours(post.minutes)}</span>
           {!isOrg && <button className="idea-add" onClick={act}>{has ? t("logYours") : t("startThis")}</button>}
         </div>
       </div>
