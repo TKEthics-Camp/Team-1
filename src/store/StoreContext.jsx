@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { getAll, put, del, clearAll as dbClearAll, clearGarden as dbClearGarden } from "../db/db";
-import { COINS_PER_LOG, DECORATIONS, REVIVE_COST, PALETTE, DEFAULT_THEME, HAIR_STYLES, OUTFIT_STYLES } from "../lib/constants";
+import { COINS_PER_LOG, DECORATIONS, REVIVE_COST, PALETTE, DEFAULT_THEME, DEFAULT_DAILY_GOAL, HAIR_STYLES, OUTFIT_STYLES } from "../lib/constants";
 import { useAuth } from "./AuthContext";
 import {
   pushInterest, deleteRemoteInterest, pushEntry, deleteRemoteEntry,
@@ -78,7 +78,7 @@ export function StoreProvider({ children }) {
       // only ever set once onboarding finishes, so a non-empty value there
       // means "this account already exists" and its profile can be rebuilt
       // straight from that row instead.
-      const userRow = await pullUserRow(user.id);
+      const [userRow, remote] = await Promise.all([pullUserRow(user.id), pullMine(user.id)]);
 
       // A cached local profile only ever belongs to whoever was signed in on
       // this device last — nothing here is scoped per-account. If a *different*
@@ -104,7 +104,20 @@ export function StoreProvider({ children }) {
         // starts), so it stopped meaning "finished onboarding" the moment
         // that shipped. Without this, every fresh signup looked
         // pre-onboarded and skipped straight past it.
-        if (userRow && userRow.onboarding_completed) {
+        //
+        // The column is only present once its migration has been applied,
+        // though, and a project without it read `undefined` here — falsy —
+        // so *every* returning user looked un-onboarded and got sent back
+        // through the start flow on login. Tell "column missing" apart from
+        // "genuinely false" and fall back to the things that only exist
+        // once onboarding has actually run: a planted tree, or an
+        // educator's class code. display_name can't serve, for the reason
+        // above.
+        const hasFlag = !!userRow && Object.prototype.hasOwnProperty.call(userRow, "onboarding_completed");
+        const onboarded = !userRow ? false
+          : hasFlag ? !!userRow.onboarding_completed
+          : (remote.interests.length > 0 || !!userRow.class_code);
+        if (onboarded) {
           const rebuilt = {
             key: "profile",
             name: userRow.display_name,
@@ -119,7 +132,7 @@ export function StoreProvider({ children }) {
             ownedDecorations: [],
             equippedDecoration: null,
             createdAt: new Date(userRow.created_at).getTime(),
-            learningGoal: userRow.learning_goal || "",
+            dailyGoal: userRow.daily_goal || DEFAULT_DAILY_GOAL,
             userId: user.id,
           };
           setProfileState(rebuilt);
@@ -182,8 +195,8 @@ export function StoreProvider({ children }) {
         }
       }
 
-      const [localInterests, localEntries, remote] = await Promise.all([
-        getAll("interests"), getAll("entries"), pullMine(user.id),
+      const [localInterests, localEntries] = await Promise.all([
+        getAll("interests"), getAll("entries"),
       ]);
 
       const remoteIntIds = new Set(remote.interests.map((i) => i.id));

@@ -32,6 +32,21 @@ export default function App() {
 
   useReminderTimers(interests, entries, photos, lang, nameOf, t);
 
+  // syncedLang latches so a later manual toggle isn't stomped by the profile
+  // it came from. It has to unlatch when the account changes, though: left
+  // set, the previous user's language stayed on screen through sign-out and
+  // the next sign-in, and the incoming profile could never correct it — which
+  // is how logging in landed you in Chinese. Signing out goes back to the
+  // default rather than keeping whoever-was-here-last's choice.
+  const langUser = useRef(null);
+  useEffect(() => {
+    const id = user ? user.id : null;
+    if (langUser.current === id) return;
+    langUser.current = id;
+    syncedLang.current = false;
+    if (!id) setLang("en");
+  }, [user, setLang]);
+
   useEffect(() => {
     if (!syncedLang.current && profile && profile.lang) {
       setLang(profile.lang);

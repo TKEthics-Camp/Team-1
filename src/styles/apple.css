@@ -599,3 +599,52 @@ input[type="text"]:focus, textarea:focus, .user-search-input:focus {
   from { opacity: 0; transform: translateY(10px) scale(.94); }
   to   { opacity: 1; transform: none; }
 }
+
+/* ---------- daily goal ladder (onboarding) ---------- */
+
+.goal-title { max-width: none; text-align: center; margin-bottom: 22px; font-size: 21px; }
+
+.goal-row { display: flex; align-items: center; gap: 14px; }
+.goal-mascot { flex: none; }
+
+.goal-options { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 9px; }
+
+.goal-opt {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 9px 14px;
+  border: 1px solid var(--home-line, var(--lg-edge));
+  border-radius: 999px;
+  background: var(--home-card, #fff);
+  font-family: var(--body); color: var(--ink);
+  text-align: left;
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+/* the ring + fill of a real radio, so the row reads as one of a set */
+.goal-dot {
+  width: 16px; height: 16px; flex: none; border-radius: 50%;
+  border: 1.5px solid var(--muted);
+  display: grid; place-items: center;
+}
+.goal-dot::after {
+  content: ""; width: 8px; height: 8px; border-radius: 50%;
+  background: currentColor; transform: scale(0);
+  transition: transform .18s cubic-bezier(.32,.72,0,1);
+}
+.goal-nm { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
+.goal-amt {
+  font-size: 13px; font-weight: 500; color: var(--muted);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+
+.goal-opt[aria-checked="true"] {
+  background: var(--accent); border-color: transparent; color: var(--accent-ink);
+}
+.goal-opt[aria-checked="true"] .goal-dot { border-color: var(--accent-ink); }
+.goal-opt[aria-checked="true"] .goal-dot::after { transform: scale(1); }
+.goal-opt[aria-checked="true"] .goal-amt { color: var(--accent-ink); opacity: .92; }
+
+/* the mascot is decoration — on a narrow frame the ladder gets the room */
+@media (max-width: 360px) {
+  .goal-row { gap: 8px; }
+  .goal-mascot { width: 84px; height: 84px; }
+}
