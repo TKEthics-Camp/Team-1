@@ -119,6 +119,7 @@ export function StoreProvider({ children }) {
             ownedDecorations: [],
             equippedDecoration: null,
             createdAt: new Date(userRow.created_at).getTime(),
+            learningGoal: userRow.learning_goal || "",
             userId: user.id,
           };
           setProfileState(rebuilt);

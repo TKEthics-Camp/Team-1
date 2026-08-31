@@ -4,7 +4,7 @@ import { useStore } from "../../store/StoreContext";
 import { useAuth } from "../../store/AuthContext";
 import { PALETTE, DEFAULT_THEME } from "../../lib/constants";
 import { uid } from "../../lib/id";
-import { mintOrFetchClassCode, markOnboardingComplete } from "../../lib/remote";
+import { mintOrFetchClassCode, markOnboardingComplete, updateLearningGoal } from "../../lib/remote";
 import { isBlockedHobby } from "../../lib/hobbyFilter";
 import LangToggle from "../shared/LangToggle";
 import IntroStep from "./IntroStep";
@@ -15,6 +15,7 @@ import ScheduleStep from "./ScheduleStep";
 import LookStep from "./LookStep";
 import NotificationsStep from "./NotificationsStep";
 import ReminderTimeStep from "./ReminderTimeStep";
+import LearningGoalStep from "./LearningGoalStep";
 
 // Account type and username are settled before this ever mounts — see
 // AuthFlow, which collects them at signup along with the one real branch
@@ -27,7 +28,7 @@ import ReminderTimeStep from "./ReminderTimeStep";
 // than typed in; students join *that* code later from Me → Join a class.
 function stepsFor(accountType) {
   if (accountType === "org") return ["intro", "look", "notifications"];
-  return ["intro", "gender", "interests", "confirm", "schedule", "look", "notifications", "reminderTime"];
+  return ["intro", "gender", "interests", "confirm", "goal", "schedule", "look", "notifications", "reminderTime"];
 }
 
 // Gender only ever picks a starting hair style for the avatar — everything
@@ -51,6 +52,7 @@ export default function Onboarding() {
   const [drafts, setDrafts] = useState([]);
   const [theme, setTheme] = useState(DEFAULT_THEME);
   const [reminderTime, setReminderTime] = useState("18:00");
+  const [goal, setGoal] = useState("");
   const [hobbyBlocked, setHobbyBlocked] = useState(false);
   const steps = stepsFor(accountType);
 
@@ -94,6 +96,7 @@ export default function Onboarding() {
       classCode: null,
       coins: 0, ownedDecorations: [], equippedDecoration: null, createdAt: Date.now(),
       avatar: avatarForGender(gender),
+      learningGoal: goal.trim(),
       userId: user ? user.id : null,
     };
     saveProfile(rec);
@@ -104,7 +107,10 @@ export default function Onboarding() {
       });
     });
     if (accountType === "org" && user && !user.isDebug) mintClassCode(user.id, rec);
-    if (user && !user.isDebug) markOnboardingComplete(user.id);
+    if (user && !user.isDebug) {
+      markOnboardingComplete(user.id);
+      updateLearningGoal(user.id, goal.trim());
+    }
   }
 
   const current = steps[step];
@@ -146,6 +152,9 @@ export default function Onboarding() {
             blocked={hobbyBlocked}
             onNext={() => setStep(step + 1)}
           />
+        )}
+        {current === "goal" && (
+          <LearningGoalStep value={goal} setValue={setGoal} onNext={() => setStep(step + 1)} />
         )}
         {current === "schedule" && (
           <ScheduleStep drafts={drafts} updateDraft={updateDraft} onEnter={() => setStep(step + 1)} />

@@ -201,6 +201,17 @@ export async function markOnboardingComplete(userId) {
   if (error) console.error("Sync (onboarding complete) failed:", error);
 }
 
+// Deliberately its own write rather than folded into markOnboardingComplete
+// above, even though both fire at the same moment. Combining them means a
+// missing learning_goal column (migration not applied yet) fails the whole
+// statement, so onboarding_completed wouldn't be set either — which is
+// exactly the "every signup looks un-onboarded" bug that flag exists to fix.
+// Separate writes fail independently.
+export async function updateLearningGoal(userId, goal) {
+  const { error } = await supabase.from("users").update({ learning_goal: goal }).eq("id", userId);
+  if (error) console.error("Sync (learning goal) failed:", error);
+}
+
 // users.avatar is text, not jsonb — the avatar customization (skin, hair,
 // hair colour, outfit, outfit colour) is stored as a JSON string so a
 // device other than the one that made the edit can pick it up too.
