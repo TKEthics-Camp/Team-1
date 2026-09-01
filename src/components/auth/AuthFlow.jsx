@@ -232,6 +232,7 @@ export default function AuthFlow() {
               value={loginId}
               onChange={(e) => { setLoginId(e.target.value); clearAuthError(); }}
             />
+            <p className="sf-hint">{t("sfLoginIdentifierHint")}</p>
           </div>
           <div>
             <label className="sf-label" htmlFor="li-password">{t("authPassword")}</label>

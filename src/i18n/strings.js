@@ -109,6 +109,10 @@ export const STR = {
   coinsEarned:  ["🪙 +{n} coins", "🪙 +{n} 金币"],
   sfSignUpTitle: ["Create Your Account", "创建你的账号"],
   sfLoginIdentifier: ["Username or Email", "用户名或邮箱"],
+  sfLoginIdentifierHint: [
+    "Students: enter your username. Educators: enter your email.",
+    "学生：请输入用户名。教育者：请输入邮箱。",
+  ],
   authConfirmPassword: ["Confirm Password", "确认密码"],
   authEducatorEmail: ["Educator Email", "教师邮箱"],
   authPasswordMismatch: ["Passwords don't match.", "两次输入的密码不一致。"],
