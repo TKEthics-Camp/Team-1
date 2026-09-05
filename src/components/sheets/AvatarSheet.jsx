@@ -12,7 +12,7 @@ import PersonAvatar from "../shared/PersonAvatar";
 export default function AvatarSheet() {
   const { t, lang } = useI18n();
   const { profile, updateProfile, buyAndEquipAvatarPart } = useStore();
-  const { closeSheet } = useUI();
+  const { closeSheet, showToast } = useUI();
 
   const avatar = { ...DEFAULT_AVATAR, ...(profile && profile.avatar) };
   const coins = (profile && profile.coins) || 0;
@@ -28,7 +28,10 @@ export default function AvatarSheet() {
     const isOwned = item.price === 0 || owned.includes(id);
     if (isOwned) { set({ [kind]: id }); return; }
     if (coins < item.price) return; // can't afford — button is disabled anyway
-    if (buyAndEquipAvatarPart(kind, id)) set({ [kind]: id });
+    if (buyAndEquipAvatarPart(kind, id)) {
+      set({ [kind]: id });
+      showToast(t("coinsSpent").replace("{n}", item.price));
+    }
   }
 
   return (

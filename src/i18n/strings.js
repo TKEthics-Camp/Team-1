@@ -107,6 +107,7 @@ export const STR = {
   blockedToast: ["Blocked. You won't see their posts.", "已拉黑，你不会再看到对方的动态。"],
   actionFailed: ["That didn't go through. Try again.", "操作没成功，请再试一次。"],
   coinsEarned:  ["🪙 +{n} coins", "🪙 +{n} 金币"],
+  coinsSpent:   ["🪙 -{n} coins", "🪙 -{n} 金币"],
   sfSignUpTitle: ["Create Your Account", "创建你的账号"],
   sfLoginIdentifier: ["Username or Email", "用户名或邮箱"],
   sfLoginIdentifierHint: [

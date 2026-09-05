@@ -20,7 +20,7 @@ export default function InterestScreen() {
   const navigate = useNavigate();
   const { t, nameOf, nOf } = useI18n();
   const { interests, photos, entries, profile, reviveInterest } = useStore();
-  const { openSheet, openViewer } = useUI();
+  const { openSheet, openViewer, showToast } = useUI();
 
   const it = interests.find((x) => x.id === id);
   const [replaying, setReplaying] = useState(false);
@@ -86,7 +86,7 @@ export default function InterestScreen() {
           <button
             className="btn revive-btn"
             disabled={!canRevive}
-            onClick={() => reviveInterest(it.id)}
+            onClick={() => { if (reviveInterest(it.id)) showToast(t("coinsSpent").replace("{n}", REVIVE_COST)); }}
           >
             {t("reviveBtn").replace("{n}", REVIVE_COST)}
           </button>

@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
+import { useUI } from "../../ui/UIContext";
 import { PALETTE, DECORATIONS } from "../../lib/constants";
 import TopBar from "../shared/TopBar";
 import PersonAvatar from "../shared/PersonAvatar";
@@ -9,6 +10,7 @@ export default function MarketScreen() {
   const { t, lang } = useI18n();
   const navigate = useNavigate();
   const { profile, buyDecoration, equipDecoration } = useStore();
+  const { showToast } = useUI();
 
   if (!profile) return null;
 
@@ -43,7 +45,11 @@ export default function MarketScreen() {
                       {isEquipped ? t("equipped") : t("equip")}
                     </button>
                   ) : (
-                    <button className="btn2" disabled={coins < deco.price} onClick={() => buyDecoration(deco.id)}>
+                    <button
+                      className="btn2"
+                      disabled={coins < deco.price}
+                      onClick={() => { if (buyDecoration(deco.id)) showToast(t("coinsSpent").replace("{n}", deco.price)); }}
+                    >
                       {"🪙 " + deco.price}
                     </button>
                   )}
