@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
-import { yearStats, demoStats } from "../../lib/yearReview";
+import { yearStats } from "../../lib/yearReview";
 import { fmtHours } from "../../lib/derived";
 import Mascot from "../shared/Mascot";
 import Tree from "../shared/Tree";
@@ -10,10 +10,7 @@ import Tree from "../shared/Tree";
 // A Wrapped-style recap, full screen and story-paced (tap to advance, a
 // segmented progress bar up top) rather than a small bottom sheet. There's
 // no real time-lock in this app — yearStats() works off whatever's logged
-// so far — but with little real data the real version looks thin, so "Try
-// the demo" swaps in a rich sample data set instead, clearly labeled, so
-// you can see the full experience today rather than waiting a year to fill
-// it out for real.
+// so far, however little that is.
 export default function YearReviewSheet() {
   const { t, nameOf } = useI18n();
   const { interests, photos, entries } = useStore();
@@ -28,7 +25,7 @@ export default function YearReviewSheet() {
     ];
     if (d.top) {
       cards.push({
-        key: "top", title: t("yrTopTitle"), big: d.demo ? d.top.name : nameOf(d.top),
+        key: "top", title: t("yrTopTitle"), big: nameOf(d.top),
         sub: d.topCount + " " + t("yrTopSub"), emoji: "🏆", tree: d.top,
       });
     }
@@ -54,9 +51,6 @@ export default function YearReviewSheet() {
           <button className="btn" onClick={() => { setData(yearStats(interests, photos, entries)); setI(0); }}>
             {t("seeMyYear")}
           </button>
-          <button className="btn2" onClick={() => { setData(demoStats()); setI(0); }}>
-            {t("tryDemo")}
-          </button>
         </div>
       </div>
     );
@@ -79,7 +73,6 @@ export default function YearReviewSheet() {
           <span key={idx} className={"seg" + (idx < i ? " done" : idx === i ? " on" : "")} />
         ))}
       </div>
-      {data.demo && <div className="sub demo-note year-demo-note">{t("demoBadge")}</div>}
       {!last ? (
         <div className="year-card year-card-full">
           <div className="year-emoji" aria-hidden="true">{cards[i].emoji}</div>
@@ -87,10 +80,7 @@ export default function YearReviewSheet() {
           <div className="year-big">{cards[i].big}</div>
           <div className="sub">{cards[i].sub}</div>
           {cards[i].tree && (
-            <Tree
-              interest={data.demo ? { color: cards[i].tree.color } : cards[i].tree}
-              size={120} stage={4} health="healthy" className="alive"
-            />
+            <Tree interest={cards[i].tree} size={120} stage={4} health="healthy" className="alive" />
           )}
         </div>
       ) : (

@@ -46,13 +46,3 @@ export function yearStats(interests, photos, entries, year) {
 
   return { year: y, minutes, entryCount: en.length, photoCount: ph.length, top, topCount: topN, longestStreak, planted, totalTrees: interests.length };
 }
-
-// A rich, believable sample so "Try the demo" shows the full experience
-// instantly, regardless of how much (or little) the real account has logged.
-export function demoStats() {
-  return {
-    year: new Date().getFullYear(), minutes: 6120, entryCount: 148, photoCount: 96,
-    top: { name: "Piano", color: "#B48CF2" }, topCount: 71,
-    longestStreak: 23, planted: 5, totalTrees: 7, demo: true,
-  };
-}

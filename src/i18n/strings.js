@@ -358,8 +358,6 @@ export const STR = {
   yearReview:      ["Year in Review", "年度回顾"],
   yearReviewIntro: ["A quick recap of everything you've grown this year.", "快速回顾一下你今年种下和照顾的一切。"],
   seeMyYear:       ["See my year", "看看我的这一年"],
-  tryDemo:         ["Try the demo", "试试演示版"],
-  demoBadge:       ["Demo — sample numbers, not yours", "演示 —— 示例数字，不是你的真实数据"],
   yrHoursTitle:    ["Time well spent", "时间没白花"],
   yrHoursSub:      ["logged across every hobby", "在所有爱好上记录的时间"],
   yrLoggedTitle:   ["You showed up", "你坚持记录了"],

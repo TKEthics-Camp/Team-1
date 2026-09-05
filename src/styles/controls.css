@@ -111,7 +111,6 @@ input[type="date"], input[type="time"] { font-family: var(--mono); color-scheme:
 /* ---------- year in review ---------- */
 .year-card { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 24px 8px; text-align: center; }
 .year-big { font-family: var(--display); font-size: 44px; font-weight: 700; color: var(--ink); line-height: 1; }
-.demo-note { text-align: center; color: var(--gold); font-weight: 600; }
 
 .memory-row {
   display: flex; gap: 10px; align-items: center; width: 100%;
@@ -150,7 +149,6 @@ input[type="date"], input[type="time"] { font-family: var(--mono); color-scheme:
 .year-intro .btn, .year-intro .btn2 { width: 100%; max-width: 280px; }
 .year-card-full { flex: 1; display: flex; justify-content: center; }
 .year-emoji { font-size: 40px; line-height: 1; }
-.year-demo-note { flex: none; }
 .year-next { flex: none; width: 100%; max-width: 320px; cursor: pointer; }
 
 /* ---------- level-up celebration ---------- */
