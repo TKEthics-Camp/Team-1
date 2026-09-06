@@ -134,7 +134,7 @@ export default function ProfileScreen() {
             {t("discoverableOn")}
           </button>
         </div>
-        <div className="sub">{t("discoverableNote")}</div>
+        <div className="sub">{t(isOrg ? "discoverableNoteOrg" : "discoverableNote")}</div>
 
         {!isOrg && (
           profile.classCode ? (
