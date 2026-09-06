@@ -644,6 +644,9 @@ export function StoreProvider({ children }) {
     // Unlocks a hair/outfit style for coins, then equips it. Free styles
     // (price 0) just equip straight away. Returns false if it can't afford
     // an unowned style — the sheet uses that to show "not enough coins".
+    // Org accounts never earn coins (no hobbies/logging to earn them from),
+    // so every style is free for them — otherwise a priced style would be
+    // permanently unreachable rather than just costing something.
     buyAndEquipAvatarPart(kind, id) {
       const p = profileRef.current;
       if (!p) return false;
@@ -652,7 +655,7 @@ export function StoreProvider({ children }) {
       if (!item) return false;
       const ownedKey = kind === "hair" ? "ownedHair" : "ownedOutfits";
       const owned = p[ownedKey] || [];
-      const alreadyOwned = item.price === 0 || owned.includes(id);
+      const alreadyOwned = item.price === 0 || owned.includes(id) || p.accountType === "org";
       if (!alreadyOwned && (p.coins || 0) < item.price) return false;
       const next = {
         ...p,

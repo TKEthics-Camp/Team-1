@@ -93,7 +93,7 @@ export const STR = {
   // explore feed
   shareToExplore: ["Share to Explore", "分享到发现"],
   shareToExploreNote: ["Public keeps it on your profile for anyone who opens it. Sharing also posts it to the Community feed.", "“公开”是让打开你主页的人能看到。分享则会把它发到大家的动态里。"],
-  feedEmpty:    ["Nothing shared yet. Log something and tick \u201cShare to Explore\u201d to be first.", "还没有人分享。记录一次，勾选“分享到发现”，你就是第一个。"],
+  feedEmpty:    ["Nothing shared by others yet — your own shared posts won't show up here, only theirs.", "还没有别人分享的内容 —— 你自己分享的内容不会出现在这里，只会显示别人的。"],
   feedLoading:  ["Loading\u2026", "加载中……"],
   postOptions:  ["Post options", "帖子选项"],
   report:       ["Report", "举报"],
@@ -274,7 +274,7 @@ export const STR = {
   discoverableLabel: ["Let others find me", "允许别人找到我"],
   discoverableOff: ["Off", "关闭"],
   discoverableOn:  ["On", "开启"],
-  discoverableNote: ["Off by default. When on, people can find your name in Explore's search — your garden itself still stays private unless you mark things public.", "默认关闭。开启后，别人可以在“发现”的搜索里找到你的名字 —— 你的花园本身仍然是私密的，除非你把内容设为公开。"],
+  discoverableNote: ["Off by default. When on, people can find your name in Explore's search and see your garden — your individual journal entries and photos still stay private unless you mark them public.", "默认关闭。开启后，别人可以在“发现”的搜索里找到你的名字，并看到你的花园 —— 你的日记和照片仍然是私密的，除非你把它们逐条设为公开。"],
   dataNote:     ["Your garden is cached on this device. Signing in ties it to your account.", "你的花园缓存在这台设备上。登录后会关联到你的账号。"],
   clearAll:     ["Clear all data", "清除所有数据"],
   confirmClear: ["Tap again to erase everything", "再点一次，全部清除"],

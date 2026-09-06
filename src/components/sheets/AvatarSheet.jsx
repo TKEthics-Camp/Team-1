@@ -18,6 +18,9 @@ export default function AvatarSheet() {
   const coins = (profile && profile.coins) || 0;
   const ownedHair = (profile && profile.ownedHair) || [];
   const ownedOutfits = (profile && profile.ownedOutfits) || [];
+  // Org accounts have no hobbies to log and so can never earn coins — every
+  // style is free for them, same as StoreContext's buyAndEquipAvatarPart.
+  const isOrg = profile && profile.accountType === "org";
 
   function set(patch) {
     updateProfile({ avatar: { ...avatar, ...patch } });
@@ -25,7 +28,7 @@ export default function AvatarSheet() {
 
   function pickStyle(kind, id, list, owned) {
     const item = list.find((x) => x.id === id);
-    const isOwned = item.price === 0 || owned.includes(id);
+    const isOwned = item.price === 0 || owned.includes(id) || isOrg;
     if (isOwned) { set({ [kind]: id }); return; }
     if (coins < item.price) return; // can't afford — button is disabled anyway
     if (buyAndEquipAvatarPart(kind, id)) {
@@ -40,7 +43,7 @@ export default function AvatarSheet() {
         <PersonAvatar avatar={avatar} size={92} />
       </div>
       <h2>{t("customizeTitle")}</h2>
-      <span className="chip coin-pill">{"🪙 " + coins}</span>
+      {!isOrg && <span className="chip coin-pill">{"🪙 " + coins}</span>}
 
       <div className="label">{t("bgColorLabel")}</div>
       <div className="swatches">
@@ -59,7 +62,7 @@ export default function AvatarSheet() {
       <div className="label">{t("hairLabel")}</div>
       <div className="species-row">
         {HAIR_STYLES.map((h) => {
-          const owned = h.price === 0 || ownedHair.includes(h.id);
+          const owned = h.price === 0 || ownedHair.includes(h.id) || isOrg;
           return (
             <button
               key={h.id}
@@ -86,7 +89,7 @@ export default function AvatarSheet() {
       <div className="label">{t("outfitLabel")}</div>
       <div className="species-row">
         {OUTFIT_STYLES.map((o) => {
-          const owned = o.price === 0 || ownedOutfits.includes(o.id);
+          const owned = o.price === 0 || ownedOutfits.includes(o.id) || isOrg;
           return (
             <button
               key={o.id}
