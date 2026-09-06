@@ -14,7 +14,6 @@ import ConfirmHobbiesStep from "./ConfirmHobbiesStep";
 import ScheduleStep from "./ScheduleStep";
 import LookStep from "./LookStep";
 import NotificationsStep from "./NotificationsStep";
-import ReminderTimeStep from "./ReminderTimeStep";
 import DailyGoalStep from "./DailyGoalStep";
 
 // Account type and username are settled before this ever mounts — see
@@ -28,7 +27,7 @@ import DailyGoalStep from "./DailyGoalStep";
 // than typed in; students join *that* code later from Me → Join a class.
 function stepsFor(accountType) {
   if (accountType === "org") return ["intro", "look", "notifications"];
-  return ["intro", "gender", "interests", "confirm", "goal", "schedule", "look", "notifications", "reminderTime"];
+  return ["intro", "gender", "interests", "confirm", "goal", "schedule", "look", "notifications"];
 }
 
 // Gender only ever picks a starting hair style for the avatar — everything
@@ -51,7 +50,6 @@ export default function Onboarding() {
   const [gender, setGender] = useState(null);
   const [drafts, setDrafts] = useState([]);
   const [theme, setTheme] = useState(DEFAULT_THEME);
-  const [reminderTime, setReminderTime] = useState("18:00");
   const [goal, setGoal] = useState(DEFAULT_DAILY_GOAL);
   const [hobbyBlocked, setHobbyBlocked] = useState(false);
   const steps = stepsFor(accountType);
@@ -61,7 +59,7 @@ export default function Onboarding() {
     if (!nm) return true;
     if (isBlockedHobby(nm)) { setHobbyBlocked(true); return false; }
     setHobbyBlocked(false);
-    setDrafts((d) => [...d, { id: uid(), name: nm, color: PALETTE[d.length % PALETTE.length], time: "16:00", friends: [] }]);
+    setDrafts((d) => [...d, { id: uid(), name: nm, color: PALETTE[d.length % PALETTE.length], friends: [] }]);
     return true;
   }
   function removeDraft(i) {
@@ -102,7 +100,7 @@ export default function Onboarding() {
     saveProfile(rec);
     drafts.forEach((d) => {
       addInterest({
-        id: d.id, name: d.name, color: d.color, why: "", time: reminderTime, days: d.days || [], friends: d.friends,
+        id: d.id, name: d.name, color: d.color, why: "", days: d.days || [], friends: d.friends,
         createdAt: Date.now(), updatedAt: Date.now(),
       });
     });
@@ -164,9 +162,6 @@ export default function Onboarding() {
         )}
         {current === "notifications" && (
           <NotificationsStep onEnter={step === steps.length - 1 ? finish : () => setStep(step + 1)} />
-        )}
-        {current === "reminderTime" && (
-          <ReminderTimeStep value={reminderTime} setValue={setReminderTime} onEnter={finish} />
         )}
       </div>
     </div>

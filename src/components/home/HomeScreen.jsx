@@ -61,7 +61,7 @@ export default function HomeScreen() {
       </TopBar>
       <div className="view home-view">
         {dying && <DyingBanner interest={dying} entries={entries} photos={photos} />}
-        {due.length > 0 && <NudgeBanner interest={due[0]} />}
+        {due.length > 0 && <NudgeBanner interests={due} />}
         {memory && <MemoryBanner memory={memory} />}
         {zoomedOut
           ? <ForestGrid interests={interests} photos={photos} entries={entries} />
