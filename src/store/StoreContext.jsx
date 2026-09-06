@@ -6,8 +6,9 @@ import {
   pushInterest, deleteRemoteInterest, pushEntry, deleteRemoteEntry,
   deleteAllMine, pullMine, pullUserRow, updateDiscovery, updateDisplayName,
   classCodeExists, joinClass as joinClassRemote, setMyClassCode, updateAvatar,
-  parseAvatar, pushPhotoRow, uploadPhotoBlob, updateCoins,
+  parseAvatar, pushPhotoRow, uploadPhotoBlob, updateCoins, deleteRemotePhoto,
 } from "../lib/remote";
+import { earnedIds } from "../lib/badges";
 
 const StoreCtx = createContext(null);
 
@@ -39,18 +40,25 @@ export function StoreProvider({ children }) {
         // Deleting sets deletedAt rather than removing the row, so it can be
         // put back from Recently Deleted. Everything past the window is
         // dropped for real here — the one place that runs on every start.
+        // The remote copy carries the same tombstone (see deleteInterest/
+        // deleteEntry/deletePhoto), so it's purged for real here too —
+        // best-effort only, since the signed-in user isn't always known
+        // yet this early in a fresh mount.
         const cutoff = Date.now() - TRASH_DAYS * 86400000;
-        const sweep = (rows, store) => {
+        const sweep = (rows, store, purgeRemote) => {
           const keep = [];
           rows.forEach((r) => {
             if (!r.deletedAt) { keep.push(r); return; }
-            if (r.deletedAt < cutoff) del(store, r.id);
+            if (r.deletedAt < cutoff) {
+              del(store, r.id);
+              if (userRef.current) purgeRemote(r);
+            }
           });
           return keep;
         };
-        ints = sweep(ints, "interests");
-        ph = sweep(ph, "photos");
-        en = sweep(en, "entries");
+        ints = sweep(ints, "interests", (r) => deleteRemoteInterest(r.id));
+        ph = sweep(ph, "photos", (r) => deleteRemotePhoto(r.id, r.storagePath));
+        en = sweep(en, "entries", (r) => deleteRemoteEntry(r.id));
 
         setProfileState(meta.find((m) => m.key === "profile") || null);
         setInterests(ints.sort((a, b) => a.createdAt - b.createdAt));
@@ -134,6 +142,17 @@ export function StoreProvider({ children }) {
           : hasFlag ? !!userRow.onboarding_completed
           : (remote.interests.length > 0 || !!userRow.class_code);
         if (onboarded) {
+          // Interests/entries/photos only land in local state further down
+          // this same effect (after the push/adopt round-trip below), well
+          // after this profile commits — useBadgeWatcher would otherwise
+          // see this profile against an empty garden, lock that in as
+          // "nothing earned yet", and then re-announce every badge you
+          // actually have the moment the real data arrives. Seeding the
+          // real baseline here, from what was already just pulled down,
+          // avoids that false "zero" moment entirely. Trashed rows don't
+          // count — the live badge count they'll be compared against never
+          // includes them either.
+          const live = (rows) => rows.filter((r) => !r.deletedAt);
           const rebuilt = {
             key: "profile",
             name: userRow.display_name,
@@ -147,6 +166,7 @@ export function StoreProvider({ children }) {
             coins: userRow.coins || 0,
             ownedDecorations: [],
             equippedDecoration: null,
+            earnedBadges: earnedIds(live(remote.interests), live(remote.entries), live(remote.photos)),
             createdAt: new Date(userRow.created_at).getTime(),
             dailyGoal: userRow.daily_goal || DEFAULT_DAILY_GOAL,
             userId: user.id,
@@ -234,26 +254,23 @@ export function StoreProvider({ children }) {
       const [allLocalInterests, allLocalEntries, allLocalPhotos] = await Promise.all([
         getAll("interests"), getAll("entries"), getAll("photos"),
       ]);
-      // Trashed rows still live in Dexie so they can be restored; pushing
-      // them would resurrect them on the server and then back onto every
-      // other device.
-      const localInterests = allLocalInterests.filter((i) => !i.deletedAt);
-      const localEntries = allLocalEntries.filter((e) => !e.deletedAt);
-      const localPhotos = allLocalPhotos.filter((p) => !p.deletedAt);
-
+      // Trashed rows carry their own deletedAt now, synced like any other
+      // field — pushing one syncs the tombstone instead of resurrecting the
+      // row, and counting it here (rather than excluding it) is what stops
+      // it from being adopted right back as if it were new.
       const remoteIntIds = new Set(remote.interests.map((i) => i.id));
-      const toPush = localInterests.filter((i) => !remoteIntIds.has(i.id));
+      const toPush = allLocalInterests.filter((i) => !remoteIntIds.has(i.id));
       await Promise.all(toPush.map((rec) => pushInterest(rec, user.id)));
 
-      const localIntIds = new Set(localInterests.map((i) => i.id));
+      const localIntIds = new Set(allLocalInterests.map((i) => i.id));
       const toAdopt = remote.interests.filter((i) => !localIntIds.has(i.id));
       await Promise.all(toAdopt.map((rec) => put("interests", rec)));
 
       const remoteEntryIds = new Set(remote.entries.map((e) => e.id));
-      const entriesToPush = localEntries.filter((e) => !remoteEntryIds.has(e.id));
+      const entriesToPush = allLocalEntries.filter((e) => !remoteEntryIds.has(e.id));
       await Promise.all(entriesToPush.map((rec) => pushEntry(rec)));
 
-      const localEntryIds = new Set(localEntries.map((e) => e.id));
+      const localEntryIds = new Set(allLocalEntries.map((e) => e.id));
       const entriesToAdopt = remote.entries.filter((e) => !localEntryIds.has(e.id));
       await Promise.all(entriesToAdopt.map((rec) => put("entries", rec)));
 
@@ -261,7 +278,7 @@ export function StoreProvider({ children }) {
       // (e.g. added offline) — upload it first so the row being pushed has
       // somewhere real to point storage_path at.
       const remotePhotoIds = new Set(remote.photos.map((p) => p.id));
-      const photosToPush = localPhotos.filter((p) => !remotePhotoIds.has(p.id));
+      const photosToPush = allLocalPhotos.filter((p) => !remotePhotoIds.has(p.id));
       await Promise.all(photosToPush.map(async (rec) => {
         let storagePath = rec.storagePath;
         if (!storagePath && rec.blob) {
@@ -271,26 +288,36 @@ export function StoreProvider({ children }) {
         await pushPhotoRow({ ...rec, storagePath });
       }));
 
-      const localPhotoIds = new Set(localPhotos.map((p) => p.id));
+      const localPhotoIds = new Set(allLocalPhotos.map((p) => p.id));
       const photosToAdopt = remote.photos.filter((p) => !localPhotoIds.has(p.id));
       await Promise.all(photosToAdopt.map((rec) => put("photos", rec)));
 
-      if (toAdopt.length) {
+      // Every adopted row above already landed in Dexie, trashed or not —
+      // same as any row loaded from local cache. Only non-trashed ones join
+      // this live state, though: interests/entries/photos here are read
+      // straight through by the rest of the app, and Recently Deleted is
+      // the one place that goes to Dexie directly for the trashed ones
+      // (see listTrash below).
+      const live = (rows) => rows.filter((r) => !r.deletedAt);
+      const adoptedInterests = live(toAdopt);
+      const adoptedEntries = live(entriesToAdopt);
+      const adoptedPhotos = live(photosToAdopt);
+      if (adoptedInterests.length) {
         setInterests((list) => {
           const ids = new Set(list.map((i) => i.id));
-          return [...list, ...toAdopt.filter((i) => !ids.has(i.id))].sort((a, b) => a.createdAt - b.createdAt);
+          return [...list, ...adoptedInterests.filter((i) => !ids.has(i.id))].sort((a, b) => a.createdAt - b.createdAt);
         });
       }
-      if (entriesToAdopt.length) {
+      if (adoptedEntries.length) {
         setEntries((list) => {
           const ids = new Set(list.map((e) => e.id));
-          return [...list, ...entriesToAdopt.filter((e) => !ids.has(e.id))];
+          return [...list, ...adoptedEntries.filter((e) => !ids.has(e.id))];
         });
       }
-      if (photosToAdopt.length) {
+      if (adoptedPhotos.length) {
         setPhotos((list) => {
           const ids = new Set(list.map((p) => p.id));
-          return [...list, ...photosToAdopt.filter((p) => !ids.has(p.id))];
+          return [...list, ...adoptedPhotos.filter((p) => !ids.has(p.id))];
         });
       }
     })();
@@ -432,15 +459,26 @@ export function StoreProvider({ children }) {
       return {
         record: removedInterest,
         commit() {
-          // Soft: the row stays in Dexie carrying deletedAt so Recently
-          // Deleted can offer it back. The remote copy does go, and a
-          // restore re-pushes it on the next reconcile.
+          // Soft, locally and remotely: every row keeps deletedAt instead
+          // of being removed, so Recently Deleted can offer it back on any
+          // of this account's devices for TRASH_DAYS — see the sweep
+          // effect and purgeTrashed for where they're actually destroyed.
           const at = Date.now();
-          if (removedInterest) put("interests", { ...removedInterest, deletedAt: at });
-          removedEntries.forEach((e) => put("entries", { ...e, deletedAt: at }));
-          removedPhotos.forEach((p) => put("photos", { ...p, deletedAt: at }));
-          // Deleting the interest remotely cascades to its entries/photos server-side.
-          if (userRef.current) deleteRemoteInterest(id);
+          if (removedInterest) {
+            const trashed = { ...removedInterest, deletedAt: at };
+            put("interests", trashed);
+            if (userRef.current) pushInterest(trashed, userRef.current.id);
+          }
+          removedEntries.forEach((e) => {
+            const trashed = { ...e, deletedAt: at };
+            put("entries", trashed);
+            if (userRef.current) pushEntry(trashed);
+          });
+          removedPhotos.forEach((p) => {
+            const trashed = { ...p, deletedAt: at };
+            put("photos", trashed);
+            if (userRef.current) pushPhotoRow(trashed);
+          });
         },
         restore() {
           if (!removedInterest) return;
@@ -509,11 +547,16 @@ export function StoreProvider({ children }) {
       });
       return {
         record: removed,
-        // Soft delete, same as interests/entries — recoverable from Recently
-        // Deleted for TRASH_DAYS before the local sweep (see the effect
-        // above) drops it for real. No immediate remote call: nothing
-        // else in the trash system tells the server on delete either.
-        commit() { if (removed) put("photos", { ...removed, deletedAt: Date.now() }); },
+        // Soft delete, synced, same as interests/entries — recoverable
+        // from Recently Deleted for TRASH_DAYS before the sweep drops it
+        // for real, locally and remotely.
+        commit() {
+          if (removed) {
+            const trashed = { ...removed, deletedAt: Date.now() };
+            put("photos", trashed);
+            if (userRef.current) pushPhotoRow(trashed);
+          }
+        },
         restore() {
           if (!removed) return;
           setPhotos((list) => (list.some((p) => p.id === id) ? list : [...list, removed]));
@@ -544,8 +587,11 @@ export function StoreProvider({ children }) {
       return {
         record: removed,
         commit() {
-          if (removed) put("entries", { ...removed, deletedAt: Date.now() });
-          if (userRef.current) deleteRemoteEntry(id);
+          if (removed) {
+            const trashed = { ...removed, deletedAt: Date.now() };
+            put("entries", trashed);
+            if (userRef.current) pushEntry(trashed);
+          }
         },
         restore() {
           if (!removed) return;
@@ -591,8 +637,11 @@ export function StoreProvider({ children }) {
         backEn.forEach((r) => put("entries", r));
         setPhotos((list) => [...list, ...backPh.filter((r) => !list.some((x) => x.id === r.id))]);
         setEntries((list) => [...list, ...backEn.filter((r) => !list.some((x) => x.id === r.id))]);
-        if (userRef.current) pushInterest(back, userRef.current.id);
-        backEn.forEach((r) => { if (userRef.current) pushEntry(r); });
+        if (userRef.current) {
+          pushInterest(back, userRef.current.id);
+          backEn.forEach((r) => pushEntry(r));
+          backPh.forEach((r) => pushPhotoRow(r));
+        }
         return;
       }
       const store = kind === "photo" ? "photos" : "entries";
@@ -601,22 +650,37 @@ export function StoreProvider({ children }) {
       if (!rec) return;
       const back = strip(rec);
       put(store, back);
-      if (kind === "photo") setPhotos((l) => (l.some((x) => x.id === id) ? l : [...l, back]));
-      else {
+      if (kind === "photo") {
+        setPhotos((l) => (l.some((x) => x.id === id) ? l : [...l, back]));
+        if (userRef.current) pushPhotoRow(back);
+      } else {
         setEntries((l) => (l.some((x) => x.id === id) ? l : [...l, back]));
         if (userRef.current) pushEntry(back);
       }
     },
-    // The one place anything is actually destroyed early, on request.
+    // The one place anything is actually destroyed early, on request —
+    // for real, locally and remotely, rather than waiting out the rest of
+    // the TRASH_DAYS window for the sweep to do it.
     async purgeTrashed(kind, id) {
       if (kind === "interest") {
         const [ph, en] = await Promise.all([getAll("photos"), getAll("entries")]);
         ph.filter((p) => p.interestId === id).forEach((p) => del("photos", p.id));
         en.filter((e) => e.interestId === id).forEach((e) => del("entries", e.id));
         del("interests", id);
+        // Cascades remotely too — entries/photos reference interests
+        // on delete cascade, so this alone clears all three there.
+        if (userRef.current) deleteRemoteInterest(id);
         return;
       }
-      del(kind === "photo" ? "photos" : "entries", id);
+      if (kind === "photo") {
+        const rows = await getAll("photos");
+        const rec = rows.find((r) => r.id === id);
+        del("photos", id);
+        if (userRef.current) deleteRemotePhoto(id, rec && rec.storagePath);
+        return;
+      }
+      del("entries", id);
+      if (userRef.current) deleteRemoteEntry(id);
     },
     // Returns true/false so the market screen can tell the user why a
     // purchase didn't go through (already owned vs. can't afford it).

@@ -89,7 +89,11 @@ export function interestToRow(rec, userId, legacy = false) {
     created_at: toIso(rec.createdAt),
     updated_at: toIso(rec.updatedAt || rec.createdAt),
   };
-  return legacy ? row : { ...row, ...appearanceColumns(rec) };
+  if (legacy) return row;
+  // deleted_at only exists once 20260907000000_trash_tombstone.sql is
+  // applied — dropped in legacy mode for the same reason appearanceColumns
+  // is, so a project without it still syncs everything else.
+  return { ...row, ...appearanceColumns(rec), deleted_at: rec.deletedAt ? toIso(rec.deletedAt) : null };
 }
 
 export function rowToInterest(row) {
@@ -107,6 +111,7 @@ export function rowToInterest(row) {
     species: row.species || null,
     leafColor: row.leaf_color || null,
     revivedAt: row.revived_at ? toMs(row.revived_at) : undefined,
+    deletedAt: row.deleted_at ? toMs(row.deleted_at) : undefined,
     createdAt: toMs(row.created_at),
     updatedAt: toMs(row.updated_at),
   };
@@ -124,10 +129,10 @@ export function entryToRow(rec, legacy = false) {
     created_at: toIso(rec.createdAt),
     updated_at: toIso(rec.updatedAt || rec.createdAt),
   };
-  // shared_to_feed only exists once 20260901000000_feed_posts.sql is applied.
-  // Sending it to a project without the column would fail the whole upsert,
-  // so every entry would stop syncing — see pushEntry's retry.
-  return legacy ? row : { ...row, shared_to_feed: !!rec.sharedToFeed };
+  // shared_to_feed only exists once 20260901000000_feed_posts.sql is applied,
+  // deleted_at once 20260907000000_trash_tombstone.sql is — both dropped in
+  // legacy mode so a project missing either still syncs the rest.
+  return legacy ? row : { ...row, shared_to_feed: !!rec.sharedToFeed, deleted_at: rec.deletedAt ? toIso(rec.deletedAt) : null };
 }
 
 export function rowToEntry(row) {
@@ -140,13 +145,14 @@ export function rowToEntry(row) {
     visibility: row.visibility,
     isPinned: row.is_pinned,
     sharedToFeed: !!row.shared_to_feed,
+    deletedAt: row.deleted_at ? toMs(row.deleted_at) : undefined,
     createdAt: toMs(row.created_at),
     updatedAt: toMs(row.updated_at),
   };
 }
 
-export function photoToRow(rec) {
-  return {
+export function photoToRow(rec, legacy = false) {
+  const row = {
     id: rec.id,
     interest_id: rec.interestId,
     storage_path: rec.storagePath || null,
@@ -155,6 +161,9 @@ export function photoToRow(rec) {
     is_pinned: !!rec.isPinned,
     created_at: toIso(rec.createdAt),
   };
+  // deleted_at only exists once 20260907000000_trash_tombstone.sql is
+  // applied — see pushPhotoRow's retry.
+  return legacy ? row : { ...row, deleted_at: rec.deletedAt ? toIso(rec.deletedAt) : null };
 }
 
 // No `blob` here — a photo pulled from Supabase only ever carries a
@@ -169,6 +178,7 @@ export function rowToPhoto(row) {
     caption: row.caption,
     visibility: row.visibility,
     isPinned: row.is_pinned,
+    deletedAt: row.deleted_at ? toMs(row.deleted_at) : undefined,
     createdAt: toMs(row.created_at),
   };
 }
@@ -211,7 +221,12 @@ export async function deleteRemoteEntry(id) {
 }
 
 export async function pushPhotoRow(rec) {
-  const { error } = await supabase.from("photos").upsert(photoToRow(rec));
+  let { error } = await supabase.from("photos").upsert(photoToRow(rec));
+  // PGRST204 = unknown column: the trash-tombstone migration isn't applied
+  // to this project yet. Retry without it so the photo still syncs.
+  if (error && error.code === "PGRST204") {
+    ({ error } = await supabase.from("photos").upsert(photoToRow(rec, true)));
+  }
   if (error) console.error("Sync (photo) failed:", error);
 }
 
