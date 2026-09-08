@@ -1,14 +1,13 @@
 import { useI18n } from "../../i18n/I18nContext";
-import { useObjectURL } from "../../lib/image";
 import { fmtClock } from "../../lib/useRecorder";
 
-// Playback for a recorded note. useObjectURL is the same helper photos use —
-// it revokes the URL on unmount, which matters here because a journal can
-// hold a lot of these.
-export default function VoiceNote({ blob, ms, onRemove }) {
+// Playback for a recorded note. The caller resolves the URL — useObjectURL
+// for a blob already in hand (mid-recording, mid-edit), useAudioURL for a
+// synced entry that might need fetching from Storage first — the same
+// split PhotoViewer/AlbumTab use for images (see lib/image.js).
+export default function VoiceNote({ url, ms, onRemove }) {
   const { t } = useI18n();
-  const url = useObjectURL(blob);
-  if (!blob) return null;
+  if (!url) return null;
 
   return (
     <div className="voice-note">

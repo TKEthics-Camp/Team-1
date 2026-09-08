@@ -12,6 +12,7 @@ import Field from "../shared/Field";
 import Chip from "../shared/Chip";
 import VisRow from "../shared/VisRow";
 import VoiceNote from "../shared/VoiceNote";
+import { useAudioURL } from "../../lib/image";
 import { useRecorder, canRecord, fmtClock } from "../../lib/useRecorder";
 
 const DURATIONS = [15, 30, 45, 60, 90, 120];
@@ -31,8 +32,14 @@ export default function EntrySheet({ interestId, entryId }) {
   const [pinned, setPinned] = useState(editing ? !!editing.isPinned : false);
   const [audio, setAudio] = useState(editing ? editing.audio || null : null);
   const [audioMs, setAudioMs] = useState(editing ? editing.audioMs || 0 : 0);
+  const [audioPath, setAudioPath] = useState(editing ? editing.audioPath || null : null);
   const rec = useRecorder();
   const textRef = useRef(null);
+  // Editing an entry that was recorded on another device (or before this
+  // one downloaded it) only has audioPath, not the blob itself yet —
+  // useAudioURL fetches it from Storage so it still plays here instead of
+  // looking like the recording vanished.
+  const audioUrl = useAudioURL({ audio, audioPath });
 
   useEffect(() => { textRef.current?.focus(); }, []);
 
@@ -55,7 +62,7 @@ export default function EntrySheet({ interestId, entryId }) {
     if (!txt && !audio) { textRef.current?.focus(); return; }
     if (rec.recording) return;   // don't save a half-finished recording
     if (editing) {
-      updateEntry({ ...editing, date: date || today(), text: txt, minutes, visibility, isPinned: pinned, sharedToFeed: visibility === "public" && shared, audio, audioMs, updatedAt: Date.now() });
+      updateEntry({ ...editing, date: date || today(), text: txt, minutes, visibility, isPinned: pinned, sharedToFeed: visibility === "public" && shared, audio, audioMs, audioPath, updatedAt: Date.now() });
       celebrate(profile);
     } else {
       const leveledUp = actsToNextStage(it, entries, photos) === 1;
@@ -96,8 +103,8 @@ export default function EntrySheet({ interestId, entryId }) {
       />
       {canRecord() && (
         <Field label={t("voiceNote")}>
-          {audio ? (
-            <VoiceNote blob={audio} ms={audioMs} onRemove={() => { setAudio(null); setAudioMs(0); }} />
+          {(audio || audioPath) ? (
+            <VoiceNote url={audioUrl} ms={audioMs} onRemove={() => { setAudio(null); setAudioMs(0); setAudioPath(null); }} />
           ) : (
             <div className="row" style={{ gap: 10 }}>
               <button
@@ -112,7 +119,6 @@ export default function EntrySheet({ interestId, entryId }) {
               )}
             </div>
           )}
-          <span className="hint">{t("voiceNoteNote")}</span>
           {rec.state === "denied" && <span className="field-error">{t("recDenied")}</span>}
           {rec.state === "unsupported" && <span className="field-error">{t("recUnsupported")}</span>}
         </Field>

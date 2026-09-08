@@ -8,7 +8,7 @@ import {
   classCodeExists, joinClass as joinClassRemote, setMyClassCode, updateAvatar,
   parseAvatar, pushPhotoRow as remotePushPhotoRow, uploadPhotoBlob, updateCoins, deleteRemotePhoto,
   updateSoundOn, updateOwnedDecorations, updateEquippedDecoration, updateOwnedHair, updateOwnedOutfits,
-  updateLang, updateTheme,
+  updateLang, updateTheme, uploadAudioBlob,
 } from "../lib/remote";
 import { earnedIds } from "../lib/badges";
 
@@ -137,7 +137,7 @@ export function StoreProvider({ children }) {
         };
         ints = sweep(ints, "interests", (r) => deleteRemoteInterest(r.id));
         ph = sweep(ph, "photos", (r) => deleteRemotePhoto(r.id, r.storagePath));
-        en = sweep(en, "entries", (r) => deleteRemoteEntry(r.id));
+        en = sweep(en, "entries", (r) => deleteRemoteEntry(r.id, r.audioPath));
 
         setProfileState(meta.find((m) => m.key === "profile") || null);
         setInterests(ints.sort((a, b) => a.createdAt - b.createdAt));
@@ -408,9 +408,19 @@ export function StoreProvider({ children }) {
       const toAdopt = remote.interests.filter((i) => !localIntIds.has(i.id));
       await Promise.all(toAdopt.map((rec) => put("interests", rec)));
 
+      // A local-only entry's voice note might have its blob but never made
+      // it to Storage (e.g. recorded offline) — upload it first, same as
+      // photosToPush does for photo blobs just above.
       const remoteEntryIds = new Set(remote.entries.map((e) => e.id));
       const entriesToPush = allLocalEntries.filter((e) => !remoteEntryIds.has(e.id));
-      await Promise.all(entriesToPush.map((rec) => pushEntry(rec)));
+      await Promise.all(entriesToPush.map(async (rec) => {
+        let audioPath = rec.audioPath;
+        if (!audioPath && rec.audio) {
+          audioPath = await uploadAudioBlob(user.id, rec.id, rec.audio);
+          if (audioPath) put("entries", { ...rec, audioPath });
+        }
+        await pushEntry({ ...rec, audioPath });
+      }));
 
       const localEntryIds = new Set(allLocalEntries.map((e) => e.id));
       const entriesToAdopt = remote.entries.filter((e) => !localEntryIds.has(e.id));
@@ -660,7 +670,10 @@ export function StoreProvider({ children }) {
       setPhotos((list) => list.map((p) => {
         if (p.interestId !== interestId) return p;
         const next = { ...p, isPinned: p.id === photoId && !p.isPinned };
-        if (next.isPinned !== p.isPinned) put("photos", next);
+        if (next.isPinned !== p.isPinned) {
+          put("photos", next);
+          if (userRef.current) pushPhotoRow(next);
+        }
         return next;
       }));
     },
@@ -681,6 +694,16 @@ export function StoreProvider({ children }) {
         if (p.id !== id || p.blob) return p;
         const next = { ...p, blob };
         put("photos", next);
+        return next;
+      }));
+    },
+    // Same idea as cachePhotoBlob, for a voice note downloaded from Storage
+    // (see lib/image.js's useAudioURL).
+    cacheEntryAudio(id, blob) {
+      setEntries((list) => list.map((e) => {
+        if (e.id !== id || e.audio) return e;
+        const next = { ...e, audio: blob };
+        put("entries", next);
         return next;
       }));
     },
@@ -713,14 +736,41 @@ export function StoreProvider({ children }) {
       setEntries((list) => [...list, rec]);
       put("entries", rec);
       bumpCoins(COINS_PER_LOG);
-      if (userRef.current) pushEntry(rec);
+      // Same shape as addPhoto: the row goes up right away, and a voice
+      // note's bytes upload separately, patching audio_path in once that
+      // finishes so a slow upload never blocks the rest of the entry.
+      if (userRef.current) {
+        pushEntry(rec);
+        if (rec.audio) {
+          uploadAudioBlob(userRef.current.id, rec.id, rec.audio).then((audioPath) => {
+            if (!audioPath) return;
+            const next = { ...rec, audioPath };
+            put("entries", next);
+            setEntries((list) => list.map((e) => (e.id === rec.id ? next : e)));
+            pushEntry(next);
+          }).catch((err) => console.error("Sync (upload audio) threw:", err));
+        }
+      }
     },
     // Edits an existing entry in place — no coin bump, this isn't new
     // activity, just a correction to something already logged.
     updateEntry(rec) {
       setEntries((list) => list.map((x) => (x.id === rec.id ? rec : x)));
       put("entries", rec);
-      if (userRef.current) pushEntry(rec);
+      if (userRef.current) {
+        pushEntry(rec);
+        // A re-recorded (or first-time, on an entry that predates syncing)
+        // voice note needs uploading too — same path as addEntry.
+        if (rec.audio) {
+          uploadAudioBlob(userRef.current.id, rec.id, rec.audio).then((audioPath) => {
+            if (!audioPath) return;
+            const next = { ...rec, audioPath };
+            put("entries", next);
+            setEntries((list) => list.map((e) => (e.id === rec.id ? next : e)));
+            pushEntry(next);
+          }).catch((err) => console.error("Sync (upload audio) threw:", err));
+        }
+      }
     },
     // Same optimistic-hide-then-commit-or-restore shape as deletePhoto —
     // entries were the only deletable thing without an undo window.
@@ -825,8 +875,10 @@ export function StoreProvider({ children }) {
         if (userRef.current) deleteRemotePhoto(id, rec && rec.storagePath);
         return;
       }
+      const rows = await getAll("entries");
+      const rec = rows.find((r) => r.id === id);
       del("entries", id);
-      if (userRef.current) deleteRemoteEntry(id);
+      if (userRef.current) deleteRemoteEntry(id, rec && rec.audioPath);
     },
     // Returns true/false so the market screen can tell the user why a
     // purchase didn't go through (already owned vs. can't afford it).

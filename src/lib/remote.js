@@ -112,6 +112,8 @@ export function entryToRow(rec) {
     updated_at: toIso(rec.updatedAt || rec.createdAt),
     shared_to_feed: !!rec.sharedToFeed,
     deleted_at: rec.deletedAt ? toIso(rec.deletedAt) : null,
+    audio_path: rec.audioPath || null,
+    audio_ms: rec.audioMs || null,
   };
 }
 
@@ -126,6 +128,8 @@ export function rowToEntry(row) {
     isPinned: row.is_pinned,
     sharedToFeed: !!row.shared_to_feed,
     deletedAt: row.deleted_at ? toMs(row.deleted_at) : undefined,
+    audioPath: row.audio_path || null,
+    audioMs: row.audio_ms || undefined,
     createdAt: toMs(row.created_at),
     updatedAt: toMs(row.updated_at),
   };
@@ -172,7 +176,7 @@ export function rowToPhoto(row) {
 // nothing forces them to actually be run in order (a project can easily
 // have a newer one applied but not an older one).
 const INTEREST_OPTIONAL_COLUMNS = ["deleted_at", "days", "species", "leaf_color", "revived_at"];
-const ENTRY_OPTIONAL_COLUMNS = ["deleted_at", "shared_to_feed"];
+const ENTRY_OPTIONAL_COLUMNS = ["deleted_at", "shared_to_feed", "audio_path", "audio_ms"];
 const PHOTO_OPTIONAL_COLUMNS = ["deleted_at"];
 
 // PGRST204 means PostgREST doesn't recognize one of the columns in the
@@ -213,7 +217,11 @@ export async function pushEntry(rec) {
   return upsertWithFallback("entries", row, ENTRY_OPTIONAL_COLUMNS);
 }
 
-export async function deleteRemoteEntry(id) {
+export async function deleteRemoteEntry(id, audioPath) {
+  if (audioPath) {
+    const { error: rmErr } = await supabase.storage.from("voice-notes").remove([audioPath]);
+    if (rmErr) console.error("Sync (delete voice note file) failed:", rmErr);
+  }
   const { error } = await supabase.from("entries").delete().eq("id", id);
   if (error) console.error("Sync (delete entry) failed:", error);
 }
@@ -272,6 +280,46 @@ export async function downloadPhotoBlob(storagePath) {
     return data;
   } catch (err) {
     console.error("Sync (download photo) threw:", err);
+    return null;
+  }
+}
+
+// Voice notes only ever had a local Blob — no bucket, no column — so a
+// sign-out (which wipes local storage) or a second device lost them for
+// good. Mirrors uploadPhotoBlob/downloadPhotoBlob exactly, just a
+// different bucket and no fixed extension (a recording's real container —
+// webm, mp4, ogg — depends on what the browser supports; see useRecorder's
+// pickMime), the audio element on playback reads that from the blob's own
+// stored type, not the path.
+export async function uploadAudioBlob(userId, entryId, blob) {
+  const path = `${userId}/${entryId}`;
+  try {
+    const { error } = await supabase.storage.from("voice-notes").upload(path, blob, {
+      upsert: true,
+      contentType: blob.type || "audio/webm",
+    });
+    if (error) {
+      console.error("Sync (upload voice note) failed:", error);
+      return null;
+    }
+    return path;
+  } catch (err) {
+    console.error("Sync (upload voice note) threw:", err);
+    return null;
+  }
+}
+
+export async function downloadAudioBlob(storagePath) {
+  if (!storagePath) return null;
+  try {
+    const { data, error } = await supabase.storage.from("voice-notes").download(storagePath);
+    if (error) {
+      console.error("Sync (download voice note) failed:", error);
+      return null;
+    }
+    return data;
+  } catch (err) {
+    console.error("Sync (download voice note) threw:", err);
     return null;
   }
 }

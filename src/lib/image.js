@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { downloadPhotoBlob } from "./remote";
+import { downloadPhotoBlob, downloadAudioBlob } from "./remote";
 
 export function downscale(file, max, cb) {
   var url = URL.createObjectURL(file);
@@ -66,6 +66,43 @@ export function usePhotoURL(photo, onDownloaded) {
         return;
       }
       console.log("[usePhotoURL] fetch succeeded, size=", fetched.size, "type=", fetched.type, "path=", storagePath);
+      objectUrl = URL.createObjectURL(fetched);
+      setUrl(objectUrl);
+      if (onDownloaded) onDownloaded(fetched);
+    });
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [blob, storagePath]);
+
+  return url;
+}
+
+// Same idea as usePhotoURL, for an entry's voice note: use the local blob
+// when there is one, otherwise fetch it from Storage via audioPath — a
+// recording made on another device, or this one after a sign-out wiped
+// local storage.
+export function useAudioURL(entry, onDownloaded) {
+  const blob = entry && entry.audio;
+  const storagePath = entry && entry.audioPath;
+  const [url, setUrl] = useState(null);
+
+  useEffect(() => {
+    if (blob) {
+      const u = URL.createObjectURL(blob);
+      setUrl(u);
+      return () => URL.revokeObjectURL(u);
+    }
+    if (!storagePath) {
+      setUrl(null);
+      return;
+    }
+    let cancelled = false;
+    let objectUrl = null;
+    downloadAudioBlob(storagePath).then((fetched) => {
+      if (cancelled || !fetched) return;
       objectUrl = URL.createObjectURL(fetched);
       setUrl(objectUrl);
       if (onDownloaded) onDownloaded(fetched);
