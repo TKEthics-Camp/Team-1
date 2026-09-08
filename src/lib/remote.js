@@ -320,6 +320,29 @@ export async function updateCoins(userId, coins) {
   if (error) console.error("Sync (coins) failed:", error);
 }
 
+// Coins spent on a decoration/hair/outfit style already sync (see
+// updateCoins) — without these, what was actually bought didn't, so
+// signing out spent the coins for good but lost the purchase.
+export async function updateOwnedDecorations(userId, ownedDecorations) {
+  const { error } = await supabase.from("users").update({ owned_decorations: ownedDecorations }).eq("id", userId);
+  if (error) console.error("Sync (owned decorations) failed:", error);
+}
+
+export async function updateEquippedDecoration(userId, equippedDecoration) {
+  const { error } = await supabase.from("users").update({ equipped_decoration: equippedDecoration }).eq("id", userId);
+  if (error) console.error("Sync (equipped decoration) failed:", error);
+}
+
+export async function updateOwnedHair(userId, ownedHair) {
+  const { error } = await supabase.from("users").update({ owned_hair: ownedHair }).eq("id", userId);
+  if (error) console.error("Sync (owned hair) failed:", error);
+}
+
+export async function updateOwnedOutfits(userId, ownedOutfits) {
+  const { error } = await supabase.from("users").update({ owned_outfits: ownedOutfits }).eq("id", userId);
+  if (error) console.error("Sync (owned outfits) failed:", error);
+}
+
 // users.avatar is text, not jsonb — the avatar customization (skin, hair,
 // hair colour, outfit, outfit colour) is stored as a JSON string so a
 // device other than the one that made the edit can pick it up too.

@@ -7,7 +7,7 @@ import {
   deleteAllMine, pullMine, pullUserRow, updateDiscovery, updateDisplayName,
   classCodeExists, joinClass as joinClassRemote, setMyClassCode, updateAvatar,
   parseAvatar, pushPhotoRow as remotePushPhotoRow, uploadPhotoBlob, updateCoins, deleteRemotePhoto,
-  updateSoundOn,
+  updateSoundOn, updateOwnedDecorations, updateEquippedDecoration, updateOwnedHair, updateOwnedOutfits,
 } from "../lib/remote";
 import { earnedIds } from "../lib/badges";
 
@@ -242,8 +242,10 @@ export function StoreProvider({ children }) {
             classCode: userRow.class_code || null,
             avatar: parseAvatar(userRow.avatar) || {},
             coins: userRow.coins || 0,
-            ownedDecorations: [],
-            equippedDecoration: null,
+            ownedDecorations: userRow.owned_decorations || [],
+            equippedDecoration: userRow.equipped_decoration || null,
+            ownedHair: userRow.owned_hair || [],
+            ownedOutfits: userRow.owned_outfits || [],
             earnedBadges: earnedIds(live(remote.interests), live(remote.entries), live(remote.photos)),
             createdAt: new Date(userRow.created_at).getTime(),
             soundOn: userRow.sound_on !== false,
@@ -271,6 +273,44 @@ export function StoreProvider({ children }) {
             setProfileState(next);
             put("meta", next);
           }
+        }
+        // Owned decorations/hair/outfits are new fields being synced for
+        // the first time — a purchase made under the old, unsynced code
+        // only exists on this device, so this unions rather than lets
+        // remote's (likely empty) value simply overwrite it, and pushes
+        // the union back up so the server finally learns about it too.
+        {
+          const union = (a, b) => Array.from(new Set([...(a || []), ...(b || [])]));
+          const nextOwnedDecorations = union(profileRef.current.ownedDecorations, userRow.owned_decorations);
+          const nextOwnedHair = union(profileRef.current.ownedHair, userRow.owned_hair);
+          const nextOwnedOutfits = union(profileRef.current.ownedOutfits, userRow.owned_outfits);
+          const grew = (list, remoteList) => list.length !== (remoteList || []).length;
+          if (
+            grew(nextOwnedDecorations, profileRef.current.ownedDecorations) ||
+            grew(nextOwnedHair, profileRef.current.ownedHair) ||
+            grew(nextOwnedOutfits, profileRef.current.ownedOutfits)
+          ) {
+            const next = {
+              ...profileRef.current,
+              ownedDecorations: nextOwnedDecorations,
+              ownedHair: nextOwnedHair,
+              ownedOutfits: nextOwnedOutfits,
+            };
+            setProfileState(next);
+            put("meta", next);
+          }
+          if (userRef.current) {
+            if (grew(nextOwnedDecorations, userRow.owned_decorations)) updateOwnedDecorations(user.id, nextOwnedDecorations);
+            if (grew(nextOwnedHair, userRow.owned_hair)) updateOwnedHair(user.id, nextOwnedHair);
+            if (grew(nextOwnedOutfits, userRow.owned_outfits)) updateOwnedOutfits(user.id, nextOwnedOutfits);
+          }
+        }
+        // Equipping is an explicit, low-stakes choice (not something
+        // earned that could be lost) — remote just wins, same as avatar.
+        if ((profileRef.current.equippedDecoration || null) !== (userRow.equipped_decoration || null)) {
+          const next = { ...profileRef.current, equippedDecoration: userRow.equipped_decoration || null };
+          setProfileState(next);
+          put("meta", next);
         }
         // Same idea for the avatar — it's edited from Me → customize on
         // whichever device you're on, so the remote copy is always the
@@ -786,7 +826,10 @@ export function StoreProvider({ children }) {
       const next = { ...p, coins: (p.coins || 0) - deco.price, ownedDecorations: [...owned, id] };
       setProfileState(next);
       put("meta", next);
-      if (userRef.current) updateCoins(userRef.current.id, next.coins);
+      if (userRef.current) {
+        updateCoins(userRef.current.id, next.coins);
+        updateOwnedDecorations(userRef.current.id, next.ownedDecorations);
+      }
       return true;
     },
     equipDecoration(id) {
@@ -796,6 +839,7 @@ export function StoreProvider({ children }) {
       const next = { ...p, equippedDecoration: id || null };
       setProfileState(next);
       put("meta", next);
+      if (userRef.current) updateEquippedDecoration(userRef.current.id, next.equippedDecoration);
     },
     // Unlocks a hair/outfit style for coins, then equips it. Free styles
     // (price 0) just equip straight away. Returns false if it can't afford
@@ -815,13 +859,16 @@ export function StoreProvider({ children }) {
       if (!alreadyOwned && (p.coins || 0) < item.price) return false;
       const next = {
         ...p,
-        [kind]: id,
         coins: alreadyOwned ? p.coins || 0 : (p.coins || 0) - item.price,
         [ownedKey]: alreadyOwned ? owned : [...owned, id],
       };
       setProfileState(next);
       put("meta", next);
-      if (!alreadyOwned && userRef.current) updateCoins(userRef.current.id, next.coins);
+      if (!alreadyOwned && userRef.current) {
+        updateCoins(userRef.current.id, next.coins);
+        if (kind === "hair") updateOwnedHair(userRef.current.id, next.ownedHair);
+        else updateOwnedOutfits(userRef.current.id, next.ownedOutfits);
+      }
       return true;
     },
     // `alsoRemote` distinguishes "wipe this device's cache" (sign-out, on a
