@@ -1,12 +1,18 @@
 import { useI18n } from "../../i18n/I18nContext";
-import { useObjectURL } from "../../lib/image";
+import { useStore } from "../../store/StoreContext";
+import { usePhotoURL } from "../../lib/image";
 import { fmtDate, dateKey } from "../../lib/dates";
 import { ideaCat } from "../../lib/explore";
 import { scene } from "../../lib/community";
 
 export default function InterestCover({ interest, firstPhoto }) {
   const { t, lang, nameOf } = useI18n();
-  const url = useObjectURL(firstPhoto ? firstPhoto.blob : null);
+  const { cachePhotoBlob } = useStore();
+  // The cover is your own tree's pinned (or latest) photo — its bytes might
+  // not be on this device yet (a fresh sign-in, a cache wipe), same as any
+  // other synced photo, so this needs the fetch-capable hook (see
+  // AlbumTab/PhotoViewer) instead of a local-blob-only one.
+  const url = usePhotoURL(firstPhoto, firstPhoto && ((blob) => cachePhotoBlob(firstPhoto.id, blob)));
 
   // With no photo yet, draw an illustration that matches the hobby (paint for
   // Drawing, a ball for Basketball…) instead of a bare initial. Falls back to
