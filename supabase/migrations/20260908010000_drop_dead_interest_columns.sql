@@ -1,3 +1,10 @@
+-- watches ("follow this hobby") was built into the schema but never wired
+-- up on the client — no query or function anywhere references it. Its
+-- insert policy is what actually blocks the interests.visibility drop
+-- below, so rather than CASCADE past it and leave an orphaned, still-dead
+-- table behind, drop the whole thing.
+drop table if exists public.watches;
+
 -- Five columns on interests with no live feature behind them anymore:
 --   time         - the per-hobby reminder time; reminders are day-of-week
 --                  only now (see the "Remind by day only" change).
