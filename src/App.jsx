@@ -22,6 +22,7 @@ import SheetHost from "./components/sheets/SheetHost";
 import PhotoViewer from "./components/interest/PhotoViewer";
 import UndoToast from "./components/shared/UndoToast";
 import Toast from "./components/shared/Toast";
+import SyncStatusBadge from "./components/shared/SyncStatusBadge";
 
 export default function App() {
   const { loading, profile, interests, entries, photos, clearAllData } = useStore();
@@ -155,6 +156,7 @@ function RoutedShell() {
       {viewer && <PhotoViewer />}
       <UndoToast />
       <Toast />
+      <SyncStatusBadge />
     </>
   );
 }

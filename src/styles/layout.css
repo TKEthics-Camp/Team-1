@@ -101,6 +101,26 @@
   font-weight: 700; font-size: 13.5px; padding: 6px 4px; cursor: pointer;
 }
 
+/* Sync status: quiet by design — a small chip, not a banner, and only
+   ever shown once something's actually been stuck for a while. */
+.sync-badge { position: absolute; top: 14px; right: 14px; z-index: 40; }
+.sync-chip {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: rgba(24, 10, 36, .78); border: none; font-size: 14px;
+  display: grid; place-items: center; cursor: pointer;
+  box-shadow: 0 8px 20px -10px rgba(30, 10, 40, .55);
+}
+.sync-popover {
+  position: absolute; top: 38px; right: 0; width: 220px;
+  background: rgba(24, 10, 36, .94); color: #fff; border-radius: 14px;
+  padding: 12px 14px; font-size: 12.5px; line-height: 1.4;
+  box-shadow: 0 14px 34px -12px rgba(30, 10, 40, .55);
+  display: flex; flex-direction: column; gap: 10px;
+  animation: rise .18s ease;
+}
+.sync-popover p { margin: 0; }
+.sync-popover .btn2 { width: auto; padding: 6px 12px; font-size: 12.5px; }
+
 /* ---------- interest cover ---------- */
 .cover {
   position: relative; width: 100%; aspect-ratio: 16 / 9;

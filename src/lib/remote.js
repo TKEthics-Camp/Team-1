@@ -185,8 +185,9 @@ export function rowToPhoto(row) {
 
 // Every push is fire-and-forget from the caller's perspective (writes
 // already landed locally first — local-first means the UI never waits on
-// the network); failures are logged, not surfaced, since the local copy
-// stays the source of truth until the next successful sync.
+// the network) — but each one does report back whether it actually landed
+// (true/false), so StoreContext's tracked wrappers know when to mark a
+// record as still needing a retry. Failures are always logged either way.
 
 export async function pushInterest(rec, userId) {
   let { error } = await supabase.from("interests").upsert(interestToRow(rec, userId));
@@ -197,6 +198,7 @@ export async function pushInterest(rec, userId) {
     ({ error } = await supabase.from("interests").upsert(interestToRow(rec, userId, true)));
   }
   if (error) console.error("Sync (interest) failed:", error);
+  return !error;
 }
 
 export async function deleteRemoteInterest(id) {
@@ -213,6 +215,7 @@ export async function pushEntry(rec) {
     ({ error } = await supabase.from("entries").upsert(entryToRow(rec, true)));
   }
   if (error) console.error("Sync (entry) failed:", error);
+  return !error;
 }
 
 export async function deleteRemoteEntry(id) {
@@ -228,6 +231,7 @@ export async function pushPhotoRow(rec) {
     ({ error } = await supabase.from("photos").upsert(photoToRow(rec, true)));
   }
   if (error) console.error("Sync (photo) failed:", error);
+  return !error;
 }
 
 export async function deleteRemotePhoto(id, storagePath) {

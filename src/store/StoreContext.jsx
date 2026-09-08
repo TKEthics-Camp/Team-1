@@ -3,10 +3,10 @@ import { getAll, put, del, clearAll as dbClearAll, clearGarden as dbClearGarden 
 import { COINS_PER_LOG, DECORATIONS, REVIVE_COST, PALETTE, DEFAULT_THEME, DEFAULT_DAILY_GOAL, TRASH_DAYS, HAIR_STYLES, OUTFIT_STYLES } from "../lib/constants";
 import { useAuth } from "./AuthContext";
 import {
-  pushInterest, deleteRemoteInterest, pushEntry, deleteRemoteEntry,
+  pushInterest as remotePushInterest, deleteRemoteInterest, pushEntry as remotePushEntry, deleteRemoteEntry,
   deleteAllMine, pullMine, pullUserRow, updateDiscovery, updateDisplayName,
   classCodeExists, joinClass as joinClassRemote, setMyClassCode, updateAvatar,
-  parseAvatar, pushPhotoRow, uploadPhotoBlob, updateCoins, deleteRemotePhoto,
+  parseAvatar, pushPhotoRow as remotePushPhotoRow, uploadPhotoBlob, updateCoins, deleteRemotePhoto,
 } from "../lib/remote";
 import { earnedIds } from "../lib/badges";
 
@@ -33,6 +33,83 @@ export function StoreProvider({ children }) {
   // just fail RLS and spam the console.
   const userRef = useRef(user);
   useEffect(() => { userRef.current = user && user.isDebug ? null : user; }, [user]);
+
+  // Sync status: a lightweight stand-in for a full offline queue. Every
+  // push already re-sends the whole current record rather than a diff, so
+  // "retry" just means "call the same push again later with whatever the
+  // record looks like now" — no need to remember what specifically
+  // changed, only which records still owe the server a successful push.
+  // Kept in memory only (not persisted to Dexie): if the app is fully
+  // closed before a retry lands, the next sign-in's reconciliation still
+  // picks up brand-new records the same way it always has, and a fresh
+  // edit re-triggers a push on its own anyway. What this adds is retrying
+  // failed *updates* to something that already exists remotely, which
+  // reconciliation alone never covered.
+  const [pendingSyncIds, setPendingSyncIds] = useState(() => new Set());
+  const pendingSyncRef = useRef(pendingSyncIds);
+  useEffect(() => { pendingSyncRef.current = pendingSyncIds; }, [pendingSyncIds]);
+
+  function markSyncResult(store, id, ok) {
+    const key = store + ":" + id;
+    setPendingSyncIds((prev) => {
+      const isPending = prev.has(key);
+      if (isPending === !ok) return prev;
+      const next = new Set(prev);
+      if (ok) next.delete(key); else next.add(key);
+      return next;
+    });
+  }
+  async function pushInterest(rec, userId) {
+    const ok = await remotePushInterest(rec, userId);
+    markSyncResult("interests", rec.id, ok);
+    return ok;
+  }
+  async function pushEntry(rec) {
+    const ok = await remotePushEntry(rec);
+    markSyncResult("entries", rec.id, ok);
+    return ok;
+  }
+  async function pushPhotoRow(rec) {
+    const ok = await remotePushPhotoRow(rec);
+    markSyncResult("photos", rec.id, ok);
+    return ok;
+  }
+
+  // Retries whatever's still pending, using each record's current Dexie
+  // copy (never a stale snapshot from whenever it first failed) — on a
+  // timer while the app is open, and the moment the browser regains a
+  // connection. retryPendingRef lets the exposed retrySync action (a
+  // manual "try again now" from the UI) trigger the exact same logic
+  // on demand instead of waiting for the next tick.
+  const retryPendingRef = useRef(() => {});
+  useEffect(() => {
+    async function retryPending() {
+      const keys = Array.from(pendingSyncRef.current);
+      if (!keys.length || !userRef.current) return;
+      const [ints, ents, phs] = await Promise.all([
+        getAll("interests"), getAll("entries"), getAll("photos"),
+      ]);
+      const byStore = { interests: ints, entries: ents, photos: phs };
+      for (const key of keys) {
+        const sep = key.indexOf(":");
+        const store = key.slice(0, sep), id = key.slice(sep + 1);
+        const rec = byStore[store].find((r) => r.id === id);
+        // Gone locally since (deleted for real, or already restored/
+        // erased) — nothing left to retry, so stop tracking it.
+        if (!rec) { markSyncResult(store, id, true); continue; }
+        if (store === "interests") await pushInterest(rec, userRef.current.id);
+        else if (store === "entries") await pushEntry(rec);
+        else await pushPhotoRow(rec);
+      }
+    }
+    retryPendingRef.current = retryPending;
+    const timer = setInterval(retryPending, 45000);
+    window.addEventListener("online", retryPending);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("online", retryPending);
+    };
+  }, []);
 
   useEffect(() => {
     Promise.all([getAll("meta"), getAll("interests"), getAll("photos"), getAll("entries")])
@@ -758,12 +835,17 @@ export function StoreProvider({ children }) {
       setPhotos([]);
       setEntries([]);
     },
+    // A manual "try again now" for the sync-status indicator — runs the
+    // exact same retry the background timer would, just on demand.
+    retrySync() {
+      retryPendingRef.current();
+    },
     };
   }, []);
 
   const value = useMemo(
-    () => ({ loading, profile, interests, photos, entries, ...actions }),
-    [loading, profile, interests, photos, entries, actions]
+    () => ({ loading, profile, interests, photos, entries, pendingSyncCount: pendingSyncIds.size, ...actions }),
+    [loading, profile, interests, photos, entries, pendingSyncIds, actions]
   );
 
   return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>;
