@@ -8,6 +8,7 @@ import {
   classCodeExists, joinClass as joinClassRemote, setMyClassCode, updateAvatar,
   parseAvatar, pushPhotoRow as remotePushPhotoRow, uploadPhotoBlob, updateCoins, deleteRemotePhoto,
   updateSoundOn, updateOwnedDecorations, updateEquippedDecoration, updateOwnedHair, updateOwnedOutfits,
+  updateLang, updateTheme,
 } from "../lib/remote";
 import { earnedIds } from "../lib/badges";
 
@@ -234,9 +235,9 @@ export function StoreProvider({ children }) {
           const rebuilt = {
             key: "profile",
             name: userRow.display_name,
-            lang: "en",
+            lang: userRow.lang || "en",
             color: PALETTE[0],
-            theme: DEFAULT_THEME,
+            theme: userRow.theme || DEFAULT_THEME,
             accountType: userRow.account_type || "individual",
             discoverable: !!userRow.discovery_enabled,
             classCode: userRow.class_code || null,
@@ -273,6 +274,18 @@ export function StoreProvider({ children }) {
             setProfileState(next);
             put("meta", next);
           }
+        }
+        // Same idea for language and theme — both used to be local-only
+        // and silently reset to their defaults after any sign-out.
+        if (userRow.lang && profileRef.current.lang !== userRow.lang) {
+          const next = { ...profileRef.current, lang: userRow.lang };
+          setProfileState(next);
+          put("meta", next);
+        }
+        if (userRow.theme && profileRef.current.theme !== userRow.theme) {
+          const next = { ...profileRef.current, theme: userRow.theme };
+          setProfileState(next);
+          put("meta", next);
         }
         // Owned decorations/hair/outfits are new fields being synced for
         // the first time — a purchase made under the old, unsynced code
@@ -475,6 +488,7 @@ export function StoreProvider({ children }) {
         put("meta", next);
         return next;
       });
+      if (userRef.current) updateLang(userRef.current.id, lang);
     },
     updateProfile(patch) {
       setProfileState((p) => {
@@ -483,13 +497,13 @@ export function StoreProvider({ children }) {
         put("meta", next);
         return next;
       });
-      // Everything else this is used for (theme, tour state...) is
-      // genuinely local-only. Avatar and soundOn are the two fields here
-      // that need to survive a sign-out — a device-wide privacy wipe, not
-      // an account change — so they're the ones that get pushed; sound in
-      // particular used to reset to on every time for exactly that reason.
+      // Everything else this is used for (tour state...) is genuinely
+      // local-only. Avatar, soundOn, and theme are fields here that need
+      // to survive a sign-out — a device-wide privacy wipe, not an
+      // account change — so they're the ones that get pushed.
       if (patch.avatar && userRef.current) updateAvatar(userRef.current.id, patch.avatar);
       if ("soundOn" in patch && userRef.current) updateSoundOn(userRef.current.id, patch.soundOn !== false);
+      if (patch.theme && userRef.current) updateTheme(userRef.current.id, patch.theme);
     },
     // Unlike setDiscoverable/updateProfile, this waits on the remote write
     // before touching local state — a username collision (users_display_

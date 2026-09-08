@@ -306,6 +306,19 @@ export async function updateSoundOn(userId, soundOn) {
   if (error) console.error("Sync (sound) failed:", error);
 }
 
+// Both used to be local-only and silently reset to their defaults after
+// any sign-out (English, and whatever DEFAULT_THEME is) regardless of
+// what was chosen before.
+export async function updateLang(userId, lang) {
+  const { error } = await supabase.from("users").update({ lang }).eq("id", userId);
+  if (error) console.error("Sync (lang) failed:", error);
+}
+
+export async function updateTheme(userId, theme) {
+  const { error } = await supabase.from("users").update({ theme }).eq("id", userId);
+  if (error) console.error("Sync (theme) failed:", error);
+}
+
 // The real signal StoreContext's reconciliation uses to tell "finished
 // onboarding" apart from "just signed up" — display_name alone stopped
 // working for this once AuthFlow started setting it at signup, before
