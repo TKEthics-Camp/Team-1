@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { getAll, put, del, clearAll as dbClearAll, clearGarden as dbClearGarden } from "../db/db";
-import { COINS_PER_LOG, DECORATIONS, REVIVE_COST, PALETTE, DEFAULT_THEME, DEFAULT_DAILY_GOAL, TRASH_DAYS, HAIR_STYLES, OUTFIT_STYLES } from "../lib/constants";
+import { COINS_PER_LOG, DECORATIONS, REVIVE_COST, PALETTE, DEFAULT_THEME, TRASH_DAYS, HAIR_STYLES, OUTFIT_STYLES } from "../lib/constants";
 import { useAuth } from "./AuthContext";
 import {
   pushInterest as remotePushInterest, deleteRemoteInterest, pushEntry as remotePushEntry, deleteRemoteEntry,
@@ -246,7 +246,6 @@ export function StoreProvider({ children }) {
             equippedDecoration: null,
             earnedBadges: earnedIds(live(remote.interests), live(remote.entries), live(remote.photos)),
             createdAt: new Date(userRow.created_at).getTime(),
-            dailyGoal: userRow.daily_goal || DEFAULT_DAILY_GOAL,
             soundOn: userRow.sound_on !== false,
             userId: user.id,
           };

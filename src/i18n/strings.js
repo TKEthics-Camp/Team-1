@@ -40,12 +40,6 @@ export const STR = {
   sfNotifBody:  ["We'll remind you when it's time to log, and before a tree wilts.", "该记录的时候，或者树快枯萎之前，我们会提醒你。"],
   sfAllowNotifications: ["Allow Notifications", "允许通知"],
   sfNotNow:     ["Not Now", "暂不开启"],
-  sfGoalTitle:  ["Choose a daily goal that will help you stay motivated!", "选一个每天的小目标，帮你坚持下去！"],
-  goalCasual:   ["Casual", "轻松"],
-  goalRegular:  ["Regular", "常规"],
-  goalSerious:  ["Serious", "认真"],
-  goalInsane:   ["Insane", "硬核"],
-  goalPerDay:   ["{n} min per day", "每天 {n} 分钟"],
   // rest day
   restDayOn:    ["Rest day used — one missed day a week won't break your streak.", "使用了休息日 —— 每周漏记一天不会中断连续记录。"],
   // voice notes

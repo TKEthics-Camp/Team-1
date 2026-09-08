@@ -20,17 +20,6 @@ export const COINS_PER_LOG = 5;
 // it immediately; this is the window before it's actually gone for good.
 export const TRASH_DAYS = 30;
 
-// Daily practice goal, in minutes — the unit entries are already logged in.
-// Four rungs so the choice is a self-assessment ("how serious am I?") rather
-// than arithmetic; DEFAULT_DAILY_GOAL is the one pre-selected in onboarding.
-export const DAILY_GOALS = [
-  { id: "casual",  minutes: 10, key: "goalCasual" },
-  { id: "regular", minutes: 20, key: "goalRegular" },
-  { id: "serious", minutes: 30, key: "goalSerious" },
-  { id: "insane",  minutes: 50, key: "goalInsane" },
-];
-export const DEFAULT_DAILY_GOAL = 20;
-
 // Reviving a tree that has died from neglect costs coins (a "life").
 export const REVIVE_COST = 20;
 

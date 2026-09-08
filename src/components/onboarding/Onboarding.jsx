@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useAuth } from "../../store/AuthContext";
-import { PALETTE, DEFAULT_THEME, DEFAULT_DAILY_GOAL } from "../../lib/constants";
+import { PALETTE, DEFAULT_THEME } from "../../lib/constants";
 import { uid } from "../../lib/id";
-import { mintOrFetchClassCode, markOnboardingComplete, updateDailyGoal } from "../../lib/remote";
+import { mintOrFetchClassCode, markOnboardingComplete } from "../../lib/remote";
 import { isBlockedHobby } from "../../lib/hobbyFilter";
 import LangToggle from "../shared/LangToggle";
 import IntroStep from "./IntroStep";
@@ -14,7 +14,6 @@ import ConfirmHobbiesStep from "./ConfirmHobbiesStep";
 import ScheduleStep from "./ScheduleStep";
 import LookStep from "./LookStep";
 import NotificationsStep from "./NotificationsStep";
-import DailyGoalStep from "./DailyGoalStep";
 
 // Account type and username are settled before this ever mounts — see
 // AuthFlow, which collects them at signup along with the one real branch
@@ -27,7 +26,7 @@ import DailyGoalStep from "./DailyGoalStep";
 // than typed in; students join *that* code later from Me → Join a class.
 function stepsFor(accountType) {
   if (accountType === "org") return ["intro", "look", "notifications"];
-  return ["intro", "gender", "interests", "confirm", "goal", "schedule", "look", "notifications"];
+  return ["intro", "gender", "interests", "confirm", "schedule", "look", "notifications"];
 }
 
 // Gender only ever picks a starting hair style for the avatar — everything
@@ -50,7 +49,6 @@ export default function Onboarding() {
   const [gender, setGender] = useState(null);
   const [drafts, setDrafts] = useState([]);
   const [theme, setTheme] = useState(DEFAULT_THEME);
-  const [goal, setGoal] = useState(DEFAULT_DAILY_GOAL);
   const [hobbyBlocked, setHobbyBlocked] = useState(false);
   const steps = stepsFor(accountType);
 
@@ -94,7 +92,6 @@ export default function Onboarding() {
       classCode: null,
       coins: 0, ownedDecorations: [], equippedDecoration: null, createdAt: Date.now(),
       avatar: avatarForGender(gender),
-      dailyGoal: goal,
       userId: user ? user.id : null,
     };
     saveProfile(rec);
@@ -105,10 +102,7 @@ export default function Onboarding() {
       });
     });
     if (accountType === "org" && user && !user.isDebug) mintClassCode(user.id, rec);
-    if (user && !user.isDebug) {
-      markOnboardingComplete(user.id);
-      updateDailyGoal(user.id, goal);
-    }
+    if (user && !user.isDebug) markOnboardingComplete(user.id);
   }
 
   const current = steps[step];
@@ -150,9 +144,6 @@ export default function Onboarding() {
             blocked={hobbyBlocked}
             onNext={() => setStep(step + 1)}
           />
-        )}
-        {current === "goal" && (
-          <DailyGoalStep value={goal} setValue={setGoal} onNext={() => setStep(step + 1)} />
         )}
         {current === "schedule" && (
           <ScheduleStep drafts={drafts} updateDraft={updateDraft} onEnter={() => setStep(step + 1)} />

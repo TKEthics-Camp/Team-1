@@ -315,17 +315,6 @@ export async function markOnboardingComplete(userId) {
   if (error) console.error("Sync (onboarding complete) failed:", error);
 }
 
-// Deliberately its own write rather than folded into markOnboardingComplete
-// above, even though both fire at the same moment. Combining them means a
-// missing daily_goal column (migration not applied yet) fails the whole
-// statement, so onboarding_completed wouldn't be set either — which is
-// exactly the "every signup looks un-onboarded" bug that flag exists to fix.
-// Separate writes fail independently.
-export async function updateDailyGoal(userId, minutes) {
-  const { error } = await supabase.from("users").update({ daily_goal: minutes }).eq("id", userId);
-  if (error) console.error("Sync (daily goal) failed:", error);
-}
-
 export async function updateCoins(userId, coins) {
   const { error } = await supabase.from("users").update({ coins }).eq("id", userId);
   if (error) console.error("Sync (coins) failed:", error);
