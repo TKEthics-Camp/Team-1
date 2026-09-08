@@ -19,7 +19,7 @@ export function onThisDay(interests, photos, entries) {
     const d = new Date(p.createdAt);
     if (d.getMonth() !== mm || d.getDate() !== dd || d.getFullYear() >= now.getFullYear()) return;
     const it = byId(p.interestId); if (!it) return;
-    items.push({ interest: it, blob: p.blob, text: p.caption, date: dateKey(d), yearsAgo: now.getFullYear() - d.getFullYear() });
+    items.push({ id: p.id, interest: it, blob: p.blob, storagePath: p.storagePath, text: p.caption, date: dateKey(d), yearsAgo: now.getFullYear() - d.getFullYear() });
   });
 
   return items.sort((a, b) => a.yearsAgo - b.yearsAgo);
@@ -54,7 +54,7 @@ export function categoryReels(interests, photos, entries, min = 3) {
   photos.forEach((p) => {
     const it = byId(p.interestId); if (!it) return;
     const cat = categoryOf(it); if (!cat) return;
-    (byCat[cat] = byCat[cat] || []).push({ interest: it, blob: p.blob, text: p.caption, date: dateKey(new Date(p.createdAt)), at: p.createdAt });
+    (byCat[cat] = byCat[cat] || []).push({ id: p.id, interest: it, blob: p.blob, storagePath: p.storagePath, text: p.caption, date: dateKey(new Date(p.createdAt)), at: p.createdAt });
   });
 
   return Object.entries(byCat)

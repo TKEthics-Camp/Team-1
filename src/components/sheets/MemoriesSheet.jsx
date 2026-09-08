@@ -2,18 +2,27 @@ import { useNavigate } from "react-router-dom";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
-import { useObjectURL } from "../../lib/image";
+import { usePhotoURL } from "../../lib/image";
 import { fmtDate } from "../../lib/dates";
 import { onThisDay, categoryReels, categoryLabel } from "../../lib/memories";
 import Sheet from "../shared/Sheet";
 import Tree from "../shared/Tree";
 
-function MemoryRow({ item, sub, onOpen }) {
+// isPhoto, not item.blob, is what makes something a photo memory — a photo
+// might only have a storagePath on this device yet (a fresh sign-in, a
+// cache wipe), and usePhotoURL (unlike the old local-blob-only
+// useObjectURL) fetches from Storage in that case instead of leaving it
+// looking like a plain journal entry.
+function isPhotoMemory(item) {
+  return !!(item.blob || item.storagePath);
+}
+
+function MemoryRow({ item, sub, onOpen, cachePhotoBlob }) {
   const { nameOf } = useI18n();
-  const url = useObjectURL(item.blob);
+  const url = usePhotoURL(item, cachePhotoBlob && ((blob) => cachePhotoBlob(item.id, blob)));
   return (
     <button className="memory-row" onClick={onOpen}>
-      {item.blob ? (
+      {isPhotoMemory(item) ? (
         <img src={url} alt="" />
       ) : (
         <div style={{ flex: "none" }}><Tree interest={item.interest} size={40} stage={2} health="healthy" /></div>
@@ -32,7 +41,7 @@ function MemoryRow({ item, sub, onOpen }) {
 // so "look back at your exercise" isn't limited to a single tree.
 export default function MemoriesSheet() {
   const { t, lang } = useI18n();
-  const { interests, photos, entries } = useStore();
+  const { interests, photos, entries, cachePhotoBlob } = useStore();
   const { closeSheet } = useUI();
   const navigate = useNavigate();
 
@@ -40,7 +49,7 @@ export default function MemoriesSheet() {
   const reels = categoryReels(interests, photos, entries);
 
   function open(item) {
-    navigate(`/interest/${item.interest.id}?tab=${item.blob ? "album" : "journal"}`);
+    navigate(`/interest/${item.interest.id}?tab=${isPhotoMemory(item) ? "album" : "journal"}`);
     closeSheet();
   }
 
@@ -58,6 +67,7 @@ export default function MemoriesSheet() {
                 item={item}
                 sub={item.yearsAgo === 1 ? t("yearAgo") : t("yearsAgo").replace("{n}", item.yearsAgo)}
                 onOpen={() => open(item)}
+                cachePhotoBlob={cachePhotoBlob}
               />
             ))}
           </>
@@ -67,7 +77,7 @@ export default function MemoriesSheet() {
           <div key={reel.cat}>
             <div className="label">{categoryLabel(reel.cat, lang)}</div>
             {reel.items.slice(0, 6).map((item, i) => (
-              <MemoryRow key={reel.cat + i} item={item} sub={fmtDate(item.date, lang)} onOpen={() => open(item)} />
+              <MemoryRow key={reel.cat + i} item={item} sub={fmtDate(item.date, lang)} onOpen={() => open(item)} cachePhotoBlob={cachePhotoBlob} />
             ))}
           </div>
         ))}

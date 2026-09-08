@@ -9,7 +9,7 @@ export function getResurfacedMemory(interests, photos, entries) {
   const pool = [];
   photos.forEach((p) => {
     const it = byId(p.interestId); if (!it) return;
-    pool.push({ interest: it, blob: p.blob, text: p.caption, date: dateKey(new Date(p.createdAt)), pin: p.isPinned, at: p.createdAt });
+    pool.push({ id: p.id, interest: it, blob: p.blob, storagePath: p.storagePath, text: p.caption, date: dateKey(new Date(p.createdAt)), pin: p.isPinned, at: p.createdAt });
   });
   entries.forEach((e) => {
     const it = byId(e.interestId); if (!it) return;
