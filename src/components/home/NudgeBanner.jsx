@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "../../i18n/I18nContext";
 import { useUI } from "../../ui/UIContext";
-import { nudgeSub } from "../../lib/reminders";
 
 export default function NudgeBanner({ interests }) {
   const { t, nameOf } = useI18n();
@@ -15,7 +14,7 @@ export default function NudgeBanner({ interests }) {
         <span className="bell" aria-hidden="true">🔔</span>
         <div className="body">
           <div className="head">{solo ? nameOf(solo) : t("nudgeManyTitle")}</div>
-          <div className="sub">{solo ? nudgeSub(solo, t) : t("nudgeManySub")}</div>
+          <div className="sub">{solo ? t("nudgeSolo") : t("nudgeManySub")}</div>
           {!solo && (
             <div className="chips" style={{ marginTop: 6 }}>
               {interests.map((it) => (

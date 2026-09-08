@@ -22,15 +22,9 @@ export function dueNudges(interests, entries, dismissed) {
   });
 }
 
-export function nudgeSub(it, t) {
-  var friends = (it.friends || []).filter(Boolean);
-  if (!friends.length) return t("nudgeSolo");
-  return t("askCome") + friends[0] + t("askCome2");
-}
-
 // Plain-text summary for the one system notification a day covering
 // everything still due (see dueNudges — day of week only, no time of day).
 export function nudgeText(due, nameOf, t) {
-  if (due.length === 1) return nameOf(due[0]) + " — " + nudgeSub(due[0], t);
+  if (due.length === 1) return nameOf(due[0]) + " — " + t("nudgeSolo");
   return t("nudgeManyTitle") + ": " + due.map(nameOf).join(", ");
 }

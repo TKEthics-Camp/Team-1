@@ -103,11 +103,6 @@ export default function InterestScreen() {
         ]} />
 
         {it.why && <div className="sub">{`“${it.why}”`}</div>}
-        {(it.friends || []).length > 0 && (
-          <div className="chips">
-            {(it.friends || []).map((f) => <span key={f} className="chip friend">{"@" + f}</span>)}
-          </div>
-        )}
 
         <div className="tabs">
           <button aria-selected={tab === "album"} onClick={() => setTab("album")}>{t("album")}</button>

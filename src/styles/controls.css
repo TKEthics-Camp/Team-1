@@ -61,7 +61,6 @@ input[type="date"], input[type="time"] { font-family: var(--mono); color-scheme:
 .chip { background: var(--card); border: 1px solid var(--line); padding: 7px 12px; font-size: 13px; border-radius: 999px; }
 .chip:hover { border-color: var(--dim); }
 .chip[aria-pressed="true"] { background: linear-gradient(135deg,#FF8FC0,#FFAE7E); color: #4A2140; border-color: transparent; font-weight: 700; }
-.chip.friend { color: var(--muted); }
 .chip.flame-badge { font-family: var(--mono); font-weight: 600; color: var(--gold); flex: none; }
 
 .day-picker { display: flex; gap: 6px; }

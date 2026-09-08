@@ -179,8 +179,6 @@ export const STR = {
   leaf_red:    ["Red", "红色"],
   leaf_gold:   ["Gold", "金黄色"],
   leaf_purple: ["Purple", "紫色"],
-  friendsLabel: ["Who's usually with you?", "通常和谁一起？"],
-  friendsPh:    ["Names, separated by commas", "名字，用逗号分隔"],
   enter:        ["Enter", "进入"],
   // home
   hi:           ["Hi, ", "你好，"],
@@ -188,9 +186,6 @@ export const STR = {
   newInterest:  ["Plant a tree", "种一棵树"],
   emptyHome:    ["Your garden is empty.\nPlant the first thing you love.", "花园还是空的。\n种下你喜欢的第一件事。"],
   // nudge
-  nudgeAt:      ["at", "，"],
-  askCome:      ["Ask ", "叫上"],
-  askCome2:     [" to come along?", "一起去？"],
   nudgeSolo:    ["You set aside this time for it.", "这是你为它留出的时间。"],
   nudgeManyTitle: ["Today's hobbies", "今天的爱好"],
   nudgeManySub: ["Tap one to log it.", "点一个开始记录。"],
@@ -220,7 +215,6 @@ export const STR = {
   entries:      ["entries", "篇日记"],
   noPhotos:     ["No photos yet.\nMake something, then bring it back here.", "还没有照片。\n先去做点什么，再回来。"],
   noEntries:    ["No entries yet.\nOne line about today is enough.", "还没有日记。\n写一句今天，就够了。"],
-  friends:      ["With", "一起的人"],
   reminder:     ["Reminder", "提醒"],
   editOrb:      ["Edit tree", "编辑这棵树"],
   deleteOrb:    ["Cut down this tree and everything in it", "砍掉这棵树和里面的一切"],
