@@ -182,26 +182,40 @@ export function rowToPhoto(row) {
 // (true/false), so StoreContext's tracked wrappers know when to mark a
 // record as still needing a retry. Failures are always logged either way.
 
+// Columns each table only has once its own migration has been applied —
+// not necessarily in the order those migrations were written, since
+// nothing forces them to actually be run in order (a project can easily
+// have a newer one applied but not an older one).
+const INTEREST_OPTIONAL_COLUMNS = ["deleted_at", "days", "species", "leaf_color", "revived_at"];
+const ENTRY_OPTIONAL_COLUMNS = ["deleted_at", "shared_to_feed"];
+const PHOTO_OPTIONAL_COLUMNS = ["deleted_at"];
+
+// PGRST204 means PostgREST doesn't recognize one of the columns in the
+// payload, and names exactly which one in its message — so this drops
+// only that column and retries, then asks again, instead of guessing a
+// fixed order to fall back through. A project missing an older migration
+// but not a newer one (columns don't always land in the order they were
+// written) would otherwise lose whatever the guessed order got wrong,
+// silently, on every single save.
+async function upsertWithFallback(table, row, optionalColumns) {
+  let candidate = row;
+  for (;;) {
+    const { error } = await supabase.from(table).upsert(candidate);
+    if (!error) return true;
+    const missing = error.code === "PGRST204" && error.message && error.message.match(/'([^']+)' column/);
+    const col = missing && missing[1];
+    if (!col || !(col in candidate) || !optionalColumns.includes(col)) {
+      console.error(`Sync (${table}) failed:`, error);
+      return false;
+    }
+    const next = { ...candidate };
+    delete next[col];
+    candidate = next;
+  }
+}
+
 export async function pushInterest(rec, userId) {
-  const row = interestToRow(rec, userId);
-  let { error } = await supabase.from("interests").upsert(row);
-  // PGRST204 = unknown column: some migration isn't applied to this project
-  // yet. Drop just the newest optional group and retry, then the next —
-  // one column at a time, oldest last — instead of falling all the way
-  // back to the original columns in one jump. A project that already has
-  // appearanceColumns but not deleted_at (the common case right after
-  // shipping a new migration) would otherwise lose days/species/leaf_color
-  // on every single save, silently, until the newer migration was applied.
-  if (error && error.code === "PGRST204") {
-    const { deleted_at, ...withoutDeletedAt } = row;
-    ({ error } = await supabase.from("interests").upsert(withoutDeletedAt));
-  }
-  if (error && error.code === "PGRST204") {
-    const { deleted_at, days, species, leaf_color, revived_at, ...bare } = row;
-    ({ error } = await supabase.from("interests").upsert(bare));
-  }
-  if (error) console.error("Sync (interest) failed:", error);
-  return !error;
+  return upsertWithFallback("interests", interestToRow(rec, userId), INTEREST_OPTIONAL_COLUMNS);
 }
 
 export async function deleteRemoteInterest(id) {
@@ -211,20 +225,7 @@ export async function deleteRemoteInterest(id) {
 
 export async function pushEntry(rec) {
   const row = entryToRow(rec);
-  let { error } = await supabase.from("entries").upsert(row);
-  // Same staged fallback as pushInterest: drop the newest missing column
-  // first, so a project missing only deleted_at doesn't also lose
-  // shared_to_feed (a migration it already has) on every save.
-  if (error && error.code === "PGRST204") {
-    const { deleted_at, ...withoutDeletedAt } = row;
-    ({ error } = await supabase.from("entries").upsert(withoutDeletedAt));
-  }
-  if (error && error.code === "PGRST204") {
-    const { deleted_at, shared_to_feed, ...bare } = row;
-    ({ error } = await supabase.from("entries").upsert(bare));
-  }
-  if (error) console.error("Sync (entry) failed:", error);
-  return !error;
+  return upsertWithFallback("entries", row, ENTRY_OPTIONAL_COLUMNS);
 }
 
 export async function deleteRemoteEntry(id) {
@@ -234,15 +235,7 @@ export async function deleteRemoteEntry(id) {
 
 export async function pushPhotoRow(rec) {
   const row = photoToRow(rec);
-  let { error } = await supabase.from("photos").upsert(row);
-  // PGRST204 = unknown column: the trash-tombstone migration isn't applied
-  // to this project yet. Retry without it so the photo still syncs.
-  if (error && error.code === "PGRST204") {
-    const { deleted_at, ...withoutDeletedAt } = row;
-    ({ error } = await supabase.from("photos").upsert(withoutDeletedAt));
-  }
-  if (error) console.error("Sync (photo) failed:", error);
-  return !error;
+  return upsertWithFallback("photos", row, PHOTO_OPTIONAL_COLUMNS);
 }
 
 export async function deleteRemotePhoto(id, storagePath) {
