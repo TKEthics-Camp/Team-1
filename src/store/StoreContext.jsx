@@ -7,6 +7,7 @@ import {
   deleteAllMine, pullMine, pullUserRow, updateDiscovery, updateDisplayName,
   classCodeExists, joinClass as joinClassRemote, setMyClassCode, updateAvatar,
   parseAvatar, pushPhotoRow as remotePushPhotoRow, uploadPhotoBlob, updateCoins, deleteRemotePhoto,
+  updateSoundOn,
 } from "../lib/remote";
 import { earnedIds } from "../lib/badges";
 
@@ -246,6 +247,7 @@ export function StoreProvider({ children }) {
             earnedBadges: earnedIds(live(remote.interests), live(remote.entries), live(remote.photos)),
             createdAt: new Date(userRow.created_at).getTime(),
             dailyGoal: userRow.daily_goal || DEFAULT_DAILY_GOAL,
+            soundOn: userRow.sound_on !== false,
             userId: user.id,
           };
           setProfileState(rebuilt);
@@ -259,6 +261,17 @@ export function StoreProvider({ children }) {
           const next = { ...profileRef.current, discoverable: !!userRow.discovery_enabled };
           setProfileState(next);
           put("meta", next);
+        }
+        // Same for sound — it used to be local-only and silently reset to
+        // on after any sign-out; now it's remembered remotely too.
+        {
+          const localSoundOn = profileRef.current.soundOn !== false;
+          const remoteSoundOn = userRow.sound_on !== false;
+          if (localSoundOn !== remoteSoundOn) {
+            const next = { ...profileRef.current, soundOn: remoteSoundOn };
+            setProfileState(next);
+            put("meta", next);
+          }
         }
         // Same idea for the avatar — it's edited from Me → customize on
         // whichever device you're on, so the remote copy is always the
@@ -431,10 +444,13 @@ export function StoreProvider({ children }) {
         put("meta", next);
         return next;
       });
-      // Everything else this is used for (theme, sound, tour state...) is
-      // genuinely local-only; the avatar is the one field here a second
-      // device also needs to see, so it's the one that gets pushed.
+      // Everything else this is used for (theme, tour state...) is
+      // genuinely local-only. Avatar and soundOn are the two fields here
+      // that need to survive a sign-out — a device-wide privacy wipe, not
+      // an account change — so they're the ones that get pushed; sound in
+      // particular used to reset to on every time for exactly that reason.
       if (patch.avatar && userRef.current) updateAvatar(userRef.current.id, patch.avatar);
+      if ("soundOn" in patch && userRef.current) updateSoundOn(userRef.current.id, patch.soundOn !== false);
     },
     // Unlike setDiscoverable/updateProfile, this waits on the remote write
     // before touching local state — a username collision (users_display_

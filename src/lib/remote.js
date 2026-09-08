@@ -74,8 +74,8 @@ function appearanceColumns(rec) {
   };
 }
 
-export function interestToRow(rec, userId, legacy = false) {
-  const row = {
+export function interestToRow(rec, userId) {
+  return {
     id: rec.id,
     user_id: userId,
     name: rec.name,
@@ -88,12 +88,9 @@ export function interestToRow(rec, userId, legacy = false) {
     inspired_by: rec.inspiredBy || null,
     created_at: toIso(rec.createdAt),
     updated_at: toIso(rec.updatedAt || rec.createdAt),
+    ...appearanceColumns(rec),
+    deleted_at: rec.deletedAt ? toIso(rec.deletedAt) : null,
   };
-  if (legacy) return row;
-  // deleted_at only exists once 20260907000000_trash_tombstone.sql is
-  // applied — dropped in legacy mode for the same reason appearanceColumns
-  // is, so a project without it still syncs everything else.
-  return { ...row, ...appearanceColumns(rec), deleted_at: rec.deletedAt ? toIso(rec.deletedAt) : null };
 }
 
 export function rowToInterest(row) {
@@ -117,8 +114,8 @@ export function rowToInterest(row) {
   };
 }
 
-export function entryToRow(rec, legacy = false) {
-  const row = {
+export function entryToRow(rec) {
+  return {
     id: rec.id,
     interest_id: rec.interestId,
     date: rec.date,
@@ -128,11 +125,9 @@ export function entryToRow(rec, legacy = false) {
     is_pinned: !!rec.isPinned,
     created_at: toIso(rec.createdAt),
     updated_at: toIso(rec.updatedAt || rec.createdAt),
+    shared_to_feed: !!rec.sharedToFeed,
+    deleted_at: rec.deletedAt ? toIso(rec.deletedAt) : null,
   };
-  // shared_to_feed only exists once 20260901000000_feed_posts.sql is applied,
-  // deleted_at once 20260907000000_trash_tombstone.sql is — both dropped in
-  // legacy mode so a project missing either still syncs the rest.
-  return legacy ? row : { ...row, shared_to_feed: !!rec.sharedToFeed, deleted_at: rec.deletedAt ? toIso(rec.deletedAt) : null };
 }
 
 export function rowToEntry(row) {
@@ -151,8 +146,8 @@ export function rowToEntry(row) {
   };
 }
 
-export function photoToRow(rec, legacy = false) {
-  const row = {
+export function photoToRow(rec) {
+  return {
     id: rec.id,
     interest_id: rec.interestId,
     storage_path: rec.storagePath || null,
@@ -160,10 +155,8 @@ export function photoToRow(rec, legacy = false) {
     visibility: rec.visibility || "private",
     is_pinned: !!rec.isPinned,
     created_at: toIso(rec.createdAt),
+    deleted_at: rec.deletedAt ? toIso(rec.deletedAt) : null,
   };
-  // deleted_at only exists once 20260907000000_trash_tombstone.sql is
-  // applied — see pushPhotoRow's retry.
-  return legacy ? row : { ...row, deleted_at: rec.deletedAt ? toIso(rec.deletedAt) : null };
 }
 
 // No `blob` here — a photo pulled from Supabase only ever carries a
@@ -190,12 +183,22 @@ export function rowToPhoto(row) {
 // record as still needing a retry. Failures are always logged either way.
 
 export async function pushInterest(rec, userId) {
-  let { error } = await supabase.from("interests").upsert(interestToRow(rec, userId));
-  // PGRST204 = unknown column: the appearance-columns migration isn't applied
-  // to this project yet. Retry with the original column set so sync still
-  // works (losing only the new fields, as before) instead of failing whole.
+  const row = interestToRow(rec, userId);
+  let { error } = await supabase.from("interests").upsert(row);
+  // PGRST204 = unknown column: some migration isn't applied to this project
+  // yet. Drop just the newest optional group and retry, then the next —
+  // one column at a time, oldest last — instead of falling all the way
+  // back to the original columns in one jump. A project that already has
+  // appearanceColumns but not deleted_at (the common case right after
+  // shipping a new migration) would otherwise lose days/species/leaf_color
+  // on every single save, silently, until the newer migration was applied.
   if (error && error.code === "PGRST204") {
-    ({ error } = await supabase.from("interests").upsert(interestToRow(rec, userId, true)));
+    const { deleted_at, ...withoutDeletedAt } = row;
+    ({ error } = await supabase.from("interests").upsert(withoutDeletedAt));
+  }
+  if (error && error.code === "PGRST204") {
+    const { deleted_at, days, species, leaf_color, revived_at, ...bare } = row;
+    ({ error } = await supabase.from("interests").upsert(bare));
   }
   if (error) console.error("Sync (interest) failed:", error);
   return !error;
@@ -207,12 +210,18 @@ export async function deleteRemoteInterest(id) {
 }
 
 export async function pushEntry(rec) {
-  let { error } = await supabase.from("entries").upsert(entryToRow(rec));
-  // PGRST204 = unknown column: the feed migration isn't applied here yet.
-  // Retry without it so entries still sync (losing only the share flag)
-  // rather than the whole write failing.
+  const row = entryToRow(rec);
+  let { error } = await supabase.from("entries").upsert(row);
+  // Same staged fallback as pushInterest: drop the newest missing column
+  // first, so a project missing only deleted_at doesn't also lose
+  // shared_to_feed (a migration it already has) on every save.
   if (error && error.code === "PGRST204") {
-    ({ error } = await supabase.from("entries").upsert(entryToRow(rec, true)));
+    const { deleted_at, ...withoutDeletedAt } = row;
+    ({ error } = await supabase.from("entries").upsert(withoutDeletedAt));
+  }
+  if (error && error.code === "PGRST204") {
+    const { deleted_at, shared_to_feed, ...bare } = row;
+    ({ error } = await supabase.from("entries").upsert(bare));
   }
   if (error) console.error("Sync (entry) failed:", error);
   return !error;
@@ -224,11 +233,13 @@ export async function deleteRemoteEntry(id) {
 }
 
 export async function pushPhotoRow(rec) {
-  let { error } = await supabase.from("photos").upsert(photoToRow(rec));
+  const row = photoToRow(rec);
+  let { error } = await supabase.from("photos").upsert(row);
   // PGRST204 = unknown column: the trash-tombstone migration isn't applied
   // to this project yet. Retry without it so the photo still syncs.
   if (error && error.code === "PGRST204") {
-    ({ error } = await supabase.from("photos").upsert(photoToRow(rec, true)));
+    const { deleted_at, ...withoutDeletedAt } = row;
+    ({ error } = await supabase.from("photos").upsert(withoutDeletedAt));
   }
   if (error) console.error("Sync (photo) failed:", error);
   return !error;
@@ -306,6 +317,15 @@ export async function pullUserRow(userId) {
 export async function updateDiscovery(userId, enabled) {
   const { error } = await supabase.from("users").update({ discovery_enabled: enabled }).eq("id", userId);
   if (error) console.error("Sync (discovery) failed:", error);
+}
+
+// Without this, soundOn only ever lived in local storage — a sign-out
+// wipes that, and the profile rebuilt on the next sign-in had nowhere to
+// recover it from, so it silently came back on regardless of what was
+// chosen before.
+export async function updateSoundOn(userId, soundOn) {
+  const { error } = await supabase.from("users").update({ sound_on: soundOn }).eq("id", userId);
+  if (error) console.error("Sync (sound) failed:", error);
 }
 
 // The real signal StoreContext's reconciliation uses to tell "finished
