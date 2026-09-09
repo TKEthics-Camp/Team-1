@@ -77,6 +77,28 @@ export function StoreProvider({ children }) {
     return ok;
   }
 
+  // A handful of profile settings (discoverable, sound, language, theme,
+  // equipped decoration, avatar) are pushed the same fire-and-forget way
+  // records are, but weren't tracked for retry — a save that failed here
+  // had nothing to retry it, and reconciliation on the next sign-in treats
+  // remote as the source of truth, so the setting would silently revert
+  // with no error shown. Keyed "profile:<field>" instead of "<store>:<id>";
+  // reads the CURRENT value from profileRef at push time, same principle
+  // as interests/entries/photos using each record's current Dexie copy.
+  const PROFILE_FIELD_PUSH = {
+    discoverable: (v) => updateDiscovery(userRef.current.id, !!v),
+    soundOn: (v) => updateSoundOn(userRef.current.id, v !== false),
+    lang: (v) => updateLang(userRef.current.id, v || "en"),
+    theme: (v) => updateTheme(userRef.current.id, v || DEFAULT_THEME),
+    equippedDecoration: (v) => updateEquippedDecoration(userRef.current.id, v || null),
+    avatar: (v) => updateAvatar(userRef.current.id, v || {}),
+  };
+  async function pushProfileField(field, value) {
+    const ok = await PROFILE_FIELD_PUSH[field](value);
+    markSyncResult("profile", field, ok);
+    return ok;
+  }
+
   // Retries whatever's still pending, using each record's current Dexie
   // copy (never a stale snapshot from whenever it first failed) — on a
   // timer while the app is open, and the moment the browser regains a
@@ -95,6 +117,12 @@ export function StoreProvider({ children }) {
       for (const key of keys) {
         const sep = key.indexOf(":");
         const store = key.slice(0, sep), id = key.slice(sep + 1);
+        if (store === "profile") {
+          const p = profileRef.current;
+          if (!p) { markSyncResult(store, id, true); continue; }
+          await pushProfileField(id, p[id]);
+          continue;
+        }
         const rec = byStore[store].find((r) => r.id === id);
         // Gone locally since (deleted for real, or already restored/
         // erased) — nothing left to retry, so stop tracking it.
@@ -491,6 +519,10 @@ export function StoreProvider({ children }) {
       setProfileState(rec);
       put("meta", rec);
     },
+    // Exposed so a one-time push outside these actions (Onboarding's own
+    // lang/theme push at signup) gets the same tracked retry as every
+    // other profile-field push here, instead of a bare, untracked call.
+    pushProfileField,
     setLangOnProfile(lang) {
       setProfileState((p) => {
         if (!p) return p;
@@ -498,7 +530,7 @@ export function StoreProvider({ children }) {
         put("meta", next);
         return next;
       });
-      if (userRef.current) updateLang(userRef.current.id, lang);
+      if (userRef.current) pushProfileField("lang", lang);
     },
     updateProfile(patch) {
       setProfileState((p) => {
@@ -511,9 +543,9 @@ export function StoreProvider({ children }) {
       // local-only. Avatar, soundOn, and theme are fields here that need
       // to survive a sign-out — a device-wide privacy wipe, not an
       // account change — so they're the ones that get pushed.
-      if (patch.avatar && userRef.current) updateAvatar(userRef.current.id, patch.avatar);
-      if ("soundOn" in patch && userRef.current) updateSoundOn(userRef.current.id, patch.soundOn !== false);
-      if (patch.theme && userRef.current) updateTheme(userRef.current.id, patch.theme);
+      if (patch.avatar && userRef.current) pushProfileField("avatar", patch.avatar);
+      if ("soundOn" in patch && userRef.current) pushProfileField("soundOn", patch.soundOn !== false);
+      if (patch.theme && userRef.current) pushProfileField("theme", patch.theme);
     },
     // Unlike setDiscoverable/updateProfile, this waits on the remote write
     // before touching local state — a username collision (users_display_
@@ -563,7 +595,7 @@ export function StoreProvider({ children }) {
         put("meta", next);
         return next;
       });
-      if (userRef.current) updateDiscovery(userRef.current.id, enabled);
+      if (userRef.current) pushProfileField("discoverable", enabled);
     },
     addInterest(rec) {
       setInterests((list) => [...list, rec]);
@@ -905,7 +937,7 @@ export function StoreProvider({ children }) {
       const next = { ...p, equippedDecoration: id || null };
       setProfileState(next);
       put("meta", next);
-      if (userRef.current) updateEquippedDecoration(userRef.current.id, next.equippedDecoration);
+      if (userRef.current) pushProfileField("equippedDecoration", next.equippedDecoration);
     },
     // Unlocks a hair/outfit style for coins, then equips it. Free styles
     // (price 0) just equip straight away. Returns false if it can't afford

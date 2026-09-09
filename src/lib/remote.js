@@ -340,9 +340,22 @@ export async function pullUserRow(userId) {
   return data;
 }
 
+// These six (discovery, sound, language, theme, equipped decoration,
+// avatar) are the settings StoreContext tracks for retry (see
+// pushProfileField) — unlike the other users-table updaters, a failed
+// save here would otherwise get silently overwritten by the stale remote
+// value on the next sign-in, with nothing telling the user it reverted.
+// Reporting true/false (and catching a thrown network/CORS-level failure,
+// same as uploadPhotoBlob) is what makes that retry possible.
 export async function updateDiscovery(userId, enabled) {
-  const { error } = await supabase.from("users").update({ discovery_enabled: enabled }).eq("id", userId);
-  if (error) console.error("Sync (discovery) failed:", error);
+  try {
+    const { error } = await supabase.from("users").update({ discovery_enabled: enabled }).eq("id", userId);
+    if (error) { console.error("Sync (discovery) failed:", error); return false; }
+    return true;
+  } catch (err) {
+    console.error("Sync (discovery) threw:", err);
+    return false;
+  }
 }
 
 // Without this, soundOn only ever lived in local storage — a sign-out
@@ -350,21 +363,39 @@ export async function updateDiscovery(userId, enabled) {
 // recover it from, so it silently came back on regardless of what was
 // chosen before.
 export async function updateSoundOn(userId, soundOn) {
-  const { error } = await supabase.from("users").update({ sound_on: soundOn }).eq("id", userId);
-  if (error) console.error("Sync (sound) failed:", error);
+  try {
+    const { error } = await supabase.from("users").update({ sound_on: soundOn }).eq("id", userId);
+    if (error) { console.error("Sync (sound) failed:", error); return false; }
+    return true;
+  } catch (err) {
+    console.error("Sync (sound) threw:", err);
+    return false;
+  }
 }
 
 // Both used to be local-only and silently reset to their defaults after
 // any sign-out (English, and whatever DEFAULT_THEME is) regardless of
 // what was chosen before.
 export async function updateLang(userId, lang) {
-  const { error } = await supabase.from("users").update({ lang }).eq("id", userId);
-  if (error) console.error("Sync (lang) failed:", error);
+  try {
+    const { error } = await supabase.from("users").update({ lang }).eq("id", userId);
+    if (error) { console.error("Sync (lang) failed:", error); return false; }
+    return true;
+  } catch (err) {
+    console.error("Sync (lang) threw:", err);
+    return false;
+  }
 }
 
 export async function updateTheme(userId, theme) {
-  const { error } = await supabase.from("users").update({ theme }).eq("id", userId);
-  if (error) console.error("Sync (theme) failed:", error);
+  try {
+    const { error } = await supabase.from("users").update({ theme }).eq("id", userId);
+    if (error) { console.error("Sync (theme) failed:", error); return false; }
+    return true;
+  } catch (err) {
+    console.error("Sync (theme) threw:", err);
+    return false;
+  }
 }
 
 // The real signal StoreContext's reconciliation uses to tell "finished
@@ -390,8 +421,14 @@ export async function updateOwnedDecorations(userId, ownedDecorations) {
 }
 
 export async function updateEquippedDecoration(userId, equippedDecoration) {
-  const { error } = await supabase.from("users").update({ equipped_decoration: equippedDecoration }).eq("id", userId);
-  if (error) console.error("Sync (equipped decoration) failed:", error);
+  try {
+    const { error } = await supabase.from("users").update({ equipped_decoration: equippedDecoration }).eq("id", userId);
+    if (error) { console.error("Sync (equipped decoration) failed:", error); return false; }
+    return true;
+  } catch (err) {
+    console.error("Sync (equipped decoration) threw:", err);
+    return false;
+  }
 }
 
 export async function updateOwnedHair(userId, ownedHair) {
@@ -408,8 +445,14 @@ export async function updateOwnedOutfits(userId, ownedOutfits) {
 // hair colour, outfit, outfit colour) is stored as a JSON string so a
 // device other than the one that made the edit can pick it up too.
 export async function updateAvatar(userId, avatar) {
-  const { error } = await supabase.from("users").update({ avatar: JSON.stringify(avatar) }).eq("id", userId);
-  if (error) console.error("Sync (avatar) failed:", error);
+  try {
+    const { error } = await supabase.from("users").update({ avatar: JSON.stringify(avatar) }).eq("id", userId);
+    if (error) { console.error("Sync (avatar) failed:", error); return false; }
+    return true;
+  } catch (err) {
+    console.error("Sync (avatar) threw:", err);
+    return false;
+  }
 }
 
 export async function updateDisplayName(userId, name) {

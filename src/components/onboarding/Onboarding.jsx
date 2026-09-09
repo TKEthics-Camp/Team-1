@@ -4,7 +4,7 @@ import { useStore } from "../../store/StoreContext";
 import { useAuth } from "../../store/AuthContext";
 import { PALETTE, DEFAULT_THEME } from "../../lib/constants";
 import { uid } from "../../lib/id";
-import { mintOrFetchClassCode, markOnboardingComplete, updateLang, updateTheme } from "../../lib/remote";
+import { mintOrFetchClassCode, markOnboardingComplete } from "../../lib/remote";
 import { isBlockedHobby } from "../../lib/hobbyFilter";
 import LangToggle from "../shared/LangToggle";
 import IntroStep from "./IntroStep";
@@ -40,7 +40,7 @@ function avatarForGender(gender) {
 
 export default function Onboarding() {
   const { t, lang } = useI18n();
-  const { saveProfile, addInterest } = useStore();
+  const { saveProfile, addInterest, pushProfileField } = useStore();
   const { user, signOut } = useAuth();
   const meta = (user && user.user_metadata) || {};
   const accountType = meta.accountType || "individual";
@@ -104,8 +104,8 @@ export default function Onboarding() {
     if (accountType === "org" && user && !user.isDebug) mintClassCode(user.id, rec);
     if (user && !user.isDebug) {
       markOnboardingComplete(user.id);
-      updateLang(user.id, lang);
-      updateTheme(user.id, theme);
+      pushProfileField("lang", lang);
+      pushProfileField("theme", theme);
     }
   }
 
