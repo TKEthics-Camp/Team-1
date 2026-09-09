@@ -26,7 +26,6 @@ export default function StudentSheet({ student }) {
         <Avatar student={student} size={46} />
         <div className="grow">
           <h2>{student.name[lang === "en" ? 0 : 1]}</h2>
-          <div className="sub">{t("schoolName")}</div>
         </div>
       </div>
 
