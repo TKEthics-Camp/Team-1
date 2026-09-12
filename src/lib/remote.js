@@ -726,6 +726,94 @@ export async function pullFeed(userId, limit = 40) {
     }));
 }
 
+// ===================================================== watching a hobby
+// watches points at an interest, never at a user — there is no follows
+// table, deliberately (PRD §7). "Keep an eye on this hobby" is a different
+// social contract from "follow this child", and the schema is what stops
+// the second one being built by accident.
+
+export async function listWatchedIds(userId) {
+  if (!userId) return new Set();
+  const { data, error } = await supabase
+    .from("watches").select("interest_id").eq("user_id", userId);
+  if (error) {
+    console.error("Sync (watches) failed:", error);
+    return new Set();
+  }
+  return new Set((data || []).map((w) => w.interest_id));
+}
+
+export async function watchInterest(userId, interestId) {
+  const { error } = await supabase.from("watches").insert({
+    id: "wch-" + Math.random().toString(36).slice(2) + Date.now().toString(36),
+    user_id: userId,
+    interest_id: interestId,
+  });
+  // 23505 = already watching, which is the state the caller wanted anyway
+  if (error && error.code !== "23505") {
+    console.error("Sync (watch) failed:", error);
+    return false;
+  }
+  return true;
+}
+
+export async function unwatchInterest(userId, interestId) {
+  const { error } = await supabase
+    .from("watches").delete().eq("user_id", userId).eq("interest_id", interestId);
+  if (error) {
+    console.error("Sync (unwatch) failed:", error);
+    return false;
+  }
+  return true;
+}
+
+// The watched hobbies themselves, for the list in the Me tab.
+//
+// Two queries rather than one embed, on purpose. A PostgREST embed does not
+// re-apply the embedded table's RLS (see pullFeed's note) — so joining
+// interests onto watches would keep returning a hobby whose owner has since
+// turned discoverability off. Selecting the interests as their own
+// top-level query puts them back under interests_select, and anything no
+// longer visible simply doesn't come back. Watching something was never a
+// claim on it staying visible.
+export async function pullWatchedInterests(userId) {
+  if (!userId) return [];
+  const [{ data: rows, error }, blocked] = await Promise.all([
+    supabase
+      .from("watches")
+      .select("interest_id")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false }),
+    listBlockedIds(userId),
+  ]);
+  if (error) {
+    console.error("Sync (watched hobbies) failed:", error);
+    return [];
+  }
+  const ids = (rows || []).map((w) => w.interest_id);
+  if (!ids.length) return [];
+
+  const { data, error: interestsError } = await supabase
+    .from("interests")
+    .select("id, name, color, user_id, users(id, display_name, avatar)")
+    .in("id", ids);
+  if (interestsError) {
+    console.error("Sync (watched hobbies) failed:", interestsError);
+    return [];
+  }
+  return (data || [])
+    .filter((i) => i.users)
+    .filter((i) => !blocked.has(i.user_id))
+    .map((i) => ({
+      id: i.id,
+      name: i.name,
+      color: i.color,
+      ownerId: i.users.id,
+      ownerName: i.users.display_name,
+      ownerAvatar: parseAvatar(i.users.avatar),
+    }));
+}
+
 export async function listBlockedIds(userId) {
   if (!userId) return new Set();
   const { data, error } = await supabase

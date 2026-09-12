@@ -5,6 +5,7 @@ import { fmtDate } from "../../lib/dates";
 import { useAudioURL } from "../../lib/image";
 import EmptyState from "../shared/EmptyState";
 import VoiceNote from "../shared/VoiceNote";
+import ReportMenu from "../shared/ReportMenu";
 
 // Own component so useAudioURL (which may need to fetch from Storage) runs
 // once per entry rather than inside the list's own render — same shape as
@@ -14,7 +15,10 @@ function EntryVoiceNote({ entry, cacheEntryAudio }) {
   return <VoiceNote url={url} ms={entry.audioMs} />;
 }
 
-export default function JournalTab({ entries, readOnly }) {
+// authorId is only passed for someone else's journal (see
+// PublicInterestScreen) — it's what turns the edit/delete controls into a
+// report control for the same row.
+export default function JournalTab({ entries, readOnly, authorId = null, onEntryReported = null }) {
   const { t, lang } = useI18n();
   const { deleteEntry, cacheEntryAudio } = useStore();
   const { openSheet, offerUndo } = useUI();
@@ -46,6 +50,14 @@ export default function JournalTab({ entries, readOnly }) {
               </button>
               <button className="icon" aria-label={t("del")} onClick={() => remove(e.id)}>×</button>
             </>
+          )}
+          {readOnly && authorId && (
+            <ReportMenu
+              targetType="entry"
+              targetId={e.id}
+              authorId={authorId}
+              onReported={onEntryReported}
+            />
           )}
         </div>
       ))}

@@ -8,6 +8,7 @@ import { treeStage } from "../../lib/tree";
 import Sheet from "../shared/Sheet";
 import Tree from "../shared/Tree";
 import PersonAvatar from "../shared/PersonAvatar";
+import ReportMenu from "../shared/ReportMenu";
 
 // Tap a search result: their public trees only (interests_select's own RLS
 // gate) — tapping one of those trees opens a read-only journal view (no
@@ -54,6 +55,17 @@ export default function UserProfileSheet({ userId, displayName, accountType, ava
           <h2>{displayName || t("someone")}</h2>
           {accountType === "org" && <div className="sub">{t("searchUsersOrg")}</div>}
         </div>
+        {/* Reporting a person, rather than one thing they posted — the case
+            the reports table's "user" target_type exists for, and the only
+            one a child has when it's the account itself that's the problem.
+            Blocking closes the sheet: their trees are about to stop being
+            visible, so leaving it open would just empty itself out. */}
+        <ReportMenu
+          targetType="user"
+          targetId={userId}
+          authorId={userId}
+          onBlocked={closeSheet}
+        />
       </div>
 
       {loading ? (
