@@ -801,9 +801,15 @@ export async function pullWatchedInterests(userId) {
     console.error("Sync (watched hobbies) failed:", interestsError);
     return [];
   }
+  // `in` returns rows in whatever order it likes, so the newest-first
+  // ordering from the watches query above has to be reapplied here — it is
+  // carried by the position of each id in `ids`, not by anything on the
+  // interests row itself.
+  const order = new Map(ids.map((id, i) => [id, i]));
   return (data || [])
     .filter((i) => i.users)
     .filter((i) => !blocked.has(i.user_id))
+    .sort((a, b) => order.get(a.id) - order.get(b.id))
     .map((i) => ({
       id: i.id,
       name: i.name,

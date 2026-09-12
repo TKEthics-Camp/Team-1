@@ -37,3 +37,22 @@ $$;
 
 revoke all on function public.delete_my_account() from public, anon;
 grant execute on function public.delete_my_account() to authenticated;
+
+-- VERIFY THIS ONE BEFORE TRUSTING IT.
+--
+-- The delete from auth.users depends on the function's owner having rights
+-- on a schema this project doesn't own — auth belongs to supabase_auth_admin,
+-- not to us. On a normal Supabase project the migration runner has them and
+-- this works, which is why it's the common pattern. But if it doesn't, the
+-- failure is at runtime, not at migration time: the function raises, the
+-- client reports "Couldn't delete the account", and a legally required
+-- feature is quietly broken while looking implemented.
+--
+-- Signed in as a throwaway account, this should return no rows afterwards:
+--
+--   select public.delete_my_account();
+--   select * from auth.users where id = '<that account id>';
+--
+-- If it raises a permission error instead, the deletion has to move to an
+-- edge function using the service-role key and the admin API, and this
+-- function should be dropped rather than left in place looking functional.

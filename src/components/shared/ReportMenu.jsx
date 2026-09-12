@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useAuth } from "../../store/AuthContext";
 import { useUI } from "../../ui/UIContext";
@@ -28,6 +28,29 @@ export default function ReportMenu({
   const { user } = useAuth();
   const { showToast } = useUI();
   const [menu, setMenu] = useState(null); // null | "menu" | "report"
+  const wrapRef = useRef(null);
+
+  // Without this an open menu stays open forever — tapping elsewhere doesn't
+  // dismiss it, and a journal full of entries can end up with several open at
+  // once, each overlapping the row below. Closing on any outside press keeps
+  // one open at a time, since opening a second one dismisses the first.
+  useEffect(() => {
+    if (!menu) return undefined;
+    function onDown(e) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setMenu(null);
+    }
+    function onKey(e) {
+      if (e.key === "Escape") setMenu(null);
+    }
+    // pointerdown, not click: it fires before the press lands on whatever is
+    // underneath, so dismissing doesn't also activate it.
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [menu]);
 
   // Nothing to do without a signed-in user, and nobody blocks themselves.
   const canBlock = Boolean(authorId && user && authorId !== user.id);
@@ -51,7 +74,7 @@ export default function ReportMenu({
   if (!user) return null;
 
   return (
-    <div className="post-menu-wrap">
+    <div className="post-menu-wrap" ref={wrapRef}>
       <button
         type="button"
         className="icon post-more"
