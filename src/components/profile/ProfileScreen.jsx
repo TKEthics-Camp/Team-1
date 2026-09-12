@@ -22,6 +22,7 @@ export default function ProfileScreen() {
   const [armed, setArmed] = useState(false);
   const [deleteArmed, setDeleteArmed] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const currentTheme = (profile && profile.theme) || DEFAULT_THEME;
   const [, bumpPermissionCheck] = useState(0);
   const coins = (profile && profile.coins) || 0;
@@ -44,9 +45,15 @@ export default function ProfileScreen() {
     }
   }
 
-  function handleClear() {
+  async function handleClear() {
     if (!armed) { setArmed(true); return; }
-    clearGarden();
+    setClearing(true);
+    const { ok } = await clearGarden();
+    setClearing(false);
+    setArmed(false);
+    // Local is already empty either way. Saying so matters when the server
+    // half failed, because that's the case where it all comes back later.
+    showToast(ok ? t("clearedToast") : t("clearedLocalOnly"));
   }
 
   // Two taps, same as clearing — but this one can't be undone by anything,
@@ -56,8 +63,10 @@ export default function ProfileScreen() {
     setDeleting(true);
     const ok = await deleteMyAccount();
     if (!ok) { setDeleting(false); setDeleteArmed(false); showToast(t("deleteAccountFailed")); return; }
-    // The account is gone; the session is now pointing at nothing.
-    clearGarden();
+    // Signing out is all that's left: App.jsx wipes the local cache the
+    // moment `user` goes null. Calling clearGarden here would try to delete
+    // server rows for an account that no longer exists — and the server side
+    // of this is already done, buckets included.
     await signOut();
   }
 
@@ -178,7 +187,11 @@ export default function ProfileScreen() {
           <>
             <div className="sub">{t("dataNote")}</div>
 
-            <button className="btn2 btn-danger" onClick={handleClear}>
+            {/* The armed state used to be a label change and nothing else,
+                which is easy to tap straight past without noticing anything
+                happened at all. */}
+            {armed && <div className="sub">{t("clearAllWarning")}</div>}
+            <button className="btn2 btn-danger" onClick={handleClear} disabled={clearing}>
               {armed ? t("confirmClear") : t("clearAll")}
             </button>
           </>

@@ -324,11 +324,43 @@ export async function downloadAudioBlob(storagePath) {
   }
 }
 
+// Storage has no cascade. Deleting a photos row leaves its file sitting in
+// the bucket, so every path that erases a user's content has to sweep the
+// buckets explicitly. Both bucket layouts are flat — `${userId}/${id}` — so
+// one non-recursive list per bucket is the whole set.
+async function clearBucket(bucket, userId) {
+  const { data, error } = await supabase.storage.from(bucket).list(userId, { limit: 1000 });
+  if (error) {
+    console.error(`Sync (list ${bucket}) failed:`, error);
+    return false;
+  }
+  const paths = (data || []).map((f) => `${userId}/${f.name}`);
+  if (!paths.length) return true;
+  const { error: removeError } = await supabase.storage.from(bucket).remove(paths);
+  if (removeError) {
+    console.error(`Sync (clear ${bucket}) failed:`, removeError);
+    return false;
+  }
+  return true;
+}
+
+// Erases everything this user planted, on the server. Reports whether it
+// actually worked: the caller has already wiped the local copy, so a silent
+// failure here means the trees come back on the next sign-in with nothing
+// ever having said so.
 export async function deleteAllMine(userId) {
   // Cascades to that user's entries and photos via the FK ON DELETE CASCADE
-  // in the migration, so one delete is enough to erase everything remote.
+  // in the migration, so one delete covers every row.
   const { error } = await supabase.from("interests").delete().eq("user_id", userId);
-  if (error) console.error("Sync (delete all) failed:", error);
+  if (error) {
+    console.error("Sync (delete all) failed:", error);
+    return false;
+  }
+  const swept = await Promise.all([
+    clearBucket("photos", userId),
+    clearBucket("voice-notes", userId),
+  ]);
+  return swept.every(Boolean);
 }
 
 export async function pullUserRow(userId) {
