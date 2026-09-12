@@ -60,9 +60,13 @@ export default function AuthFlow() {
     // If it fails, the auth account was still created, so it's rolled back
     // by signing out rather than left as a signed-in account with no valid
     // display name — Onboarding trusts that name is already reserved.
+    // account_type isn't set here any more — handle_new_user reads it from
+    // the signup metadata, and the column is frozen against client writes
+    // (see 20260912000000), since it's what decides who gets the educator
+    // dashboard. This is still where a taken username surfaces as a 23505.
     const { error } = await supabase
       .from("users")
-      .update({ display_name: trimmedUsername, account_type: accountType })
+      .update({ display_name: trimmedUsername })
       .eq("id", result.userId);
     setBusy(false);
     if (error) {

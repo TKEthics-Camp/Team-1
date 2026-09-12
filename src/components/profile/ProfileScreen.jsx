@@ -10,15 +10,18 @@ import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
 import Stats from "../shared/Stats";
 import PersonAvatar from "../shared/PersonAvatar";
+import { deleteMyAccount } from "../../lib/remote";
 
 export default function ProfileScreen() {
   const { t, lang, nOf } = useI18n();
   const { profile, interests, photos, entries, clearGarden, updateProfile, setDiscoverable } = useStore();
   const { signOut } = useAuth();
-  const { openSheet } = useUI();
+  const { openSheet, showToast } = useUI();
   const navigate = useNavigate();
   const isOrg = profile && profile.accountType === "org";
   const [armed, setArmed] = useState(false);
+  const [deleteArmed, setDeleteArmed] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const currentTheme = (profile && profile.theme) || DEFAULT_THEME;
   const [, bumpPermissionCheck] = useState(0);
   const coins = (profile && profile.coins) || 0;
@@ -44,6 +47,18 @@ export default function ProfileScreen() {
   function handleClear() {
     if (!armed) { setArmed(true); return; }
     clearGarden();
+  }
+
+  // Two taps, same as clearing — but this one can't be undone by anything,
+  // so it says so before the second tap rather than after.
+  async function handleDeleteAccount() {
+    if (!deleteArmed) { setDeleteArmed(true); return; }
+    setDeleting(true);
+    const ok = await deleteMyAccount();
+    if (!ok) { setDeleting(false); setDeleteArmed(false); showToast(t("deleteAccountFailed")); return; }
+    // The account is gone; the session is now pointing at nothing.
+    clearGarden();
+    await signOut();
   }
 
   return (
@@ -167,6 +182,11 @@ export default function ProfileScreen() {
             </button>
           </>
         )}
+
+        {deleteArmed && <div className="sub">{t("deleteAccountWarning")}</div>}
+        <button className="btn2 btn-danger" onClick={handleDeleteAccount} disabled={deleting}>
+          {deleteArmed ? t("deleteAccountConfirm") : t("deleteAccount")}
+        </button>
         <button className="btn2" onClick={signOut}>{t("logOut")}</button>
       </div>
     </>

@@ -471,8 +471,11 @@ export async function updateDisplayName(userId, name) {
 // "does this row's class_code match *my own* class_code"), so an educator
 // who never gets this set can never see their own students no matter who
 // joins. Both have to be written for a code to actually work end to end.
-export async function setMyClassCode(userId, code) {
-  const { error } = await supabase.from("users").update({ class_code: code }).eq("id", userId);
+// Goes through join_class() like everyone else: users.class_code is frozen
+// against direct writes (see 20260912000000), and by the time this is
+// called createClass has already inserted the row, so the code validates.
+export async function setMyClassCode(code) {
+  const { error } = await supabase.rpc("join_class", { p_code: code });
   if (error) console.error("Sync (set own class_code) failed:", error);
 }
 
@@ -493,7 +496,7 @@ export async function createClass(userId, code) {
     console.error("Sync (create class) failed:", error);
     return { ok: false, taken: false, alreadyMinted: false };
   }
-  await setMyClassCode(userId, code);
+  await setMyClassCode(code);
   return { ok: true };
 }
 
@@ -522,7 +525,7 @@ export async function mintOrFetchClassCode(userId) {
     if (result.ok) return code;
     if (result.alreadyMinted) {
       const existing = await fetchMyClassCode(userId);
-      if (existing) await setMyClassCode(userId, existing);
+      if (existing) await setMyClassCode(existing);
       return existing;
     }
     if (!result.taken) break;
@@ -530,22 +533,28 @@ export async function mintOrFetchClassCode(userId) {
   return null;
 }
 
-// Whether a typed code belongs to a real class, checked before the typing
-// account has joined anything — see classes_select in the migration for
-// why this can't go through users_select instead.
-export async function classCodeExists(code) {
-  const { data, error } = await supabase.from("classes").select("code").eq("code", code).maybeSingle();
-  if (error) {
-    console.error("Sync (check class code) failed:", error);
-    return false;
-  }
-  return !!data;
-}
-
-export async function joinClass(userId, code) {
-  const { error } = await supabase.from("users").update({ class_code: code }).eq("id", userId);
+// Joins a class by code. The check for "is this a real code" lives inside
+// join_class() on the server now — the classes table isn't readable by
+// anyone but its owner, precisely so codes can't be listed and walked into,
+// which is what a client-side existence check allowed. A wrong code comes
+// back as a plain false, not an error: it's an ordinary thing to type.
+export async function joinClass(code) {
+  const { data, error } = await supabase.rpc("join_class", { p_code: code });
   if (error) {
     console.error("Sync (join class) failed:", error);
+    return "error";
+  }
+  return data ? "joined" : "invalid";
+}
+
+// Erases the account for good: storage objects first, then the auth row,
+// which cascades every table that hangs off it. Server-side in one call
+// (see 20260912010000) because a client can't delete its own auth.users
+// row at all, and a half-finished deletion is worse than none.
+export async function deleteMyAccount() {
+  const { error } = await supabase.rpc("delete_my_account");
+  if (error) {
+    console.error("Account deletion failed:", error);
     return false;
   }
   return true;

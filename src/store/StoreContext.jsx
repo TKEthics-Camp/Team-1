@@ -5,7 +5,7 @@ import { useAuth } from "./AuthContext";
 import {
   pushInterest as remotePushInterest, deleteRemoteInterest, pushEntry as remotePushEntry, deleteRemoteEntry,
   deleteAllMine, pullMine, pullUserRow, updateDiscovery, updateDisplayName,
-  classCodeExists, joinClass as joinClassRemote, setMyClassCode, updateAvatar,
+  joinClass as joinClassRemote, setMyClassCode, updateAvatar,
   parseAvatar, pushPhotoRow as remotePushPhotoRow, uploadPhotoBlob, updateCoins, deleteRemotePhoto,
   updateSoundOn, updateOwnedDecorations, updateEquippedDecoration, updateOwnedHair, updateOwnedOutfits,
   updateLang, updateTheme, uploadAudioBlob,
@@ -571,11 +571,12 @@ export function StoreProvider({ children }) {
     async joinClass(code) {
       const trimmed = (code || "").trim().toUpperCase();
       if (!trimmed) return { ok: false, reason: "empty" };
-      const exists = await classCodeExists(trimmed);
-      if (!exists) return { ok: false, reason: "invalid" };
       if (userRef.current) {
-        const pushed = await joinClassRemote(userRef.current.id, trimmed);
-        if (!pushed) return { ok: false, reason: "error" };
+        // join_class() validates the code and writes the membership in one
+        // go, server-side — the client can't be trusted to check first,
+        // since it could just skip the check and write the column itself.
+        const result = await joinClassRemote(trimmed);
+        if (result !== "joined") return { ok: false, reason: result };
       }
       setProfileState((p) => {
         if (!p) return p;
