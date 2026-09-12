@@ -758,6 +758,61 @@ export async function pullFeed(userId, limit = 40) {
     }));
 }
 
+// ==================================================== account recovery
+// A student has no email, so there is no reset link and no support desk.
+// A recovery code, written down while they still know their password, is
+// the only way back into an account whose password has been forgotten.
+//
+// The alphabet omits 0/O/1/I/L/5/S — this gets copied onto paper by a
+// child and read back weeks later, and those are the pairs that get
+// misread. 12 characters from 25 symbols is about 56 bits, which is far
+// past guessable while still being four short groups to write down.
+const RECOVERY_ALPHABET = "ABCDEFGHJKMNPQRTUVWXYZ2346789";
+
+export function generateRecoveryCode() {
+  const bytes = new Uint8Array(12);
+  crypto.getRandomValues(bytes);
+  const chars = Array.from(bytes, (b) => RECOVERY_ALPHABET[b % RECOVERY_ALPHABET.length]);
+  return chars.slice(0, 4).join("") + "-" + chars.slice(4, 8).join("") + "-" + chars.slice(8, 12).join("");
+}
+
+// Stores the hash of a freshly generated code. The plaintext is returned to
+// the caller to show once and is never sent anywhere else or kept.
+export async function setRecoveryCode(code) {
+  const { error } = await supabase.rpc("set_recovery_code", { p_code: code });
+  if (error) {
+    console.error("Recovery code save failed:", error.message);
+    return false;
+  }
+  return true;
+}
+
+export async function hasRecoveryCode() {
+  const { data, error } = await supabase.rpc("has_recovery_code");
+  if (error) {
+    console.error("Recovery code check failed:", error.message);
+    return false;
+  }
+  return !!data;
+}
+
+// Redeems a code for a new password. Called by somebody who is not signed
+// in, which is why it takes a username. Returns "ok", "invalid" (wrong
+// username or wrong code — the server deliberately cannot tell you which),
+// or "error".
+export async function redeemRecoveryCode(username, code, newPassword) {
+  const { data, error } = await supabase.rpc("redeem_recovery_code", {
+    p_username: username,
+    p_code: code,
+    p_new_password: newPassword,
+  });
+  if (error) {
+    console.error("Recovery redemption failed:", error.message);
+    return "error";
+  }
+  return data ? "ok" : "invalid";
+}
+
 // ===================================================== watching a hobby
 // watches points at an interest, never at a user — there is no follows
 // table, deliberately (PRD §7). "Keep an eye on this hobby" is a different

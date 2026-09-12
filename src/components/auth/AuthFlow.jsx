@@ -5,6 +5,7 @@ import { supabase } from "../../lib/supabase";
 import { usernameToEmail } from "../../lib/syntheticEmail";
 import LangToggle from "../shared/LangToggle";
 import SfHead from "../onboarding/SfHead";
+import RecoverFlow from "./RecoverFlow";
 import AccountTypeStep from "../onboarding/AccountTypeStep";
 import Mascot from "../shared/Mascot";
 
@@ -18,7 +19,7 @@ import Mascot from "../shared/Mascot";
 export default function AuthFlow() {
   const { t } = useI18n();
   const { signUp, signIn, authError, clearAuthError } = useAuth();
-  const [screen, setScreen] = useState("welcome"); // "welcome" | "signup" | "login"
+  const [screen, setScreen] = useState("welcome"); // "welcome" | "signup" | "login" | "recover"
   const [signupStep, setSignupStep] = useState("accountType"); // "accountType" | "credentials"
   const [accountType, setAccountType] = useState(null);
 
@@ -215,6 +216,16 @@ export default function AuthFlow() {
     );
   }
 
+  if (screen === "recover") {
+    return (
+      <div className="view sf-view">
+        <div className="sf">
+          <RecoverFlow onBack={() => setScreen("login")} onDone={() => setScreen("welcome")} />
+        </div>
+      </div>
+    );
+  }
+
   // screen === "login"
   return (
     <div className="view sf-view">
@@ -255,6 +266,10 @@ export default function AuthFlow() {
         <div className="sf-foot">
           <button className="sf-btn" type="submit" disabled={busy || !loginId.trim() || !loginPassword}>
             {busy ? t("authWorking") : t("sfContinue")}
+          </button>
+          {/* Students have no email, so this is the only way back in. */}
+          <button className="sf-linkbtn" type="button" onClick={() => setScreen("recover")}>
+            {t("recForgotLink")}
           </button>
         </div>
       </form>
