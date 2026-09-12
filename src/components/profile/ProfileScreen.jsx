@@ -181,6 +181,10 @@ export default function ProfileScreen() {
           </>
         )}
 
+        {/* Both account types have a password, so this sits outside the
+            individual-only block above. */}
+        <button className="btn2" onClick={() => openSheet("password")}>{t("pwTitle")}</button>
+
         <div className="grow" />
 
         {!isOrg && (
