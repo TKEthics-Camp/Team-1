@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useStore } from "./store/StoreContext";
 import { useAuth } from "./store/AuthContext";
@@ -9,18 +9,23 @@ import { DEFAULT_THEME } from "./lib/constants";
 import { useResolvedTheme } from "./lib/useResolvedTheme";
 import { useBadgeWatcher } from "./lib/useBadgeWatcher";
 import AuthFlow from "./components/auth/AuthFlow";
-import Onboarding from "./components/onboarding/Onboarding";
 import HomeScreen from "./components/home/HomeScreen";
-import EducatorDashboard from "./components/home/EducatorDashboard";
-import InterestScreen from "./components/interest/InterestScreen";
-import PublicInterestScreen from "./components/interest/PublicInterestScreen";
-import ExploreScreen from "./components/explore/ExploreScreen";
-import ProfileScreen from "./components/profile/ProfileScreen";
-import MarketScreen from "./components/market/MarketScreen";
 import BottomNav from "./components/shared/BottomNav";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
-import SheetHost from "./components/sheets/SheetHost";
-import PhotoViewer from "./components/interest/PhotoViewer";
+
+// Split at the route boundary. AuthFlow and HomeScreen stay eager because
+// one of them is always the first paint — lazy-loading those would only
+// trade bytes for a blank frame. Everything below is reached by a tap, by
+// which point the chunk has had the whole session to arrive.
+const Onboarding = lazy(() => import("./components/onboarding/Onboarding"));
+const EducatorDashboard = lazy(() => import("./components/home/EducatorDashboard"));
+const InterestScreen = lazy(() => import("./components/interest/InterestScreen"));
+const PublicInterestScreen = lazy(() => import("./components/interest/PublicInterestScreen"));
+const ExploreScreen = lazy(() => import("./components/explore/ExploreScreen"));
+const ProfileScreen = lazy(() => import("./components/profile/ProfileScreen"));
+const MarketScreen = lazy(() => import("./components/market/MarketScreen"));
+const SheetHost = lazy(() => import("./components/sheets/SheetHost"));
+const PhotoViewer = lazy(() => import("./components/interest/PhotoViewer"));
 import UndoToast from "./components/shared/UndoToast";
 import Toast from "./components/shared/Toast";
 import SyncStatusBadge from "./components/shared/SyncStatusBadge";
@@ -80,7 +85,7 @@ export default function App() {
             </UIProvider>
           </BrowserRouter>
         ) : (
-          <Onboarding />
+          <Suspense fallback={<div className="view" />}><Onboarding /></Suspense>
         )}
       </div>
     </div>
@@ -148,6 +153,9 @@ function RoutedShell() {
           a provider blowing up, say — where reloading really is the only way
           out. */}
       <ErrorBoundary inline key={location.pathname}>
+        {/* An empty .view holds the frame's shape while a chunk lands, so
+            switching tabs doesn't collapse the layout for a frame. */}
+        <Suspense fallback={<div className="view" />}>
         <Routes>
           <Route path="/" element={profile.accountType === "org" ? <EducatorDashboard /> : <HomeScreen />} />
           <Route path="/interest/:id" element={<InterestScreen />} />
@@ -157,10 +165,13 @@ function RoutedShell() {
           <Route path="/market" element={<MarketScreen />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </Suspense>
       </ErrorBoundary>
       {!hideNav && <BottomNav />}
-      {sheet && <SheetHost />}
-      {viewer && <PhotoViewer />}
+      <Suspense fallback={null}>
+        {sheet && <SheetHost />}
+        {viewer && <PhotoViewer />}
+      </Suspense>
       <UndoToast />
       <Toast />
       <SyncStatusBadge />
