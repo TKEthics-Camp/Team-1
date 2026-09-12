@@ -4,6 +4,7 @@ import { useAuth } from "../../store/AuthContext";
 import { useUI } from "../../ui/UIContext";
 import Sheet from "../shared/Sheet";
 import Field from "../shared/Field";
+import { errorSound } from "../../lib/feedback";
 
 const MIN_LENGTH = 6;
 
@@ -35,6 +36,9 @@ export default function PasswordSheet() {
     const result = await changePassword(current, next);
     setSaving(false);
     if (result.ok) { showToast(t("pwChanged")); closeSheet(); return; }
+    // A wrong password is the one failure here the student can act on, so
+    // it gets a sound as well as the message.
+    errorSound(null);
     setErrorKey(result.reason === "wrong" ? "pwWrong" : "pwError");
   }
 

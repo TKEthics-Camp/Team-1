@@ -5,6 +5,7 @@ import { useUI } from "../../ui/UIContext";
 import { PALETTE, DECORATIONS } from "../../lib/constants";
 import TopBar from "../shared/TopBar";
 import PersonAvatar from "../shared/PersonAvatar";
+import { coinSound } from "../../lib/feedback";
 
 export default function MarketScreen() {
   const { t, lang } = useI18n();
@@ -48,7 +49,7 @@ export default function MarketScreen() {
                     <button
                       className="btn2"
                       disabled={coins < deco.price}
-                      onClick={() => { if (buyDecoration(deco.id)) showToast(t("coinsSpent").replace("{n}", deco.price)); }}
+                      onClick={() => { if (buyDecoration(deco.id)) { coinSound(profile); showToast(t("coinsSpent").replace("{n}", deco.price)); } }}
                     >
                       {"🪙 " + deco.price}
                     </button>

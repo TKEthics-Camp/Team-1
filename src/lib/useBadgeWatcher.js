@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { earnedIds } from "./badges";
+import { badgeSound } from "./feedback";
 
 // Badges are derived, so "newly earned" is the difference between what's true
 // now and what the profile has already been told about. Without that record
@@ -26,6 +27,9 @@ export function useBadgeWatcher({ profile, interests, entries, photos, updatePro
     if (!fresh.length) return;
 
     updateProfile({ earnedBadges: now });
+    // One sound however many landed, for the same reason the toast is one
+    // line: several at once is a good moment, not five good moments.
+    badgeSound(profile);
     // one line even if several land at once, so a big session doesn't become
     // a queue of toasts fighting over the same slot
     showToast(
