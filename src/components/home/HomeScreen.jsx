@@ -8,6 +8,7 @@ import { globalStreakDetail } from "../../lib/derived";
 import { isDyingSoon, daysUntilDeath } from "../../lib/tree";
 import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
+import StreakFlame from "../shared/StreakFlame";
 import NudgeBanner from "./NudgeBanner";
 import MemoryBanner from "./MemoryBanner";
 import DyingBanner from "./DyingBanner";
@@ -53,9 +54,7 @@ export default function HomeScreen() {
             together, so a protected streak never looks like an unbroken one */}
         <span className={"chip flame-badge" + (restingNow ? " resting" : "")} title={restingNow ? t("restDayOn") : undefined}>
           {streak}
-          <span key={String(streak) + restingNow} className="flame" aria-hidden="true">
-            {restingNow ? "🍃" : "🔥"}
-          </span>
+          <StreakFlame key={String(streak) + restingNow} resting={restingNow} />
         </span>
         <LangToggle />
       </TopBar>

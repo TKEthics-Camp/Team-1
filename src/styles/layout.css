@@ -21,7 +21,13 @@
   border-radius: 32px;
   box-shadow: 0 40px 90px -34px var(--cast), 0 0 0 1px rgba(255,255,255,.28) inset;
   transition: background .5s ease;
-  overflow: hidden;
+  /* clip, not hidden: `hidden` still makes this a scroll container, and the
+     drifting cloud pseudo-elements below overflow it by ~140px. Focusing a
+     control then scrolled the whole frame sideways to reveal them — and
+     nothing could scroll it back, since there's no scrollbar and no gesture
+     for it. `clip` clips without any of that, which is what the fixed frame
+     wanted in the first place. */
+  overflow: clip;
   display: flex;
   flex-direction: column;
   /* Fixed device-shaped frame — content scrolls inside .view, the frame itself never grows. */

@@ -667,23 +667,35 @@ input[type="text"]:focus, textarea:focus, .user-search-input:focus {
   50%      { transform: rotate(7deg); }
 }
 
-/* the streak flame: a slow idle flicker, plus a pop each time the number
-   actually changes (HomeScreen keys the span on the streak value, so it
-   remounts and the animation replays) */
+/* the streak flame: an outer body and a brighter core, each licking on its
+   own clock. The two rates don't divide into each other, so they drift in
+   and out of phase and the silhouette never settles into a visible loop.
+   Plus a pop each time the number actually changes — HomeScreen keys the
+   icon on the streak value, so it remounts and the pop replays. */
 .flame-badge { display: inline-flex; align-items: center; gap: 5px; }
-.flame-badge .flame {
-  display: inline-block;
-  animation: flameIdle 2.6s ease-in-out infinite, flamePop .62s cubic-bezier(.32,.72,0,1);
-  transform-origin: 50% 85%;
+.streak-ico {
+  display: block; overflow: visible;
+  transform-origin: 50% 92%;
+  animation: streakPop .62s cubic-bezier(.32,.72,0,1);
 }
-@keyframes flameIdle {
-  0%, 100% { transform: scale(1) rotate(0deg); }
-  30%      { transform: scale(1.08) rotate(-5deg); }
-  65%      { transform: scale(.97) rotate(4deg); }
+.streak-ico .streak-flame-outer,
+.streak-ico .streak-flame-core { transform-box: view-box; transform-origin: 12px 28px; }
+.streak-ico .streak-flame-outer { animation: streakLickOuter 1.15s ease-in-out infinite; }
+.streak-ico .streak-flame-core  { animation: streakLickCore .78s ease-in-out infinite; }
+
+@keyframes streakLickOuter {
+  0%, 100% { transform: scale(1, 1) translateY(0); }
+  35%      { transform: scale(.94, 1.07) translateY(-.4px); }
+  70%      { transform: scale(1.05, .95) translateY(.2px); }
 }
-@keyframes flamePop {
-  0%   { transform: scale(.5) rotate(-18deg); opacity: .3; }
-  55%  { transform: scale(1.45) rotate(8deg); opacity: 1; }
+@keyframes streakLickCore {
+  0%, 100% { transform: scale(1, 1);     opacity: .95; }
+  40%      { transform: scale(.86, 1.14); opacity: 1; }
+  75%      { transform: scale(1.1, .9);   opacity: .82; }
+}
+@keyframes streakPop {
+  0%   { transform: scale(.4) rotate(-16deg); opacity: .2; }
+  55%  { transform: scale(1.35) rotate(6deg); opacity: 1; }
   100% { transform: scale(1) rotate(0deg); }
 }
 
@@ -778,11 +790,21 @@ input[type="text"]:focus, textarea:focus, .user-search-input:focus {
    the *viewport* origin, which sends rotations flying off-centre.
    ============================================================ */
 
+/* Pivots are in viewBox units, not fill-box. A leaf-arm has to swing from
+   the shoulder where it meets the body — a fixed point on the drawing, not
+   the centre of the leaf's own bounding box. fill-box also re-anchors any
+   `transform` attribute on the same element, which is what used to fling
+   the arms off into space; Mascot.jsx now keeps those attributes on the
+   shapes *inside* these wrappers, so the two never fight. */
 .sprig .sprig-body, .sprig .sprig-arm-l, .sprig .sprig-arm-r,
 .sprig .sprig-face, .sprig .sprig-tuft, .sprig .sprig-shadow {
-  transform-box: fill-box;
-  transform-origin: center;
+  transform-box: view-box;
 }
+.sprig .sprig-body   { transform-origin: 50px 60px; }
+.sprig .sprig-arm-l  { transform-origin: 26px 62px; }
+.sprig .sprig-arm-r  { transform-origin: 74px 62px; }
+.sprig .sprig-tuft   { transform-origin: 50px 34px; }
+.sprig .sprig-shadow { transform-origin: 50px 94px; }
 
 /* idle — a slow breath, so he's never completely still */
 .sprig[data-action="idle"] .sprig-body { animation: sprigBreathe 3.6s ease-in-out infinite; }
@@ -793,7 +815,6 @@ input[type="text"]:focus, textarea:focus, .user-search-input:focus {
 
 /* wave — one arm swings from its shoulder end */
 .sprig[data-action="wave"] .sprig-arm-l {
-  transform-origin: 100% 50%;
   animation: sprigWave 1.5s ease-in-out infinite;
 }
 .sprig[data-action="wave"] .sprig-body { animation: sprigBreathe 3.6s ease-in-out infinite; }
@@ -804,8 +825,8 @@ input[type="text"]:focus, textarea:focus, .user-search-input:focus {
 }
 
 /* cheer — both arms up, and the whole plant hops off its own shadow */
-.sprig[data-action="cheer"] .sprig-arm-l { transform-origin: 100% 50%; animation: sprigCheerL .9s ease-in-out infinite; }
-.sprig[data-action="cheer"] .sprig-arm-r { transform-origin: 0% 50%;   animation: sprigCheerR .9s ease-in-out infinite; }
+.sprig[data-action="cheer"] .sprig-arm-l { animation: sprigCheerL .9s ease-in-out infinite; }
+.sprig[data-action="cheer"] .sprig-arm-r { animation: sprigCheerR .9s ease-in-out infinite; }
 .sprig[data-action="cheer"] .sprig-body  { animation: sprigHop .9s ease-in-out infinite; }
 .sprig[data-action="cheer"] .sprig-shadow { animation: sprigShadow .9s ease-in-out infinite; }
 @keyframes sprigCheerL { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-34deg); } }
@@ -815,7 +836,7 @@ input[type="text"]:focus, textarea:focus, .user-search-input:focus {
 
 /* point — leans toward whatever's on his right */
 .sprig[data-action="point"] .sprig-body { animation: sprigLean 2.4s ease-in-out infinite; }
-.sprig[data-action="point"] .sprig-arm-r { transform-origin: 0% 50%; animation: sprigPoint 2.4s ease-in-out infinite; }
+.sprig[data-action="point"] .sprig-arm-r { animation: sprigPoint 2.4s ease-in-out infinite; }
 @keyframes sprigLean  { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(7deg); } }
 @keyframes sprigPoint { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-22deg) translateX(8%); } }
 
@@ -857,6 +878,19 @@ input[type="text"]:focus, textarea:focus, .user-search-input:focus {
 }
 .entry .voice-note { margin-top: 8px; }
 
-/* a streak currently held together by a rest day reads calm, not on fire */
+/* a streak currently held together by a rest day reads calm, not on fire:
+   the leaf sways instead of licking */
 .flame-badge.resting { color: var(--accent); }
-.flame-badge.resting .flame { animation: flameIdle 4.2s ease-in-out infinite; }
+.streak-ico .streak-leaf {
+  transform-box: view-box; transform-origin: 12px 24px;
+  animation: streakSway 4.2s ease-in-out infinite;
+}
+@keyframes streakSway {
+  0%, 100% { transform: rotate(-6deg); }
+  50%      { transform: rotate(6deg); }
+}
+
+/* motion here is decoration, never information — the number carries that */
+@media (prefers-reduced-motion: reduce) {
+  .streak-ico, .streak-ico * { animation: none; }
+}

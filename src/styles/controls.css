@@ -87,7 +87,10 @@ input[type="date"], input[type="time"] { font-family: var(--mono); color-scheme:
 .photogrid button { padding: 0; border: none; background: none; aspect-ratio: 1; border-radius: 10px; overflow: hidden; }
 .photogrid img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-.entry { border-top: 1px solid var(--line); padding: 13px 0; display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: start; }
+/* text, then edit, then delete — three columns, because there are three
+   children. With only two the delete button wrapped onto a row of its own
+   and stretched across it, centring the × under the entry text. */
+.entry { border-top: 1px solid var(--line); padding: 13px 0; display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: start; }
 .entry:first-child { border-top: none; }
 .entry .d { font-family: var(--mono); font-size: 11px; color: var(--dim); }
 .entry .t { font-size: 14px; margin-top: 3px; overflow-wrap: anywhere; white-space: pre-wrap; }
