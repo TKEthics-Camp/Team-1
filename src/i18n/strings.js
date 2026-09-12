@@ -230,6 +230,8 @@ export const STR = {
   save:         ["Save", "保存"],
   cancel:       ["Cancel", "取消"],
   choosePhoto:  ["Choose a photo", "选择照片"],
+  photoTooBig:  ["That picture's too big to add. Try one under 25MB.", "这张图片太大了，请选择小于 25MB 的图片。"],
+  photoUnreadable: ["That file couldn't be opened as a picture. Try another one.", "无法打开这个文件，请换一张图片。"],
   name:         ["Name", "名称"],
   colour:       ["Colour", "颜色"],
   del:          ["Delete", "删除"],

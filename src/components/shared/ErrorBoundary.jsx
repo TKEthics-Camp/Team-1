@@ -21,6 +21,20 @@ export default class ErrorBoundary extends Component {
 
   render() {
     if (!this.state.hasError) return this.props.children;
+    // `inline` is the per-screen boundary in App.jsx: the shell and the tab
+    // bar are still mounted and still work, so this only has to replace the
+    // view that broke. Switching tabs re-keys it and clears the error, which
+    // is a far cheaper recovery than reloading the whole app.
+    if (this.props.inline) {
+      return (
+        <div className="view" style={{ alignItems: "center", justifyContent: "center", textAlign: "center", gap: 10 }}>
+          <div style={{ fontSize: 32 }} aria-hidden="true">🌧️</div>
+          <h2 style={{ fontFamily: "var(--display)", fontSize: 17 }}>This screen ran into trouble</h2>
+          <p className="sub">换个标签页再回来试试。你的数据是安全的。</p>
+          <p className="sub">Try another tab and come back — your data is safe.</p>
+        </div>
+      );
+    }
     return (
       <div className="stage" data-theme="white">
         <div className="app">

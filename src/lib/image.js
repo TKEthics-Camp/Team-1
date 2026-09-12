@@ -1,19 +1,44 @@
 import { useEffect, useState } from "react";
 import { downloadPhotoBlob, downloadAudioBlob } from "./remote";
 
-export function downscale(file, max, cb) {
+// Nothing bigger than this is worth decoding: it's a phone photo or it's a
+// mistake, and the decode itself is what would hang a cheap device.
+export const MAX_PICK_BYTES = 25 * 1024 * 1024;
+
+// Turns a picked file into something safe to store and show: size-capped,
+// actually decodable, scaled to `max` on the long edge, and always
+// re-encoded as JPEG. Calls back (blob, null) or (null, reasonKey).
+//
+// The re-encode is unconditional on purpose. This used to hand the original
+// file straight back whenever it was already small enough, or whenever the
+// decode failed — so a HEIC straight off an iPhone (small, and undecodable
+// outside Safari) went up untouched and then rendered as a broken image for
+// everyone else. Anything that reaches the callback here has been through a
+// canvas, which means the browser could read it and every other browser can
+// read what came out.
+export function prepareImage(file, max, cb) {
+  if (!file) return cb(null, "photoUnreadable");
+  if (file.size > MAX_PICK_BYTES) return cb(null, "photoTooBig");
+
   var url = URL.createObjectURL(file);
   var img = new Image();
   img.onload = function () {
+    URL.revokeObjectURL(url);
     var scale = Math.min(1, max / Math.max(img.width, img.height));
-    if (scale === 1) { URL.revokeObjectURL(url); return cb(file); }
     var c = document.createElement("canvas");
-    c.width = Math.round(img.width * scale);
-    c.height = Math.round(img.height * scale);
-    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-    c.toBlob(function (b) { URL.revokeObjectURL(url); cb(b || file); }, "image/jpeg", 0.82);
+    c.width = Math.max(1, Math.round(img.width * scale));
+    c.height = Math.max(1, Math.round(img.height * scale));
+    var ctx = c.getContext("2d");
+    // JPEG has no alpha, so anything transparent would flatten to black
+    // without this — screenshots and exported drawings, mostly.
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, c.width, c.height);
+    ctx.drawImage(img, 0, 0, c.width, c.height);
+    // toBlob yields null when the canvas is past the browser's size limit,
+    // which is the one failure that survives a successful decode.
+    c.toBlob(function (b) { cb(b || null, b ? null : "photoUnreadable"); }, "image/jpeg", 0.82);
   };
-  img.onerror = function () { URL.revokeObjectURL(url); cb(file); };
+  img.onerror = function () { URL.revokeObjectURL(url); cb(null, "photoUnreadable"); };
   img.src = url;
 }
 

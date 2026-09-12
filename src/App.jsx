@@ -18,6 +18,7 @@ import ExploreScreen from "./components/explore/ExploreScreen";
 import ProfileScreen from "./components/profile/ProfileScreen";
 import MarketScreen from "./components/market/MarketScreen";
 import BottomNav from "./components/shared/BottomNav";
+import ErrorBoundary from "./components/shared/ErrorBoundary";
 import SheetHost from "./components/sheets/SheetHost";
 import PhotoViewer from "./components/interest/PhotoViewer";
 import UndoToast from "./components/shared/UndoToast";
@@ -142,15 +143,21 @@ function RoutedShell() {
 
   return (
     <>
-      <Routes>
-        <Route path="/" element={profile.accountType === "org" ? <EducatorDashboard /> : <HomeScreen />} />
-        <Route path="/interest/:id" element={<InterestScreen />} />
-        <Route path="/user/:userId/interest/:interestId" element={<PublicInterestScreen />} />
-        <Route path="/explore" element={<ExploreScreen />} />
-        <Route path="/profile" element={<ProfileScreen />} />
-        <Route path="/market" element={<MarketScreen />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      {/* Keyed on the path so moving to another tab clears a crashed screen.
+          The root boundary in main.jsx still catches anything outside this —
+          a provider blowing up, say — where reloading really is the only way
+          out. */}
+      <ErrorBoundary inline key={location.pathname}>
+        <Routes>
+          <Route path="/" element={profile.accountType === "org" ? <EducatorDashboard /> : <HomeScreen />} />
+          <Route path="/interest/:id" element={<InterestScreen />} />
+          <Route path="/user/:userId/interest/:interestId" element={<PublicInterestScreen />} />
+          <Route path="/explore" element={<ExploreScreen />} />
+          <Route path="/profile" element={<ProfileScreen />} />
+          <Route path="/market" element={<MarketScreen />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </ErrorBoundary>
       {!hideNav && <BottomNav />}
       {sheet && <SheetHost />}
       {viewer && <PhotoViewer />}
