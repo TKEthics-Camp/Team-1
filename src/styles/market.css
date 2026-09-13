@@ -8,5 +8,5 @@
 .deco-nm { font-family: var(--display); font-weight: 600; font-size: 13px; color: var(--ink); text-align: center; }
 .deco-card .btn2 { padding: 8px 10px; font-size: 12.5px; }
 .deco-card .btn2[aria-pressed="true"] {
-  background: linear-gradient(135deg,#FF8FC0,#FFAE7E); color: #4A2140; border-color: transparent; font-weight: 700;
+  background: var(--accent); color: var(--accent-ink); border-color: transparent; font-weight: 600;
 }

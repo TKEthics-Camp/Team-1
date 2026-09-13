@@ -14,28 +14,18 @@
    one shared piece — see the .nav block in the Home section.
    ============================================================ */
 
+/* These used to be their own palette, hardcoded per skin, which is how the
+   home screens drifted to a different grey and a different blue from the
+   rest of the app. They are aliases now: one skin in tokens.css, and these
+   names kept only so the rules below don't all have to be rewritten. A
+   theme change reaches them for free, which is the point. */
 .home-bar, .home-view, .nav,
 .tree-bar, .tree-view, .tree-sheet {
-  --home-fill: #ececee;
-  --home-line: #d6d6da;
-  --home-blue: #0088ff;
-  /* raised surfaces — cards, fields, the sheet itself. Must be tokens, not
-     literal #fff: --ink flips to white under the Black skin, and a hardcoded
-     white card would leave white text on white. */
-  --home-card: #ffffff;
-  --home-surface: #ffffff;
-}
-.stage[data-theme="black"] .home-bar,
-.stage[data-theme="black"] .home-view,
-.stage[data-theme="black"] .nav,
-.stage[data-theme="black"] .tree-bar,
-.stage[data-theme="black"] .tree-view,
-.stage[data-theme="black"] .tree-sheet {
-  --home-fill: rgba(255, 255, 255, .10);
-  --home-line: rgba(255, 255, 255, .16);
-  --home-blue: #0a84ff;
-  --home-card: #2c2c2e;
-  --home-surface: #1c1c1e;
+  --home-fill: var(--card-2);
+  --home-line: var(--line);
+  --home-blue: var(--accent);
+  --home-card: var(--card);
+  --home-surface: var(--app-bg);
 }
 
 /* ---------- header: no rule, no glass, just the greeting ---------- */
@@ -413,13 +403,18 @@
   background: radial-gradient(ellipse, var(--wash-b), transparent 70%);
   animation: drift 34s ease-in-out infinite reverse;
 }
+/* These were a blue and a pink at .26 and .20, which is most of why every
+   screen read as washed out — a pastel haze sitting over the content at all
+   times. They existed to give the glass something to refract; with the blur
+   now reserved for three surfaces, that job is gone. What is left is a
+   single barely-there warm tint so the ground is not dead flat. */
 .stage, .stage[data-theme="white"] {
-  --wash-a: rgba(0, 136, 255, .26);
-  --wash-b: rgba(255, 122, 168, .20);
+  --wash-a: rgba(28, 112, 73, .05);
+  --wash-b: rgba(200, 129, 27, .04);
 }
 .stage[data-theme="black"] {
-  --wash-a: rgba(10, 132, 255, .34);
-  --wash-b: rgba(255, 122, 168, .20);
+  --wash-a: rgba(95, 191, 139, .06);
+  --wash-b: rgba(224, 163, 60, .04);
 }
 
 /* the device frame itself */
@@ -430,10 +425,12 @@
 
 /* ---------- the glass recipe, as one reusable block ---------- */
 
-.topbar, .nav, .sheet, .btn2, .chip, .tabs, .seg,
-.stat, .theme-btn, .idea, .post, .setup-row, .nudge, .memory,
-.code-card, .deco-card, .acct-card, .choice, .tree-status,
-.user-search-input, .day-btn, .species-btn {
+/* Blur is a material, and a material only reads as one if it is rare. This
+   used to name twenty-one selectors — a stat tile, a day button and the tab
+   bar were all made of the same stuff, which is why nothing on screen
+   looked more important than anything else. Only these three actually sit
+   over content that moves underneath them. */
+.topbar, .nav, .sheet {
   -webkit-backdrop-filter: var(--lg-blur);
   backdrop-filter: var(--lg-blur);
 }
