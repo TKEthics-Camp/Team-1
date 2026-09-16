@@ -523,13 +523,16 @@
 }
 
 /* fields */
-input[type="text"], input[type="date"], input[type="time"], textarea,
+input[type="text"], input[type="password"], input[type="email"],
+input[type="date"], input[type="time"], textarea,
 .user-search-input {
   background: var(--lg-fill); color: var(--ink);
   border: 1px solid var(--lg-edge); border-radius: 12px;
   font-family: var(--body);
 }
-input[type="text"]:focus, textarea:focus, .user-search-input:focus {
+input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus,
+input[type="date"]:focus, input[type="time"]:focus,
+textarea:focus, .user-search-input:focus {
   outline: none; border-color: var(--accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
 }
