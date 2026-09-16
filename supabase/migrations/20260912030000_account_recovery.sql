@@ -3,10 +3,10 @@
 -- THE PROBLEM THIS SOLVES
 -- A student signs up with a username and a password and no email address,
 -- because a meaningful share of them don't have one. There is consequently
--- no reset link, no second factor, and no support desk. Until this
--- migration, a child who forgot their password lost every tree, photo,
--- journal entry and voice note they had ever made, permanently, with no
--- path back. That is the harshest failure mode in the product.
+-- no reset link, no second factor, and no support desk. Without this, a
+-- child who forgot their password lost every tree, photo, journal entry and
+-- voice note they had ever made, permanently, with no path back. That is
+-- the harshest failure mode in the product.
 --
 -- THE SHAPE OF THE FIX
 -- A recovery code, issued while the student is still signed in, written
@@ -20,6 +20,23 @@
 -- the app, which would defeat the point. The student sees it exactly once,
 -- when it is generated, and can generate a fresh one whenever they like.
 --
+-- WHY THIS FILE DOES NOT NAME THE pgcrypto SCHEMA
+-- The first version of this migration opened with
+--   create extension if not exists pgcrypto with schema extensions;
+-- and then called extensions.crypt(...) throughout. Both halves of that are
+-- assumptions about a project this migration does not own. If the schema
+-- named there does not exist, the statement raises; the SQL editor runs the
+-- whole file as one transaction, so the table and all three functions roll
+-- back together and nothing is left behind to show for it. The app then
+-- fails with PostgREST's "could not find the function in the schema cache",
+-- which is true but says nothing about why.
+--
+-- So: install pgcrypto only if it is missing, leave it alone if it is
+-- already installed somewhere, and call crypt/gen_salt unqualified with a
+-- pinned search_path that covers both plausible homes. The search path is
+-- fixed at definition time and puts extensions ahead of public, so nothing
+-- created in public later can shadow crypt inside a definer function.
+--
 -- A NOTE ON HOW THE PASSWORD IS ACTUALLY SET, AND ITS TRADE-OFF
 -- Resetting a password for somebody who is *not* signed in needs privileges
 -- a browser cannot hold. There are two ways to get them:
@@ -32,12 +49,11 @@
 --       internal detail, not a documented contract.
 --
 -- (b) is chosen here because it works today with no infrastructure the
--- project doesn't already have, and because 20260912010000 already
--- establishes that this project's migration owner can write to the auth
--- schema. If that assumption ever stops holding, redeem_recovery_code
--- raises rather than silently succeeding, and the fix is to move this one
--- function to an edge function and change the single rpc() call in
--- lib/remote.js. Nothing else in the flow depends on which path is used.
+-- project doesn't already have. If that assumption ever stops holding,
+-- redeem_recovery_code raises rather than silently succeeding, and the fix
+-- is to move this one function to an edge function and change the single
+-- rpc() call in lib/remote.js. Nothing else in the flow depends on which
+-- path is used.
 --
 -- Deliberately NOT done here: revoking existing sessions. Doing that means
 -- reaching into auth's session tables, whose shape is far less stable than
@@ -45,7 +61,16 @@
 -- session at all. A student who still has a session should use Me → Change
 -- password, which goes through Supabase's own API.
 
-create extension if not exists pgcrypto with schema extensions;
+-- ================================================== pgcrypto, defensively
+create schema if not exists extensions;
+
+do $$
+begin
+  if not exists (select 1 from pg_extension where extname = 'pgcrypto') then
+    create extension pgcrypto with schema extensions;
+  end if;
+end
+$$;
 
 -- ===================================================== recovery_codes
 create table if not exists public.recovery_codes (
@@ -68,11 +93,14 @@ revoke all on public.recovery_codes from anon, authenticated;
 -- the account. Replaces any previous code: one live code per account, so a
 -- code written down and then re-generated stops working, which is the
 -- behaviour someone re-generating it after losing the paper expects.
+--
+-- The 12-character minimum matches canonicalRecoveryCode in
+-- lib/recoveryCode.js, which strips the display dashes before sending.
 create or replace function public.set_recovery_code(p_code text)
 returns void
 language plpgsql
 security definer
-set search_path = public, extensions
+set search_path = extensions, public, pg_temp
 as $$
 begin
   if auth.uid() is null then
@@ -83,7 +111,7 @@ begin
   end if;
 
   insert into public.recovery_codes (user_id, code_hash, created_at, used_at)
-  values (auth.uid(), extensions.crypt(p_code, extensions.gen_salt('bf')), now(), null)
+  values (auth.uid(), crypt(p_code, gen_salt('bf')), now(), null)
   on conflict (user_id) do update
     set code_hash = excluded.code_hash,
         created_at = now(),
@@ -100,7 +128,7 @@ create or replace function public.has_recovery_code()
 returns boolean
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
 begin
   if auth.uid() is null then
@@ -133,7 +161,7 @@ create or replace function public.redeem_recovery_code(
 returns boolean
 language plpgsql
 security definer
-set search_path = public, extensions
+set search_path = extensions, public, pg_temp
 as $$
 declare
   v_uid  uuid;
@@ -161,14 +189,14 @@ begin
     return false;
   end if;
 
-  if extensions.crypt(p_code, v_hash) <> v_hash then
+  if crypt(p_code, v_hash) <> v_hash then
     return false;
   end if;
 
   -- See the header: this is the internal-detail dependency. bcrypt is what
   -- Supabase stores here, and gen_salt('bf') is what produces it.
   update auth.users
-  set encrypted_password = extensions.crypt(p_new_password, extensions.gen_salt('bf')),
+  set encrypted_password = crypt(p_new_password, gen_salt('bf')),
       updated_at = now()
   where id = v_uid;
 
@@ -183,15 +211,8 @@ $$;
 revoke all on function public.redeem_recovery_code(text, text, text) from public;
 grant execute on function public.redeem_recovery_code(text, text, text) to anon, authenticated;
 
--- VERIFY BEFORE TRUSTING, the same way 20260912010000 asks you to.
---
--- On a throwaway account, signed in:
---   select public.set_recovery_code('TESTTESTTEST');
--- Then signed out, redeem it and sign in with the new password:
---   select public.redeem_recovery_code('<that username>', 'TESTTESTTEST', 'newpassword123');
--- It must return true, and logging in with newpassword123 must work.
---
--- If the update raises a permission error, or returns true but the new
--- password does not work, the bcrypt assumption does not hold on this
--- project. Move this one function to an edge function using the admin API
--- and repoint redeemRecoveryCode in src/lib/remote.js at it.
+-- PostgREST answers rpc() calls from a cached copy of the schema and does
+-- not notice new functions on its own. Without this, every call returns
+-- "Could not find the function in the schema cache" even once the function
+-- genuinely exists.
+notify pgrst, 'reload schema';
