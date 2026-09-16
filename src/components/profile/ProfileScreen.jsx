@@ -15,7 +15,7 @@ import { deleteMyAccount } from "../../lib/remote";
 export default function ProfileScreen() {
   const { t, lang, nOf } = useI18n();
   const { profile, interests, photos, entries, clearGarden, updateProfile, setDiscoverable } = useStore();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const { openSheet, showToast } = useUI();
   const navigate = useNavigate();
   const isOrg = profile && profile.accountType === "org";
@@ -23,6 +23,7 @@ export default function ProfileScreen() {
   const [deleteArmed, setDeleteArmed] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
   const currentTheme = (profile && profile.theme) || DEFAULT_THEME;
   const [, bumpPermissionCheck] = useState(0);
   const coins = (profile && profile.coins) || 0;
@@ -61,8 +62,18 @@ export default function ProfileScreen() {
   async function handleDeleteAccount() {
     if (!deleteArmed) { setDeleteArmed(true); return; }
     setDeleting(true);
-    const ok = await deleteMyAccount();
-    if (!ok) { setDeleting(false); setDeleteArmed(false); showToast(t("deleteAccountFailed")); return; }
+    setDeleteError(null);
+    const result = await deleteMyAccount(user && user.id);
+    if (!result.ok) {
+      setDeleting(false);
+      setDeleteArmed(false);
+      // Shown on the screen, not just toasted: this one can't be retried
+      // into working, and the server's own wording is the only thing that
+      // says what actually went wrong.
+      setDeleteError(result.message);
+      showToast(t("deleteAccountFailed"));
+      return;
+    }
     // Signing out is all that's left: App.jsx wipes the local cache the
     // moment `user` goes null. Calling clearGarden here would try to delete
     // server rows for an account that no longer exists — and the server side
@@ -203,6 +214,7 @@ export default function ProfileScreen() {
         )}
 
         {deleteArmed && <div className="sub">{t("deleteAccountWarning")}</div>}
+        {deleteError && <div className="field-error" style={{ overflowWrap: "anywhere" }}>{deleteError}</div>}
         <button className="btn2 btn-danger" onClick={handleDeleteAccount} disabled={deleting}>
           {deleteArmed ? t("deleteAccountConfirm") : t("deleteAccount")}
         </button>

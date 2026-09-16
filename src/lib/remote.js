@@ -583,13 +583,35 @@ export async function joinClass(code) {
 // which cascades every table that hangs off it. Server-side in one call
 // (see 20260912010000) because a client can't delete its own auth.users
 // row at all, and a half-finished deletion is worse than none.
-export async function deleteMyAccount() {
+// Erases the account for good. Two halves, deliberately split.
+//
+// Storage goes first, from here, through the same storage API that "clear
+// all data" uses and that is known to work on this project. The SQL
+// function sweeps the buckets too, but deleting storage.objects by hand is
+// a different permission from asking the storage API to remove a file, and
+// it is the more fragile of the two. Doing it here means the photos and
+// voice notes are gone even if the SQL half cannot manage it.
+//
+// Then the auth row, which nothing but a definer function can remove.
+//
+// Returns the server's own message rather than a boolean. This is the one
+// action in the app a student cannot work around or retry their way out
+// of, and "that didn't work" tells them nothing and tells us less — the
+// real error names the exact table and privilege involved, and it was
+// going to a console nobody opens.
+export async function deleteMyAccount(userId) {
+  if (userId) {
+    await Promise.all([
+      clearBucket("photos", userId),
+      clearBucket("voice-notes", userId),
+    ]);
+  }
   const { error } = await supabase.rpc("delete_my_account");
   if (error) {
     console.error("Account deletion failed:", error);
-    return false;
+    return { ok: false, message: error.message || error.hint || String(error) };
   }
-  return true;
+  return { ok: true };
 }
 
 // Everyone else sharing this class_code — RLS's users_select class-code
