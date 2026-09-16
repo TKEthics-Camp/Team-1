@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import { randomClassCode } from "./id";
+import { canonicalRecoveryCode } from "./recoveryCode";
 
 // users.avatar is '' until the first sync, and JSON.parse('') throws —
 // null here means "nothing remote yet" (render the default look), not
@@ -784,29 +785,20 @@ export async function pullFeed(userId, limit = 40) {
 // A student has no email, so there is no reset link and no support desk.
 // A recovery code, written down while they still know their password, is
 // the only way back into an account whose password has been forgotten.
-//
-// The alphabet omits 0/O/1/I/L/5/S — this gets copied onto paper by a
-// child and read back weeks later, and those are the pairs that get
-// misread. 12 characters from 25 symbols is about 56 bits, which is far
-// past guessable while still being four short groups to write down.
-const RECOVERY_ALPHABET = "ABCDEFGHJKMNPQRTUVWXYZ2346789";
-
-export function generateRecoveryCode() {
-  const bytes = new Uint8Array(12);
-  crypto.getRandomValues(bytes);
-  const chars = Array.from(bytes, (b) => RECOVERY_ALPHABET[b % RECOVERY_ALPHABET.length]);
-  return chars.slice(0, 4).join("") + "-" + chars.slice(4, 8).join("") + "-" + chars.slice(8, 12).join("");
-}
+// What a code is, and how it survives being copied by hand, lives in
+// lib/recoveryCode.js — this file only moves it to and from the server.
 
 // Stores the hash of a freshly generated code. The plaintext is returned to
 // the caller to show once and is never sent anywhere else or kept.
 export async function setRecoveryCode(code) {
-  const { error } = await supabase.rpc("set_recovery_code", { p_code: code });
+  const { error } = await supabase.rpc("set_recovery_code", {
+    p_code: canonicalRecoveryCode(code),
+  });
   if (error) {
     console.error("Recovery code save failed:", error.message);
-    return false;
+    return { ok: false, message: error.message || error.hint || String(error) };
   }
-  return true;
+  return { ok: true };
 }
 
 export async function hasRecoveryCode() {
@@ -819,20 +811,20 @@ export async function hasRecoveryCode() {
 }
 
 // Redeems a code for a new password. Called by somebody who is not signed
-// in, which is why it takes a username. Returns "ok", "invalid" (wrong
-// username or wrong code — the server deliberately cannot tell you which),
-// or "error".
+// in, which is why it takes a username. Returns a status of "ok",
+// "invalid" (wrong username or wrong code — the server deliberately cannot
+// tell you which), or "error", which carries the server's own message.
 export async function redeemRecoveryCode(username, code, newPassword) {
   const { data, error } = await supabase.rpc("redeem_recovery_code", {
     p_username: username,
-    p_code: code,
+    p_code: canonicalRecoveryCode(code),
     p_new_password: newPassword,
   });
   if (error) {
     console.error("Recovery redemption failed:", error.message);
-    return "error";
+    return { status: "error", message: error.message || error.hint || String(error) };
   }
-  return data ? "ok" : "invalid";
+  return { status: data ? "ok" : "invalid" };
 }
 
 // ===================================================== watching a hobby

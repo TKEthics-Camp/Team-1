@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useUI } from "../../ui/UIContext";
-import { generateRecoveryCode, setRecoveryCode, hasRecoveryCode } from "../../lib/remote";
+import { setRecoveryCode, hasRecoveryCode } from "../../lib/remote";
+import { generateRecoveryCode } from "../../lib/recoveryCode";
 import Sheet from "../shared/Sheet";
 
 // Gets the student a recovery code, which is the only way back into an
@@ -19,7 +20,7 @@ export default function RecoveryCodeSheet() {
   const [existing, setExisting] = useState(null); // null = still checking
   const [code, setCode] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState(null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -31,11 +32,14 @@ export default function RecoveryCodeSheet() {
   async function generate() {
     if (busy) return;
     setBusy(true);
-    setFailed(false);
+    setFailed(null);
     const fresh = generateRecoveryCode();
-    const ok = await setRecoveryCode(fresh);
+    const result = await setRecoveryCode(fresh);
     setBusy(false);
-    if (!ok) { setFailed(true); return; }
+    // The server's own wording, not just "try again": the failures this can
+    // hit are configuration problems on the database, and trying again will
+    // reproduce them forever without ever saying what is wrong.
+    if (!result.ok) { setFailed(result.message); return; }
     setCode(fresh);
     setExisting(true);
   }
@@ -72,7 +76,11 @@ export default function RecoveryCodeSheet() {
               <span>{t("recNoneYet")}</span>
             </div>
           )}
-          {failed && <div className="field-error">{t("recFailed")}</div>}
+          {failed && (
+            <div className="field-error" style={{ overflowWrap: "anywhere" }}>
+              {t("recFailed")} {failed}
+            </div>
+          )}
           <button className="btn" disabled={busy || existing === null} onClick={generate}>
             {existing ? t("recRegenerate") : t("recGenerate")}
           </button>

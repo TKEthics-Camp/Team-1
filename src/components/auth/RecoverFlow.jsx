@@ -22,6 +22,7 @@ export default function RecoverFlow({ onBack, onDone }) {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [errorKey, setErrorKey] = useState(null);
+  const [serverError, setServerError] = useState(null);
   const [busy, setBusy] = useState(false);
 
   async function submit(e) {
@@ -32,14 +33,17 @@ export default function RecoverFlow({ onBack, onDone }) {
 
     setBusy(true);
     setErrorKey(null);
-    // The code is typed off paper, so be forgiving about how it arrives:
-    // spacing, case and stray dashes are the reader's problem, not theirs.
-    const normalised = code.toUpperCase().replace(/\s+/g, "");
-    const result = await redeemRecoveryCode(username.trim(), normalised, password);
+    setServerError(null);
+    // The code is typed off paper, so how it arrives must not matter:
+    // spacing, case and dash grouping are all stripped before comparison.
+    // canonicalRecoveryCode in lib/remote.js is the one place that decides
+    // what a code actually is, and both halves of this feature go through it.
+    const result = await redeemRecoveryCode(username.trim(), code, password);
 
-    if (result !== "ok") {
+    if (result.status !== "ok") {
       setBusy(false);
-      setErrorKey(result === "invalid" ? "recBadCode" : "recFailed");
+      setErrorKey(result.status === "invalid" ? "recBadCode" : "recFailed");
+      if (result.message) setServerError(result.message);
       return;
     }
 
@@ -73,7 +77,7 @@ export default function RecoverFlow({ onBack, onDone }) {
               id="rc-user" className="sf-field" type="text" autoComplete="username"
               disabled={busy}
               value={username}
-              onChange={(e) => { setUsername(e.target.value); setErrorKey(null); }}
+              onChange={(e) => { setUsername(e.target.value); setErrorKey(null); setServerError(null); }}
             />
           </div>
           <div>
@@ -84,7 +88,7 @@ export default function RecoverFlow({ onBack, onDone }) {
               placeholder="ABCD-EFGH-JKMN"
               disabled={busy}
               value={code}
-              onChange={(e) => { setCode(e.target.value); setErrorKey(null); }}
+              onChange={(e) => { setCode(e.target.value); setErrorKey(null); setServerError(null); }}
             />
           </div>
           <div>
@@ -110,6 +114,7 @@ export default function RecoverFlow({ onBack, onDone }) {
         </div>
 
         {errorKey && <p className="sf-err">{t(errorKey)}</p>}
+        {serverError && <p className="sf-err" style={{ overflowWrap: "anywhere" }}>{serverError}</p>}
 
         <div className="sf-grow" />
         <div className="sf-foot">
