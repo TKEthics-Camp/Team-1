@@ -4,6 +4,7 @@ import { useUI } from "../../ui/UIContext";
 import { setRecoveryCode, hasRecoveryCode } from "../../lib/remote";
 import { generateRecoveryCode } from "../../lib/recoveryCode";
 import Sheet from "../shared/Sheet";
+import Field from "../shared/Field";
 
 // Gets the student a recovery code, which is the only way back into an
 // account whose password has been forgotten — they have no email, so there
@@ -19,6 +20,8 @@ export default function RecoveryCodeSheet() {
   const { closeSheet } = useUI();
   const [existing, setExisting] = useState(null); // null = still checking
   const [code, setCode] = useState(null);
+  const [password, setPassword] = useState("");
+  const [wrongPw, setWrongPw] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -30,16 +33,23 @@ export default function RecoveryCodeSheet() {
   }, []);
 
   async function generate() {
-    if (busy) return;
+    if (busy || !password) return;
     setBusy(true);
     setFailed(null);
+    setWrongPw(false);
     const fresh = generateRecoveryCode();
-    const result = await setRecoveryCode(fresh);
+    const result = await setRecoveryCode(fresh, password);
     setBusy(false);
-    // The server's own wording, not just "try again": the failures this can
-    // hit are configuration problems on the database, and trying again will
-    // reproduce them forever without ever saying what is wrong.
-    if (!result.ok) { setFailed(result.message); return; }
+    if (!result.ok) {
+      // A wrong password is the student's own typo and says so plainly.
+      // Anything else is a configuration problem on the database, and gets
+      // the server's own wording — retrying reproduces those forever
+      // without ever saying what is wrong.
+      if (result.reason === "wrong") { setWrongPw(true); return; }
+      setFailed(result.message);
+      return;
+    }
+    setPassword("");
     setCode(fresh);
     setExisting(true);
   }
@@ -76,12 +86,27 @@ export default function RecoveryCodeSheet() {
               <span>{t("recNoneYet")}</span>
             </div>
           )}
+          {/* The password is what stops this sheet being a way around the
+              check Me -> Change password makes. Without it, ten seconds
+              with an unlocked phone is a permanent account takeover. */}
+          <Field label={t("pwCurrent")}>
+            <input
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              disabled={busy}
+              onChange={(e) => { setPassword(e.target.value); setWrongPw(false); setFailed(null); }}
+              onKeyDown={(e) => { if (e.key === "Enter") generate(); }}
+            />
+            {wrongPw && <span className="field-error">{t("recWrongPw")}</span>}
+          </Field>
+          <p className="sub">{t("recConfirmPw")}</p>
           {failed && (
             <div className="field-error" style={{ overflowWrap: "anywhere" }}>
               {t("recFailed")} {failed}
             </div>
           )}
-          <button className="btn" disabled={busy || existing === null} onClick={generate}>
+          <button className="btn" disabled={busy || existing === null || !password} onClick={generate}>
             {existing ? t("recRegenerate") : t("recGenerate")}
           </button>
           <button className="btn2" onClick={closeSheet}>{t("cancel")}</button>

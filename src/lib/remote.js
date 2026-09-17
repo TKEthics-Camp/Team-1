@@ -790,13 +790,26 @@ export async function pullFeed(userId, limit = 40) {
 
 // Stores the hash of a freshly generated code. The plaintext is returned to
 // the caller to show once and is never sent anywhere else or kept.
-export async function setRecoveryCode(code) {
+// The current password is required, and checked on the server. Without it
+// this sheet would be a way around the check Me -> Change password makes:
+// a borrowed unlocked phone could mint a code and own the account for good
+// without ever knowing the password. See 20260917010000.
+export async function setRecoveryCode(code, password) {
   const { error } = await supabase.rpc("set_recovery_code", {
     p_code: canonicalRecoveryCode(code),
+    p_password: password,
   });
   if (error) {
     console.error("Recovery code save failed:", error.message);
-    return { ok: false, message: error.message || error.hint || String(error) };
+    // 28P01 is what the function raises for a wrong password. It is the one
+    // failure here the student can do something about, so it gets its own
+    // message rather than the server's wording.
+    const wrong = error.code === "28P01" || /wrong password/i.test(error.message || "");
+    return {
+      ok: false,
+      reason: wrong ? "wrong" : "error",
+      message: wrong ? null : (error.message || error.hint || String(error)),
+    };
   }
   return { ok: true };
 }
