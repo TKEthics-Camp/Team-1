@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
@@ -10,7 +10,7 @@ import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
 import Stats from "../shared/Stats";
 import PersonAvatar from "../shared/PersonAvatar";
-import { deleteMyAccount } from "../../lib/remote";
+import { deleteMyAccount, myConsentStatus } from "../../lib/remote";
 
 export default function ProfileScreen() {
   const { t, lang, nOf } = useI18n();
@@ -24,6 +24,7 @@ export default function ProfileScreen() {
   const [deleting, setDeleting] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+  const [consent, setConsent] = useState(null);
   const currentTheme = (profile && profile.theme) || DEFAULT_THEME;
   const [, bumpPermissionCheck] = useState(0);
   const coins = (profile && profile.coins) || 0;
@@ -32,6 +33,17 @@ export default function ProfileScreen() {
   const soundOn = !(profile && profile.soundOn === false);
   const publicCount = entries.filter((e) => e.visibility === "public").length
     + photos.filter((p) => p.visibility === "public").length;
+
+  // The database refuses these writes outright (20260918000000), so the job
+  // here is not to enforce anything — it is to not offer a control that is
+  // guaranteed to fail, and to say why instead.
+  useEffect(() => {
+    let cancelled = false;
+    myConsentStatus().then((c) => { if (!cancelled) setConsent(c); });
+    return () => { cancelled = true; };
+  }, []);
+  const locked = !!(consent && consent.disclosure_locked);
+  const needsReconsent = !!(consent && consent.state === "re_consent_required");
 
   const permission = window.Notification ? Notification.permission : "unsupported";
   const granted = permission === "granted";
@@ -160,18 +172,30 @@ export default function ProfileScreen() {
           {soundOn ? "🔊 " + t("soundOn") : "🔈 " + t("soundOff")}
         </button>
 
-        <div className="label">{t("discoverableLabel")}</div>
-        <div className="seg">
-          <button type="button" aria-pressed={!discoverable ? "true" : "false"} onClick={() => setDiscoverable(false)}>
-            {t("discoverableOff")}
-          </button>
-          <button type="button" aria-pressed={discoverable ? "true" : "false"} onClick={() => setDiscoverable(true)}>
-            {t("discoverableOn")}
-          </button>
-        </div>
-        <div className="sub">{t(isOrg ? "discoverableNoteOrg" : "discoverableNote")}</div>
+        {locked ? (
+          <>
+            <div className="label">{t("dlTitle")}</div>
+            <div className="safe-note">
+              <span aria-hidden="true">🔒</span>
+              <span>{needsReconsent ? t("dlReconsent") : t("dlBody")}</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="label">{t("discoverableLabel")}</div>
+            <div className="seg">
+              <button type="button" aria-pressed={!discoverable ? "true" : "false"} onClick={() => setDiscoverable(false)}>
+                {t("discoverableOff")}
+              </button>
+              <button type="button" aria-pressed={discoverable ? "true" : "false"} onClick={() => setDiscoverable(true)}>
+                {t("discoverableOn")}
+              </button>
+            </div>
+            <div className="sub">{t(isOrg ? "discoverableNoteOrg" : "discoverableNote")}</div>
+          </>
+        )}
 
-        {!isOrg && (
+        {!isOrg && !locked && (
           profile.classCode ? (
             <div className="sub">{t("joinedClass")}</div>
           ) : (

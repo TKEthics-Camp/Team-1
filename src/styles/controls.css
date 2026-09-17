@@ -204,3 +204,25 @@ input[type="date"], input[type="time"] { font-family: var(--mono); }
   overflow-wrap: anywhere;
   user-select: all;
 }
+
+/* ---------- guardian consent ---------- */
+/* Read by a parent who has never seen this app, on a phone, once. Wider
+   measure and larger body text than the rest of the app: this is the only
+   screen whose job is to be read rather than used. */
+.consent-page { max-width: 34rem; margin: 0 auto; }
+.consent-h {
+  font-family: var(--display); font-size: var(--fs-display); font-weight: 650;
+  letter-spacing: var(--tracking); margin: 8px 0 6px; color: var(--ink);
+}
+.consent-h2 {
+  font-family: var(--display); font-size: var(--fs-body); font-weight: 650;
+  margin: 0 0 6px; color: var(--ink);
+}
+.consent-block {
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+  padding: 14px 15px; margin-top: 12px;
+}
+.consent-promise { border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.consent-list { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 5px; }
+.consent-list li { font-size: var(--fs-body); line-height: 1.55; color: var(--ink); }
+.consent-fine { font-size: var(--fs-sub); color: var(--muted); line-height: 1.5; margin: 10px 0 0; }

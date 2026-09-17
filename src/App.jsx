@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useStore } from "./store/StoreContext";
 import { useAuth } from "./store/AuthContext";
@@ -9,6 +9,10 @@ import { DEFAULT_THEME } from "./lib/constants";
 import { useResolvedTheme } from "./lib/useResolvedTheme";
 import { useBadgeWatcher } from "./lib/useBadgeWatcher";
 import AuthFlow from "./components/auth/AuthFlow";
+import GuardianConsentPage from "./components/consent/GuardianConsentPage";
+import PendingConsentScreen from "./components/consent/PendingConsentScreen";
+import { guardianTokenFromLocation } from "./lib/guardianLink";
+import { myConsentStatus, refreshConsentState } from "./lib/remote";
 import HomeScreen from "./components/home/HomeScreen";
 import BottomNav from "./components/shared/BottomNav";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
@@ -33,6 +37,7 @@ import SyncStatusBadge from "./components/shared/SyncStatusBadge";
 export default function App() {
   const { loading, profile, interests, entries, photos, clearAllData } = useStore();
   const { session, loading: authLoading, user } = useAuth();
+  const [consent, setConsent] = useState(undefined); // undefined = not asked yet
   const { lang, setLang, nameOf, t } = useI18n();
   const syncedLang = useRef(false);
   const lastUserId = useRef(null);
@@ -71,6 +76,33 @@ export default function App() {
     lastUserId.current = user ? user.id : null;
   }, [user, clearAllData]);
 
+  // Asked once per signed-in session. refreshConsentState is what notices a
+  // fourteenth birthday, and it deliberately does not unlock anything — see
+  // migration 20260918000000.
+  useEffect(() => {
+    let cancelled = false;
+    if (!user) { setConsent(null); return; }
+    (async () => {
+      await refreshConsentState();
+      const status = await myConsentStatus();
+      if (!cancelled) setConsent(status);
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  // The guardian is not a user of this app and has no session, so their page
+  // is resolved from the URL before the auth gate rather than inside the
+  // router — the router only mounts once someone is signed in with a
+  // profile, which a parent following a link never is.
+  const guardianToken = guardianTokenFromLocation();
+  if (guardianToken) {
+    return (
+      <div className="stage" data-theme={resolvedTheme}>
+        <div className="app"><GuardianConsentPage token={guardianToken} /></div>
+      </div>
+    );
+  }
+
   if (loading || authLoading) return null;
 
   return (
@@ -78,6 +110,13 @@ export default function App() {
       <div className="app">
         {!session ? (
           <AuthFlow />
+        ) : consent === undefined ? (
+          // Held rather than guessed: showing the app for a frame and then
+          // yanking it away is worse than a blank one, and this only lasts a
+          // single round trip.
+          <div className="view" />
+        ) : consent && consent.state === "pending" ? (
+          <PendingConsentScreen />
         ) : profile ? (
           <BrowserRouter basename={import.meta.env.BASE_URL}>
             <UIProvider>

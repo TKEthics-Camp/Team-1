@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useAuth } from "../../store/AuthContext";
 import { supabase } from "../../lib/supabase";
+import { applyAgeGate } from "../../lib/remote";
 import { usernameToEmail } from "../../lib/syntheticEmail";
 import LangToggle from "../shared/LangToggle";
 import SfHead from "../onboarding/SfHead";
@@ -20,7 +21,7 @@ export default function AuthFlow() {
   const { t } = useI18n();
   const { signUp, signIn, authError, clearAuthError } = useAuth();
   const [screen, setScreen] = useState("welcome"); // "welcome" | "signup" | "login" | "recover"
-  const [signupStep, setSignupStep] = useState("accountType"); // "accountType" | "credentials"
+  const [signupStep, setSignupStep] = useState("accountType"); // "accountType" | "age" | "credentials"
   const [accountType, setAccountType] = useState(null);
 
   const [username, setUsername] = useState("");
@@ -29,6 +30,12 @@ export default function AuthFlow() {
   const [email, setEmail] = useState("");
   const [localError, setLocalError] = useState(null);
   const [busy, setBusy] = useState(false);
+
+  // Collected before the account exists, so an account is never created
+  // without the thing that decides what it is allowed to do. Educators skip
+  // this entirely — they are adults by definition of the account type.
+  const [birthdate, setBirthdate] = useState("");
+  const [classCode, setClassCode] = useState("");
 
   const [loginId, setLoginId] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -69,12 +76,33 @@ export default function AuthFlow() {
       .from("users")
       .update({ display_name: trimmedUsername })
       .eq("id", result.userId);
-    setBusy(false);
     if (error) {
+      setBusy(false);
       console.error("Failed to reserve username:", error);
       await supabase.auth.signOut();
       setLocalError(error.code === "23505" ? "usernameTaken" : "usernameError");
+      return;
     }
+
+    // The age gate runs here, once, while we still have the birthdate in
+    // hand and before anything can be logged. The server decides which of
+    // the three paths this is — an under-14 signup with no class lands in
+    // 'pending' and App shows the guardian screen instead of the app.
+    //
+    // A failure here is rolled back the same way a taken username is: an
+    // account that exists but was never gated is the one outcome this
+    // feature cannot leave behind.
+    if (!isOrg) {
+      const gate = await applyAgeGate(birthdate, classCode.trim() || null);
+      if (!gate.ok) {
+        setBusy(false);
+        console.error("Age gate failed:", gate.message);
+        await supabase.auth.signOut();
+        setLocalError("agBadDate");
+        return;
+      }
+    }
+    setBusy(false);
   }
 
   async function submitLogIn(e) {
@@ -120,6 +148,79 @@ export default function AuthFlow() {
     );
   }
 
+  // Asked before the account exists, so nothing can be created and then
+  // retro-fitted with an age. The class code is optional and is what
+  // separates the two under-14 paths: with one, the school's consent covers
+  // the account; without one, a guardian has to be asked directly.
+  if (screen === "signup" && signupStep === "age") {
+    const tooOld = birthdate && new Date(birthdate) < new Date("1906-01-01");
+    const future = birthdate && new Date(birthdate) > new Date();
+    const invalid = !!(tooOld || future);
+    return (
+      <div className="view sf-view">
+        <div className="sf">
+          <div className="sf-screen">
+            <div className="sf-inner">
+              <div className="sf-top">
+                <button
+                  className="sf-back"
+                  type="button"
+                  aria-label={t("back")}
+                  onClick={() => setSignupStep("accountType")}
+                >‹</button>
+                <LangToggle />
+              </div>
+
+              <SfHead>{t("agTitle")}</SfHead>
+              <p className="sf-hint">{t("agSub")}</p>
+
+              <div className="sf-stack">
+                <div>
+                  <label className="sf-label" htmlFor="ag-bd">{t("agBirthdate")}</label>
+                  <input
+                    id="ag-bd"
+                    className="sf-field"
+                    type="date"
+                    max={new Date().toISOString().slice(0, 10)}
+                    value={birthdate}
+                    onChange={(e) => setBirthdate(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="sf-label" htmlFor="ag-cc">{t("agClassLabel")}</label>
+                  <input
+                    id="ag-cc"
+                    className="sf-field"
+                    type="text"
+                    autoCapitalize="characters"
+                    autoComplete="off"
+                    spellCheck="false"
+                    value={classCode}
+                    onChange={(e) => setClassCode(e.target.value)}
+                  />
+                  <span className="sf-hint">{t("agClassHint")}</span>
+                </div>
+                {invalid && <p className="sf-err">{t("agBadDate")}</p>}
+              </div>
+
+              <div className="sf-grow" />
+              <div className="sf-foot">
+                <button
+                  className="sf-btn"
+                  type="button"
+                  disabled={!birthdate || invalid}
+                  onClick={() => setSignupStep("credentials")}
+                >
+                  {t("agContinue")}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (screen === "signup" && signupStep === "accountType") {
     return (
       <div className="view sf-view">
@@ -132,7 +233,7 @@ export default function AuthFlow() {
           <AccountTypeStep
             value={accountType}
             setType={setAccountType}
-            onNext={() => setSignupStep("credentials")}
+            onNext={() => setSignupStep(accountType === "org" ? "credentials" : "age")}
           />
         </div>
       </div>
@@ -148,7 +249,7 @@ export default function AuthFlow() {
               type="button"
               className="sf-back"
               aria-label={t("back")}
-              onClick={() => setSignupStep("accountType")}
+              onClick={() => setSignupStep(accountType === "org" ? "accountType" : "age")}
             >
               ‹
             </button>

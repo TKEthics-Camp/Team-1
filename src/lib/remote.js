@@ -1,6 +1,7 @@
 import { supabase } from "./supabase";
 import { randomClassCode } from "./id";
 import { canonicalRecoveryCode } from "./recoveryCode";
+import { TERMS_VERSION, PRIVACY_VERSION } from "./policyVersions";
 
 // users.avatar is '' until the first sync, and JSON.parse('') throws —
 // null here means "nothing remote yet" (render the default look), not
@@ -838,6 +839,82 @@ export async function redeemRecoveryCode(username, code, newPassword) {
     return { status: "error", message: error.message || error.hint || String(error) };
   }
   return { status: data ? "ok" : "invalid" };
+}
+
+// ============================================== age gate and consent
+// The three signup paths (PRD §14.2, migration 20260918000000):
+//   14 or over, or an educator   nothing happens
+//   under 14 with a class code   the school's consent covers the account
+//   under 14, alone              a guardian agrees twice, and the account
+//                                can disclose nothing, ever
+//
+// Every one of these decisions is made server side. The client passes the
+// birthdate in and is told which path it landed on; it never chooses.
+
+export async function applyAgeGate(birthdate, classCode) {
+  const { data, error } = await supabase.rpc("apply_age_gate", {
+    p_birthdate: birthdate,
+    p_class_code: classCode || null,
+  });
+  if (error) {
+    console.error("Age gate failed:", error.message);
+    return { ok: false, message: error.message || String(error) };
+  }
+  return { ok: true, state: data };
+}
+
+export async function startGuardianConsent(phone) {
+  const { error } = await supabase.rpc("start_guardian_consent", {
+    p_phone: phone,
+    p_terms_version: TERMS_VERSION,
+    p_privacy_version: PRIVACY_VERSION,
+  });
+  if (error) {
+    console.error("Guardian consent start failed:", error.message);
+    return { ok: false, message: error.message || String(error) };
+  }
+  return { ok: true };
+}
+
+export async function myConsentStatus() {
+  const { data, error } = await supabase.rpc("my_consent_status");
+  if (error) {
+    console.error("Consent status failed:", error.message);
+    return null;
+  }
+  return data;
+}
+
+// Called on sign-in. This is what turns an active no-disclosure account
+// into one that needs re-consent on its fourteenth birthday — deliberately
+// not an unlock, see the migration.
+export async function refreshConsentState() {
+  const { data, error } = await supabase.rpc("refresh_consent_state");
+  if (error) {
+    console.error("Consent refresh failed:", error.message);
+    return null;
+  }
+  return data;
+}
+
+// The two the guardian calls. They are not signed in and never will be, so
+// these run as anon and the token is the only credential.
+export async function describeGuardianConsent(token) {
+  const { data, error } = await supabase.rpc("describe_guardian_consent", { p_token: token });
+  if (error) {
+    console.error("Consent lookup failed:", error.message);
+    return { result: "error", message: error.message };
+  }
+  return data;
+}
+
+export async function confirmGuardianConsent(token) {
+  const { data, error } = await supabase.rpc("confirm_guardian_consent", { p_token: token });
+  if (error) {
+    console.error("Consent confirm failed:", error.message);
+    return { result: "error", message: error.message };
+  }
+  return data;
 }
 
 // ===================================================== watching a hobby
