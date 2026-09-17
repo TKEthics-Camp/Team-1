@@ -154,7 +154,9 @@ export const STR = {
   // ---- age gate (signup)
   agTitle:      ["When were you born?", "你的出生日期是？"],
   agSub:        ["This decides what Forest is allowed to do with what you make. Nobody else sees it.", "这决定了 Forest 可以如何处理你创作的内容。其他人看不到这个日期。"],
-  agBirthdate:  ["Date of birth", "出生日期"],
+  agYear:       ["Year", "年"],
+  agMonth:      ["Month", "月"],
+  agDay:        ["Day", "日"],
   agClassLabel: ["Class code, if your teacher gave you one", "班级代码（如果老师给了你）"],
   agClassHint:  ["Leave this empty if you're joining on your own.", "如果你是自己加入的，请留空。"],
   agContinue:   ["Continue", "继续"],

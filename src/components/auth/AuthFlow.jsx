@@ -34,8 +34,15 @@ export default function AuthFlow() {
   // Collected before the account exists, so an account is never created
   // without the thing that decides what it is allowed to do. Educators skip
   // this entirely — they are adults by definition of the account type.
-  const [birthdate, setBirthdate] = useState("");
+  const [bdY, setBdY] = useState("");
+  const [bdM, setBdM] = useState("");
+  const [bdD, setBdD] = useState("");
   const [classCode, setClassCode] = useState("");
+  // What the server wants, assembled from the three dropdowns. Zero-padded
+  // because the column is a date and "2015-4-9" is not one.
+  const birthdate = bdY && bdM && bdD
+    ? `${bdY}-${String(bdM).padStart(2, "0")}-${String(bdD).padStart(2, "0")}`
+    : "";
 
   const [loginId, setLoginId] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -152,10 +159,26 @@ export default function AuthFlow() {
   // retro-fitted with an age. The class code is optional and is what
   // separates the two under-14 paths: with one, the school's consent covers
   // the account; without one, a guardian has to be asked directly.
+  //
+  // Three dropdowns rather than <input type="date">. A native date picker
+  // opens on today, so a twelve-year-old pages back through a hundred and
+  // fifty months to reach their own birth year, and it renders in the
+  // browser's locale order — mm/dd/yyyy for a Chinese reader who expects
+  // year first. Year/month/day reads correctly in both languages and puts
+  // the birth year one tap away.
   if (screen === "signup" && signupStep === "age") {
-    const tooOld = birthdate && new Date(birthdate) < new Date("1906-01-01");
-    const future = birthdate && new Date(birthdate) > new Date();
-    const invalid = !!(tooOld || future);
+    const thisYear = new Date().getFullYear();
+    // Most recent first: almost everyone signing up is a child, so their
+    // year is at the top of the list rather than ninety scrolls down.
+    const years = Array.from({ length: 100 }, (_, i) => thisYear - i);
+    const months = Array.from({ length: 12 }, (_, i) => i + 1);
+    // Real length of the chosen month, so 31 February is never offered.
+    const daysInMonth = (bdY && bdM)
+      ? new Date(Number(bdY), Number(bdM), 0).getDate()
+      : 31;
+    const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+    const complete = bdY && bdM && bdD;
+
     return (
       <div className="view sf-view">
         <div className="sf">
@@ -172,21 +195,43 @@ export default function AuthFlow() {
               </div>
 
               <SfHead>{t("agTitle")}</SfHead>
-              <p className="sf-hint">{t("agSub")}</p>
+              <p className="sf-hint sf-hint-lead">{t("agSub")}</p>
 
               <div className="sf-stack">
-                <div>
-                  <label className="sf-label" htmlFor="ag-bd">{t("agBirthdate")}</label>
-                  <input
-                    id="ag-bd"
+                {/* No label above these: the heading already asks the
+                    question, and repeating it as "Date of birth" was just
+                    another line between the question and the answer. */}
+                <div className="sf-date">
+                  <select
                     className="sf-field"
-                    type="date"
-                    max={new Date().toISOString().slice(0, 10)}
-                    value={birthdate}
-                    onChange={(e) => setBirthdate(e.target.value)}
-                  />
+                    aria-label={t("agYear")}
+                    value={bdY}
+                    onChange={(e) => setBdY(e.target.value)}
+                  >
+                    <option value="">{t("agYear")}</option>
+                    {years.map((y) => <option key={y} value={y}>{y}</option>)}
+                  </select>
+                  <select
+                    className="sf-field"
+                    aria-label={t("agMonth")}
+                    value={bdM}
+                    onChange={(e) => setBdM(e.target.value)}
+                  >
+                    <option value="">{t("agMonth")}</option>
+                    {months.map((m) => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                  <select
+                    className="sf-field"
+                    aria-label={t("agDay")}
+                    value={bdD}
+                    onChange={(e) => setBdD(e.target.value)}
+                  >
+                    <option value="">{t("agDay")}</option>
+                    {days.map((d) => <option key={d} value={d}>{d}</option>)}
+                  </select>
                 </div>
-                <div>
+
+                <div className="sf-optional">
                   <label className="sf-label" htmlFor="ag-cc">{t("agClassLabel")}</label>
                   <input
                     id="ag-cc"
@@ -198,9 +243,8 @@ export default function AuthFlow() {
                     value={classCode}
                     onChange={(e) => setClassCode(e.target.value)}
                   />
-                  <span className="sf-hint">{t("agClassHint")}</span>
+                  <p className="sf-hint">{t("agClassHint")}</p>
                 </div>
-                {invalid && <p className="sf-err">{t("agBadDate")}</p>}
               </div>
 
               <div className="sf-grow" />
@@ -208,7 +252,7 @@ export default function AuthFlow() {
                 <button
                   className="sf-btn"
                   type="button"
-                  disabled={!birthdate || invalid}
+                  disabled={!complete}
                   onClick={() => setSignupStep("credentials")}
                 >
                   {t("agContinue")}
