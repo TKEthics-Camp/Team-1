@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
@@ -10,7 +10,8 @@ import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
 import Stats from "../shared/Stats";
 import PersonAvatar from "../shared/PersonAvatar";
-import { deleteMyAccount, myConsentStatus } from "../../lib/remote";
+import { deleteMyAccount } from "../../lib/remote";
+import { useConsentStatus } from "../../lib/useConsentStatus";
 
 export default function ProfileScreen() {
   const { t, lang, nOf } = useI18n();
@@ -24,7 +25,7 @@ export default function ProfileScreen() {
   const [deleting, setDeleting] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
-  const [consent, setConsent] = useState(null);
+
   const currentTheme = (profile && profile.theme) || DEFAULT_THEME;
   const [, bumpPermissionCheck] = useState(0);
   const coins = (profile && profile.coins) || 0;
@@ -37,11 +38,7 @@ export default function ProfileScreen() {
   // The database refuses these writes outright (20260918000000), so the job
   // here is not to enforce anything — it is to not offer a control that is
   // guaranteed to fail, and to say why instead.
-  useEffect(() => {
-    let cancelled = false;
-    myConsentStatus().then((c) => { if (!cancelled) setConsent(c); });
-    return () => { cancelled = true; };
-  }, []);
+  const consent = useConsentStatus(user && user.id);
   const locked = !!(consent && consent.disclosure_locked);
   const needsReconsent = !!(consent && consent.state === "re_consent_required");
 

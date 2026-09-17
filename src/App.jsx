@@ -13,6 +13,7 @@ import GuardianConsentPage from "./components/consent/GuardianConsentPage";
 import PendingConsentScreen from "./components/consent/PendingConsentScreen";
 import { guardianTokenFromLocation } from "./lib/guardianLink";
 import { myConsentStatus, refreshConsentState } from "./lib/remote";
+import { forgetConsentStatus } from "./lib/useConsentStatus";
 import HomeScreen from "./components/home/HomeScreen";
 import BottomNav from "./components/shared/BottomNav";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
@@ -72,7 +73,10 @@ export default function App() {
   // the next login on this device doesn't inherit the previous user's data —
   // there's no per-user sync yet, so this is the only thing preventing a leak.
   useEffect(() => {
-    if (lastUserId.current && !user) clearAllData();
+    // Same reasoning as clearAllData: the next student on a shared computer
+    // must not inherit anything of the previous one's, and consent state
+    // decides what whole screens do.
+    if (lastUserId.current && !user) { clearAllData(); forgetConsentStatus(); }
     lastUserId.current = user ? user.id : null;
   }, [user, clearAllData]);
 

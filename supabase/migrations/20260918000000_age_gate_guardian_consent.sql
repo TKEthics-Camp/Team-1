@@ -232,11 +232,39 @@ create trigger photos_disclosure_lock
 -- first place, so this changes nothing today — it is here so that a future
 -- migration that sets those columns directly, bypassing the triggers,
 -- still cannot make a locked account visible to a stranger.
+-- ================================== the lock works in both directions
+-- The triggers above stop a locked account being *found*. On their own they
+-- leave the other half open: the account could still read the Community
+-- feed, search for other students, and open a stranger's public hobby. That
+-- is not what "locked out of every disclosure surface" means, and hiding
+-- those tabs in the client would be a preference again rather than a wall.
+--
+-- So the viewer side is closed here too. For a locked account every
+-- not-my-own branch of every visibility policy evaluates false, which
+-- empties the feed, user search and the public interest route at the source
+-- — a tampered client gets the same nothing a well-behaved one does.
+--
+-- Own rows are untouched in all four. The child's own garden is theirs to
+-- read; it is other people this closes off, in both directions.
+create or replace function public.viewer_is_disclosure_locked()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+  select coalesce(
+    (select u.disclosure_locked from public.users u where u.id = auth.uid()),
+    false
+  );
+$$;
+
 alter policy "users_select" on public.users
   using (
     auth.uid() = id
     or (
-      coalesce(disclosure_locked, false) = false
+      not public.viewer_is_disclosure_locked()
+      and coalesce(disclosure_locked, false) = false
       and (
         discovery_enabled = true
         or (class_code is not null and class_code = public.my_class_code())
@@ -246,6 +274,69 @@ alter policy "users_select" on public.users
         where (b.user_id = auth.uid() and b.blocked_user_id = users.id)
            or (b.user_id = users.id and b.blocked_user_id = auth.uid())
       )
+    )
+  );
+
+alter policy "interests_select" on public.interests
+  using (
+    user_id = auth.uid()
+    or (
+      not public.viewer_is_disclosure_locked()
+      and interests.deleted_at is null
+      and (
+        exists (select 1 from public.users u where u.id = interests.user_id and u.discovery_enabled = true)
+        or exists (
+          select 1 from public.users u
+          where u.id = interests.user_id and u.class_code is not null and u.class_code = public.my_class_code()
+        )
+      )
+      and not exists (
+        select 1 from public.blocks b
+        where (b.user_id = auth.uid() and b.blocked_user_id = interests.user_id)
+           or (b.user_id = interests.user_id and b.blocked_user_id = auth.uid())
+      )
+    )
+  );
+
+alter policy "entries_select" on public.entries
+  using (
+    exists (
+      select 1 from public.interests i
+      join public.users u on u.id = i.user_id
+      where i.id = entries.interest_id
+        and (
+          i.user_id = auth.uid()
+          or (
+            not public.viewer_is_disclosure_locked()
+            and entries.deleted_at is null
+            and entries.visibility = 'public'
+            and (
+              u.discovery_enabled = true
+              or (u.class_code is not null and u.class_code = public.my_class_code())
+            )
+          )
+        )
+    )
+  );
+
+alter policy "photos_select" on public.photos
+  using (
+    exists (
+      select 1 from public.interests i
+      join public.users u on u.id = i.user_id
+      where i.id = photos.interest_id
+        and (
+          i.user_id = auth.uid()
+          or (
+            not public.viewer_is_disclosure_locked()
+            and photos.deleted_at is null
+            and photos.visibility = 'public'
+            and (
+              u.discovery_enabled = true
+              or (u.class_code is not null and u.class_code = public.my_class_code())
+            )
+          )
+        )
     )
   );
 
