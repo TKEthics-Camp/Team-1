@@ -20,13 +20,13 @@
 -- the consent record has to be replaced with one taken under the heavier
 -- standard — which is exactly what the 14th-birthday path below does.
 --
--- WHAT IS DELIBERATELY NOT DECIDED HERE
--- Whether SMS satisfies that standard is a legal question, not a technical
--- one: the rule is written around email, and the sending channel is the
--- part a regulator would look at first. This migration stores the channel
--- and both timestamps so the record stands up either way, and the transport
--- is swappable — see sms_outbox, which is a queue, not a Twilio client.
--- Have a lawyer confirm the channel before relying on this.
+-- THE CHANNEL
+-- Email, because the rule this lighter standard comes from is written
+-- around email specifically, and because SMS into mainland China needs
+-- pre-registered templates and an ICP-backed sender — a guardian who never
+-- receives the message leaves their child stuck in pending forever.
+-- The channel is stored on every record and the queue is transport-neutral,
+-- so moving to SMS later costs a worker and nothing else.
 --
 -- SCOPE: new signups only, by decision. Accounts that already exist keep a
 -- null birthdate and consent_state 'not_required'. Nothing here reaches
@@ -66,8 +66,8 @@ create table if not exists public.guardian_consents (
   -- Stored because the record has to be able to show, years later, who was
   -- asked and how they were reached. Never readable by any client: see the
   -- grants at the bottom — this table has RLS on and no policies at all.
-  guardian_channel    text not null default 'sms' check (guardian_channel in ('sms', 'email')),
-  guardian_phone      text not null,
+  guardian_channel    text not null default 'email' check (guardian_channel in ('sms', 'email')),
+  guardian_contact      text not null,
 
   -- Two separate confirmations, not one. The second is what makes this a
   -- lighter-standard consent rather than a single tap by whoever happened
@@ -107,27 +107,27 @@ create index if not exists guardian_consents_step2_token_idx
 alter table public.guardian_consents enable row level security;
 revoke all on public.guardian_consents from anon, authenticated;
 
--- ============================================================ sms_outbox
--- A queue, not a Twilio client. Nothing in the browser can see it and
--- nothing in this database sends anything: a worker holding the service
--- role key drains it. That keeps the provider credentials out of the app
--- entirely, and makes the transport swappable without touching consent
--- logic — which matters, because whether SMS is the right channel here is
--- still a legal question.
+-- ============================================================ consent_outbox
+-- A queue, not a mail client. Nothing in the browser can see it and nothing
+-- in this database sends anything: a worker holding the service role key
+-- drains it. That keeps the provider credentials out of the app entirely
+-- and makes the transport swappable — this started as an SMS queue and
+-- became an email one without the consent logic changing at all.
 --
 -- The row holds a live token in the clear, because a message has to carry
 -- one. That is why this table has RLS on, no policies, and no grants to
 -- anon or authenticated: only the service role can read it.
-create table if not exists public.sms_outbox (
+create table if not exists public.consent_outbox (
   id          uuid primary key default gen_random_uuid(),
   consent_id  uuid not null references public.guardian_consents (id) on delete cascade,
   step        int not null check (step in (1, 2)),
-  to_phone    text not null,
+  to_address    text not null,
   -- The live token, in the clear, because the worker has to put it in a
   -- message. The worker composes the link from its own configured origin
   -- and this value: the app never supplies the URL, so nothing the client
-  -- sends can turn a consent text into a link somewhere else.
+  -- sends can turn a consent email into a link somewhere else.
   token       text not null,
+  subject     text not null,
   body        text not null,
   send_after  timestamptz not null default now(),
   sent_at     timestamptz,
@@ -136,11 +136,11 @@ create table if not exists public.sms_outbox (
   created_at  timestamptz not null default now()
 );
 
-create index if not exists sms_outbox_due_idx
-  on public.sms_outbox (send_after) where sent_at is null;
+create index if not exists consent_outbox_due_idx
+  on public.consent_outbox (send_after) where sent_at is null;
 
-alter table public.sms_outbox enable row level security;
-revoke all on public.sms_outbox from anon, authenticated;
+alter table public.consent_outbox enable row level security;
+revoke all on public.consent_outbox from anon, authenticated;
 
 -- ====================================================== the lock itself
 -- Every disclosure surface in this app funnels through two columns on
@@ -491,7 +491,7 @@ grant execute on function public.apply_age_gate(date, text) to authenticated;
 -- be able to start over — and the unique index only permits one live
 -- record anyway.
 create or replace function public.start_guardian_consent(
-  p_phone           text,
+  p_contact         text,
   p_terms_version   text,
   p_privacy_version text
 )
@@ -503,7 +503,7 @@ as $$
 declare
   v_uid     uuid := auth.uid();
   v_state   text;
-  v_phone   text := regexp_replace(coalesce(p_phone, ''), '[^0-9+]', '', 'g');
+  v_contact text := lower(trim(coalesce(p_contact, '')));
   v_token   text;
   v_consent uuid;
 begin
@@ -516,12 +516,12 @@ begin
     raise exception 'this account is not waiting on guardian consent' using errcode = '42501';
   end if;
 
-  -- Loose on purpose: this has to accept mainland numbers with and without
-  -- +86, and a guardian reading digits down a phone line. A number that
-  -- does not exist fails by never being answered, which is the same outcome
-  -- as a number typed wrong, and is recoverable by starting again.
-  if length(v_phone) < 8 or length(v_phone) > 16 then
-    raise exception 'that does not look like a phone number' using errcode = '22023';
+  -- Deliberately shallow. The only check worth making here is that this
+  -- could be an address at all; whether it reaches anybody is answered by
+  -- nobody confirming, which is the same outcome as a typo and is
+  -- recoverable by starting again with a corrected one.
+  if v_contact !~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$' then
+    raise exception 'that does not look like an email address' using errcode = '22023';
   end if;
   if p_terms_version is null or p_privacy_version is null then
     raise exception 'policy versions are required' using errcode = '22023';
@@ -534,20 +534,23 @@ begin
   v_token := encode(gen_random_bytes(32), 'hex');
 
   insert into public.guardian_consents (
-    user_id, guardian_channel, guardian_phone,
+    user_id, guardian_channel, guardian_contact,
     step1_token_sha, step1_sent_at,
     terms_version, privacy_version, status
   )
   values (
-    v_uid, 'sms', v_phone,
+    v_uid, 'email', v_contact,
     encode(digest(v_token, 'sha256'), 'hex'), null,
     p_terms_version, p_privacy_version, 'pending'
   )
   returning id into v_consent;
 
-  insert into public.sms_outbox (consent_id, step, to_phone, token, body)
-  values (v_consent, 1, v_phone, v_token,
-    'Forest: a child has asked to use Forest with your permission. Forest keeps photos, voice notes and journal writing. For this account none of it is ever shared, searchable, or made public. Read and agree here:');
+  insert into public.consent_outbox (consent_id, step, to_address, token, subject, body)
+  values (v_consent, 1, v_contact, v_token,
+    'A child has asked for your permission to use Forest',
+    'A child has asked to use Forest, and their account will not switch on until you agree.' || chr(10) || chr(10) ||
+    'Forest keeps photos they take, voice notes they record, and writing in their journal. For this account, none of it is ever shared with other people, findable by search, or posted anywhere public. That is built into how the account works, not a setting someone can change later.' || chr(10) || chr(10) ||
+    'Read the full details and agree here:');
 end;
 $$;
 
@@ -605,9 +608,12 @@ begin
         step2_token_sha = encode(digest(v_token2, 'sha256'), 'hex')
     where id = v_rec.id;
 
-    insert into public.sms_outbox (consent_id, step, to_phone, token, body, send_after)
-    values (v_rec.id, 2, v_rec.guardian_phone, v_token2,
-      'Forest: yesterday you agreed to let a child use Forest. This is the second and last check. If you still agree, confirm here:',
+    insert into public.consent_outbox (consent_id, step, to_address, token, subject, body, send_after)
+    values (v_rec.id, 2, v_rec.guardian_contact, v_token2,
+      'One more check before the child can start',
+      'Yesterday you agreed to let a child use Forest. This is the second and last check, and it is deliberate: asking twice, a day apart, is what makes this a considered decision rather than one tap.' || chr(10) || chr(10) ||
+      'If you have changed your mind, do nothing and the account stays switched off.' || chr(10) || chr(10) ||
+      'If you still agree, confirm here:',
       now() + interval '24 hours');
 
     return jsonb_build_object('result', 'ok', 'step', 1);
@@ -655,7 +661,7 @@ grant execute on function public.confirm_guardian_consent(text) to anon, authent
 -- A consent page has to say who and what before it asks for agreement, so
 -- this is readable with the token alone. It returns the child's display
 -- name and the policy versions and nothing else — no journal text, no
--- photos, no phone number back.
+-- photos, no contact address back.
 create or replace function public.describe_guardian_consent(p_token text)
 returns jsonb
 language plpgsql
@@ -699,10 +705,9 @@ revoke all on function public.describe_guardian_consent(text) from public;
 grant execute on function public.describe_guardian_consent(text) to anon, authenticated;
 
 -- ================================================ what the child is shown
--- Deliberately does not return the guardian's phone number. The child gave
--- it, so they are not learning anything new from the last four digits, and
--- a screen that prints a parent's number is a screen that prints it to
--- whoever is holding the phone.
+-- Deliberately does not return the guardian's address. The child typed it,
+-- so they learn nothing from seeing it again, and a screen that prints a
+-- parent's email prints it to whoever is holding the phone.
 create or replace function public.my_consent_status()
 returns jsonb
 language plpgsql

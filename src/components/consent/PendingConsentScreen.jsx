@@ -15,7 +15,7 @@ export default function PendingConsentScreen() {
   const { t } = useI18n();
   const { signOut } = useAuth();
   const [status, setStatus] = useState(null);
-  const [phone, setPhone] = useState("");
+  const [contact, setContact] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [sent, setSent] = useState(false);
@@ -27,14 +27,14 @@ export default function PendingConsentScreen() {
   useEffect(() => { load(); }, []);
 
   async function send() {
-    if (busy || !phone.trim()) return;
+    if (busy || !contact.trim()) return;
     setBusy(true);
     setError(null);
-    const result = await startGuardianConsent(phone.trim());
+    const result = await startGuardianConsent(contact.trim());
     setBusy(false);
     if (!result.ok) { setError(result.message); return; }
     setSent(true);
-    setPhone("");
+    setContact("");
     load();
   }
 
@@ -72,21 +72,23 @@ export default function PendingConsentScreen() {
         {!midway && (
           <div className="sf-stack">
             <div>
-              <label className="sf-label" htmlFor="pc-phone">{t("pcPhoneLabel")}</label>
+              <label className="sf-label" htmlFor="pc-email">{t("pcEmailLabel")}</label>
               <input
-                id="pc-phone"
+                id="pc-email"
                 className="sf-field"
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                autoCapitalize="off"
+                spellCheck="false"
                 disabled={busy}
-                value={phone}
-                onChange={(e) => { setPhone(e.target.value); setError(null); }}
+                value={contact}
+                onChange={(e) => { setContact(e.target.value); setError(null); }}
               />
             </div>
             {error && <p className="sf-err" style={{ overflowWrap: "anywhere" }}>{error}</p>}
             {sent && !error && <p className="sf-hint">{t("pcSent")}</p>}
-            <button className="sf-btn" disabled={busy || !phone.trim()} onClick={send}>
+            <button className="sf-btn" disabled={busy || !contact.trim()} onClick={send}>
               {busy ? t("authWorking") : (waiting ? t("pcResend") : t("pcSend"))}
             </button>
           </div>

@@ -875,9 +875,9 @@ export async function applyAgeGate(birthdate, classCode) {
   return { ok: true, state: data };
 }
 
-export async function startGuardianConsent(phone) {
+export async function startGuardianConsent(contact) {
   const { error } = await supabase.rpc("start_guardian_consent", {
-    p_phone: phone,
+    p_contact: contact,
     p_terms_version: TERMS_VERSION,
     p_privacy_version: PRIVACY_VERSION,
   });
