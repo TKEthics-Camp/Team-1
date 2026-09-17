@@ -17,6 +17,11 @@ import Mascot from "../shared/Mascot";
 // created (same server-side uniqueness check that used to live in
 // Onboarding's name step, just moved to where the username is actually
 // collected now) rather than at the end of onboarding.
+// Survives the remount that signing out causes. Not state, deliberately:
+// the component this belongs to is destroyed between setting it and reading
+// it back.
+let carriedError = null;
+
 export default function AuthFlow() {
   const { t } = useI18n();
   const { signUp, signIn, authError, clearAuthError } = useAuth();
@@ -28,7 +33,11 @@ export default function AuthFlow() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [email, setEmail] = useState("");
-  const [localError, setLocalError] = useState(null);
+  const [localError, setLocalError] = useState(() => {
+    const carried = carriedError;
+    carriedError = null;
+    return carried;
+  });
   const [busy, setBusy] = useState(false);
 
   // Collected before the account exists, so an account is never created
@@ -96,16 +105,27 @@ export default function AuthFlow() {
     // the three paths this is — an under-14 signup with no class lands in
     // 'pending' and App shows the guardian screen instead of the app.
     //
-    // A failure here is rolled back the same way a taken username is: an
-    // account that exists but was never gated is the one outcome this
-    // feature cannot leave behind.
+    // Two failures, and they are nothing alike.
+    //
+    // reason "missing" means the migration is not applied on this project,
+    // so there is no gate to fail: signup has to complete exactly as it did
+    // before the gate was written. The first version of this treated that
+    // as an error and signed the new account out, which unmounted the whole
+    // flow and dropped the student back on the welcome screen with no
+    // message — signup was broken outright for everybody.
+    //
+    // Anything else means the gate IS live and did not run, which is the
+    // one outcome that must not leave an account behind. That rolls back.
     if (!isOrg) {
       const gate = await applyAgeGate(birthdate, classCode.trim() || null);
-      if (!gate.ok) {
+      if (!gate.ok && gate.reason !== "missing") {
         setBusy(false);
-        console.error("Age gate failed:", gate.message);
         await supabase.auth.signOut();
-        setLocalError("agBadDate");
+        // Signing out unmounts this component, so an error in local state
+        // would be thrown away with it. Module scope survives the remount
+        // within the same page load, which is the only lifetime that
+        // matters here.
+        carriedError = gate.message || "agBadDate";
         return;
       }
     }

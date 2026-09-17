@@ -857,8 +857,20 @@ export async function applyAgeGate(birthdate, classCode) {
     p_class_code: classCode || null,
   });
   if (error) {
+    // PGRST202 is PostgREST saying the function is not in its schema cache,
+    // which here means 20260918000000 has not been applied to this project.
+    // That is a deployment state, not a failure: the age gate is simply not
+    // live yet, and signup must go through exactly as it did before it
+    // existed. Treating it as an error is what broke account creation
+    // outright — see the comment at the call site.
+    const missing = error.code === "PGRST202"
+      || /could not find the function/i.test(error.message || "");
+    if (missing) {
+      console.warn("Age gate not deployed; signup proceeding ungated.");
+      return { ok: false, reason: "missing" };
+    }
     console.error("Age gate failed:", error.message);
-    return { ok: false, message: error.message || String(error) };
+    return { ok: false, reason: "error", message: error.message || String(error) };
   }
   return { ok: true, state: data };
 }
