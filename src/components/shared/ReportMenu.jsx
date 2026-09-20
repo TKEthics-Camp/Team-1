@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useI18n } from "../../i18n/I18nContext";
 import { useAuth } from "../../store/AuthContext";
 import { useUI } from "../../ui/UIContext";
@@ -6,11 +7,25 @@ import { blockUser, reportContent } from "../../lib/remote";
 
 const REPORT_REASONS = ["reportSpam", "reportMean", "reportUnsafe", "reportOther"];
 
-// The "⋯" menu that lets someone report a thing or block whoever made it.
+// The "⋯" that lets someone report a thing or block whoever made it.
 // reports.target_type accepts interest / photo / entry / user, and every one
 // of those should be reachable from wherever the thing is actually looked at
-// — a child who needs this is looking at the content, not hunting for a
-// settings screen.
+// — a child who needs this is looking at the content, not hunting through
+// settings.
+//
+// WHY THIS IS A SHEET AND NOT A DROPDOWN
+// It used to be an absolutely-positioned menu hanging off the ⋯, which
+// worked until it did not: opened low on a screen, or inside the full-screen
+// photo viewer, the list ran past the bottom of the app frame and .app's
+// `overflow: clip` cut it off. The report reasons were half visible and, in
+// the photo viewer, effectively unreachable — so reporting a photo looked
+// like something the app could not do.
+//
+// A sheet cannot be clipped by whatever happens to be around the button, it
+// matches how every other choice in this app is made, and it gives a child
+// a full-width target for a thing that matters. It is rendered through a
+// portal into .app for the same reason: so no ancestor's overflow or
+// positioning can interfere with it again.
 //
 // Blocking is hidden when there's no author to block (your own content, or a
 // caller that didn't pass one). Both actions tell the caller first and talk
@@ -23,40 +38,29 @@ export default function ReportMenu({
   onReported = null,
   onBlocked = null,
   label = null,
+  // "dots" is the quiet ⋯ used in a list, where a labelled button on every
+  // row would shout. "button" is a plain labelled control, for the few
+  // screens showing one thing at a time — a bare ⋯ on a dark photo viewer
+  // is not something a child looking for help will find.
+  variant = "dots",
 }) {
   const { t } = useI18n();
   const { user } = useAuth();
   const { showToast } = useUI();
-  const [menu, setMenu] = useState(null); // null | "menu" | "report"
-  const wrapRef = useRef(null);
+  const [step, setStep] = useState(null); // null | "menu" | "report"
 
-  // Without this an open menu stays open forever — tapping elsewhere doesn't
-  // dismiss it, and a journal full of entries can end up with several open at
-  // once, each overlapping the row below. Closing on any outside press keeps
-  // one open at a time, since opening a second one dismisses the first.
   useEffect(() => {
-    if (!menu) return undefined;
-    function onDown(e) {
-      if (wrapRef.current && !wrapRef.current.contains(e.target)) setMenu(null);
-    }
-    function onKey(e) {
-      if (e.key === "Escape") setMenu(null);
-    }
-    // pointerdown, not click: it fires before the press lands on whatever is
-    // underneath, so dismissing doesn't also activate it.
-    document.addEventListener("pointerdown", onDown);
+    if (!step) return undefined;
+    function onKey(e) { if (e.key === "Escape") setStep(null); }
     document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [menu]);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [step]);
 
   // Nothing to do without a signed-in user, and nobody blocks themselves.
   const canBlock = Boolean(authorId && user && authorId !== user.id);
 
   async function block() {
-    setMenu(null);
+    setStep(null);
     if (!user || !authorId) return;
     if (onBlocked) onBlocked(authorId);
     const ok = await blockUser(user.id, authorId);
@@ -64,7 +68,7 @@ export default function ReportMenu({
   }
 
   async function report(reasonKey) {
-    setMenu(null);
+    setStep(null);
     if (!user) return;
     if (onReported) onReported(targetId);
     const ok = await reportContent(user.id, targetType, targetId, reasonKey);
@@ -73,35 +77,75 @@ export default function ReportMenu({
 
   if (!user) return null;
 
+  // .app is the frame every sheet in this app lives inside; body is the
+  // fallback for anything rendered outside it.
+  const host = (typeof document !== "undefined"
+    && (document.querySelector(".app") || document.body)) || null;
+
+  const sheet = !step ? null : (
+    <div
+      /* report-bg lifts this above the full-screen photo viewer, which sits
+         at z-index 30. Without it the sheet renders behind the photo — in
+         precisely the place reporting matters most. */
+      className="sheet-bg report-bg"
+      onMouseDown={(e) => { if (e.target === e.currentTarget) setStep(null); }}
+    >
+      <div className="sheet report-sheet">
+        {step === "menu" ? (
+          <>
+            <h2>{t("reportOrBlockTitle")}</h2>
+            <button className="btn2 report-choice" onClick={() => setStep("report")}>
+              {t("report")}
+            </button>
+            {canBlock && (
+              <button className="btn2 report-choice btn-danger" onClick={block}>
+                {t("block")}
+              </button>
+            )}
+            <button className="btn2 report-choice" onClick={() => setStep(null)}>
+              {t("cancel")}
+            </button>
+          </>
+        ) : (
+          <>
+            <h2>{t("reportWhy")}</h2>
+            {REPORT_REASONS.map((r) => (
+              <button key={r} className="btn2 report-choice" onClick={() => report(r)}>
+                {t(r)}
+              </button>
+            ))}
+            <button className="btn2 report-choice" onClick={() => setStep(null)}>
+              {t("cancel")}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+
   return (
-    <div className="post-menu-wrap" ref={wrapRef}>
-      <button
-        type="button"
-        className="icon post-more"
-        aria-label={label || t("moreOptions")}
-        aria-expanded={menu ? "true" : "false"}
-        onClick={() => setMenu(menu ? null : "menu")}
-      >
-        ⋯
-      </button>
-      {menu === "menu" && (
-        <div className="post-menu" role="menu">
-          <button type="button" role="menuitem" onClick={() => setMenu("report")}>{t("report")}</button>
-          {canBlock && (
-            <button type="button" role="menuitem" className="danger" onClick={block}>{t("block")}</button>
-          )}
-          <button type="button" role="menuitem" onClick={() => setMenu(null)}>{t("cancel")}</button>
-        </div>
+    <div className="post-menu-wrap">
+      {variant === "button" ? (
+        <button
+          type="button"
+          className="btn2 report-open"
+          aria-expanded={step ? "true" : "false"}
+          onClick={() => setStep(step ? null : "menu")}
+        >
+          {t("report")}
+        </button>
+      ) : (
+        <button
+          type="button"
+          className="icon post-more"
+          aria-label={label || t("moreOptions")}
+          aria-expanded={step ? "true" : "false"}
+          onClick={() => setStep(step ? null : "menu")}
+        >
+          ⋯
+        </button>
       )}
-      {menu === "report" && (
-        <div className="post-menu" role="menu">
-          <div className="post-menu-head">{t("reportWhy")}</div>
-          {REPORT_REASONS.map((r) => (
-            <button key={r} type="button" role="menuitem" onClick={() => report(r)}>{t(r)}</button>
-          ))}
-          <button type="button" role="menuitem" onClick={() => setMenu(null)}>{t("cancel")}</button>
-        </div>
-      )}
+      {sheet && host ? createPortal(sheet, host) : null}
     </div>
   );
 }

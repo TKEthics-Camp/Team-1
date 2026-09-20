@@ -27,11 +27,19 @@ function PublicPhotoViewer({ photo, authorId, onClose }) {
     <div className="viewer">
       <img src={url} alt={photo.caption || ""} />
       {photo.caption && <div className="cap">{photo.caption}</div>}
-      <div className="row" style={{ gap: 10, alignItems: "center" }}>
-        <button className="btn2" style={{ maxWidth: 220 }} onClick={onClose}>{t("close")}</button>
-        {/* A photo is the likeliest thing in the app to need reporting, and
-            this is the only screen where one is looked at properly. */}
-        <ReportMenu targetType="photo" targetId={photo.id} authorId={authorId} onReported={onClose} />
+      {/* A photo is the likeliest thing in the app to need reporting, and
+          this is the only screen where one is looked at properly — so the
+          control is a labelled button, not a ⋯ a child has to guess at on a
+          dark screen. */}
+      <div className="viewer-actions">
+        <button className="btn2" onClick={onClose}>{t("close")}</button>
+        <ReportMenu
+          targetType="photo"
+          targetId={photo.id}
+          authorId={authorId}
+          onReported={onClose}
+          variant="button"
+        />
       </div>
     </div>
   );

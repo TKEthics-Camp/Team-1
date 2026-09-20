@@ -217,6 +217,8 @@ export const STR = {
   termsTitle:   ["Terms of Use", "使用条款"],
   contactNote:  ["Questions, or something wrong? Ask the teacher or adult who gave you Forest.", "有疑问或发现问题？请联系把 Forest 介绍给你的老师或成年人。"],
 
+  reportOrBlockTitle: ["What do you want to do?", "你想做什么？"],
+
   genderTitle:  ["One quick thing", "还有一个小问题"],
   genderSub:    ["Just to set a starting look for your avatar — you can change everything about it later from Me.", "只是为了给你的头像定一个初始样子 —— 之后随时可以在“我的”里重新改。"],
   genderBoy:    ["Boy", "男生"],
