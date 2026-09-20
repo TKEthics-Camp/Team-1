@@ -103,7 +103,7 @@ export const STR = {
   reportMean:   ["Mean or bullying", "恶意或欺凌"],
   reportUnsafe: ["Unsafe or inappropriate", "不安全或不适宜"],
   reportOther:  ["Something else", "其他原因"],
-  reportedToast: ["Reported. Thanks for telling us.", "已举报，谢谢你告诉我们。"],
+  reportedToast: ["Reported, and hidden from you. An adult will look at it.", "已举报，并且不会再显示给你。会有成年人查看。"],
   blockedToast: ["Blocked. You won't see their posts.", "已拉黑，你不会再看到对方的动态。"],
   actionFailed: ["That didn't go through. Try again.", "操作没成功，请再试一次。"],
   coinsEarned:  ["🪙 +{n} coins", "🪙 +{n} 金币"],
