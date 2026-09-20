@@ -11,7 +11,8 @@ import { useBadgeWatcher } from "./lib/useBadgeWatcher";
 import AuthFlow from "./components/auth/AuthFlow";
 import GuardianConsentPage from "./components/consent/GuardianConsentPage";
 import PendingConsentScreen from "./components/consent/PendingConsentScreen";
-import { guardianTokenFromLocation } from "./lib/guardianLink";
+import PolicyScreen from "./components/policy/PolicyScreen";
+import { guardianTokenFromLocation, policyFromLocation } from "./lib/guardianLink";
 import { myConsentStatus, refreshConsentState } from "./lib/remote";
 import { forgetConsentStatus } from "./lib/useConsentStatus";
 import HomeScreen from "./components/home/HomeScreen";
@@ -29,6 +30,7 @@ const PublicInterestScreen = lazy(() => import("./components/interest/PublicInte
 const ExploreScreen = lazy(() => import("./components/explore/ExploreScreen"));
 const ProfileScreen = lazy(() => import("./components/profile/ProfileScreen"));
 const MarketScreen = lazy(() => import("./components/market/MarketScreen"));
+const ModerationScreen = lazy(() => import("./components/moderation/ModerationScreen"));
 const SheetHost = lazy(() => import("./components/sheets/SheetHost"));
 const PhotoViewer = lazy(() => import("./components/interest/PhotoViewer"));
 import UndoToast from "./components/shared/UndoToast";
@@ -98,6 +100,17 @@ export default function App() {
   // is resolved from the URL before the auth gate rather than inside the
   // router — the router only mounts once someone is signed in with a
   // profile, which a parent following a link never is.
+  // Same reasoning as the consent link below: a parent reading the policy
+  // has no account, so this is resolved before the auth gate.
+  const policy = policyFromLocation();
+  if (policy) {
+    return (
+      <div className="stage" data-theme={resolvedTheme}>
+        <div className="app"><PolicyScreen which={policy} /></div>
+      </div>
+    );
+  }
+
   const guardianToken = guardianTokenFromLocation();
   if (guardianToken) {
     return (
@@ -206,6 +219,10 @@ function RoutedShell() {
           <Route path="/explore" element={<ExploreScreen />} />
           <Route path="/profile" element={<ProfileScreen />} />
           <Route path="/market" element={<MarketScreen />} />
+          {/* Reachable only by an account listed in public.moderators. The
+              server refuses every call behind this screen regardless, so
+              the route existing is not itself access. */}
+          <Route path="/reports" element={<ModerationScreen />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </Suspense>

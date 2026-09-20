@@ -929,6 +929,58 @@ export async function confirmGuardianConsent(token) {
   return data;
 }
 
+// ================================================== moderation queue
+// Reports have been fileable from five screens since the app was written
+// and readable by nobody (PRD §14.1). These are the other end of that.
+// Every one refuses anybody who is not in public.moderators, checked on the
+// server — being a moderator is a row a database admin writes, not
+// something the app can grant.
+
+export async function amIModerator() {
+  const { data, error } = await supabase.rpc("am_i_moderator");
+  if (error) {
+    // A project without the migration answers PGRST202. That is not an
+    // error worth showing anybody: it means there is no queue yet.
+    if (error.code !== "PGRST202") console.error("Moderator check failed:", error.message);
+    return false;
+  }
+  return !!data;
+}
+
+export async function moderationQueue() {
+  const { data, error } = await supabase.rpc("moderation_queue");
+  if (error) {
+    console.error("Moderation queue failed:", error.message);
+    return { ok: false, message: error.message, rows: [] };
+  }
+  return { ok: true, rows: data || [] };
+}
+
+export async function moderateHide(targetType, targetId, hidden) {
+  const { error } = await supabase.rpc("moderate_hide", {
+    p_target_type: targetType,
+    p_target_id: targetId,
+    p_hidden: hidden,
+  });
+  if (error) {
+    console.error("Hide failed:", error.message);
+    return { ok: false, message: error.message };
+  }
+  return { ok: true };
+}
+
+export async function moderateResolve(reportId, status) {
+  const { error } = await supabase.rpc("moderate_resolve", {
+    p_report_id: reportId,
+    p_status: status,
+  });
+  if (error) {
+    console.error("Resolve failed:", error.message);
+    return { ok: false, message: error.message };
+  }
+  return { ok: true };
+}
+
 // ===================================================== watching a hobby
 // watches points at an interest, never at a user — there is no follows
 // table, deliberately (PRD §7). "Keep an eye on this hobby" is a different

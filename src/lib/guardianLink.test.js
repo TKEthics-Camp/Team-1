@@ -43,3 +43,20 @@ describe("guardianTokenFromPath", () => {
     expect(guardianTokenFromPath(`/user/x/consent/${TOKEN}`)).toBeNull();
   });
 });
+
+import { policyFromPath } from "./guardianLink";
+
+describe("policyFromPath", () => {
+  it("resolves both policies at the root and under a base path", () => {
+    expect(policyFromPath("/privacy")).toBe("privacy");
+    expect(policyFromPath("/terms")).toBe("terms");
+    expect(policyFromPath("/Team-1/privacy", "/Team-1/")).toBe("privacy");
+    expect(policyFromPath("/terms/")).toBe("terms");
+  });
+
+  it("ignores everything else", () => {
+    for (const path of ["/", "/market", "/privacy/extra", "/privacypolicy", "/reports"]) {
+      expect(policyFromPath(path)).toBeNull();
+    }
+  });
+});

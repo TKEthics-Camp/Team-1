@@ -107,6 +107,13 @@ export default function GuardianConsentPage({ token }) {
             <p className="consent-fine">
               {t("gcTwoStepNote")}
             </p>
+            {/* The agreement is to these documents, so they have to be one
+                tap away from the button that agrees. */}
+            <p className="consent-fine">
+              <a href={(import.meta.env.BASE_URL || "/") + "privacy"}>{t("privacyTitle")}</a>
+              {"  ·  "}
+              <a href={(import.meta.env.BASE_URL || "/") + "terms"}>{t("termsTitle")}</a>
+            </p>
             <p className="consent-fine">
               {t("gcVersions")} {info.terms_version} / {info.privacy_version}
             </p>
