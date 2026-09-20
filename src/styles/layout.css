@@ -17,11 +17,17 @@
   width: 100%;
   max-width: 400px;
   background: var(--app-bg);
-  border: 1px solid rgba(255,255,255,.28);
+  border: 1px solid var(--line);
   border-radius: 32px;
-  box-shadow: 0 40px 90px -34px var(--cast), 0 0 0 1px rgba(255,255,255,.28) inset;
+  box-shadow: var(--lg-shadow-lg);
   transition: background .5s ease;
-  overflow: hidden;
+  /* clip, not hidden: `hidden` still makes this a scroll container, and the
+     drifting cloud pseudo-elements below overflow it by ~140px. Focusing a
+     control then scrolled the whole frame sideways to reveal them — and
+     nothing could scroll it back, since there's no scrollbar and no gesture
+     for it. `clip` clips without any of that, which is what the fixed frame
+     wanted in the first place. */
+  overflow: clip;
   display: flex;
   flex-direction: column;
   /* Fixed device-shaped frame — content scrolls inside .view, the frame itself never grows. */
@@ -62,8 +68,9 @@
 }
 .topbar h1 {
   margin: 0; flex: 1;
-  font-family: var(--display); font-size: 17px; font-weight: 600;
-  letter-spacing: -.01em; text-wrap: balance;
+  font-family: var(--display); font-size: var(--fs-title); font-weight: 650;
+  letter-spacing: var(--tracking); text-wrap: balance;
+  color: var(--ink);
 }
 
 .view {
@@ -90,14 +97,14 @@
 .undo-toast {
   position: absolute; left: 14px; right: 14px; bottom: 78px; z-index: 35;
   display: flex; align-items: center; gap: 10px;
-  background: rgba(24, 10, 36, .92); color: #fff; border-radius: 14px;
+  background: var(--ink); color: var(--app-bg); border-radius: 14px;
   padding: 12px 12px 12px 16px; font-size: 13.5px;
-  box-shadow: 0 14px 34px -12px rgba(30, 10, 40, .55);
+  box-shadow: var(--lg-shadow);
   animation: rise .22s ease;
 }
 .undo-toast span { flex: 1; }
 .undo-btn {
-  flex: none; background: none; border: none; color: var(--candy, #ff6fa5);
+  flex: none; background: none; border: none; color: var(--gold);
   font-weight: 700; font-size: 13.5px; padding: 6px 4px; cursor: pointer;
 }
 
@@ -106,15 +113,15 @@
 .sync-badge { position: absolute; top: 14px; right: 14px; z-index: 40; }
 .sync-chip {
   width: 30px; height: 30px; border-radius: 50%;
-  background: rgba(24, 10, 36, .78); border: none; font-size: 14px;
+  background: var(--ink); border: none; font-size: 14px;
   display: grid; place-items: center; cursor: pointer;
-  box-shadow: 0 8px 20px -10px rgba(30, 10, 40, .55);
+  box-shadow: var(--lg-shadow);
 }
 .sync-popover {
   position: absolute; top: 38px; right: 0; width: 220px;
-  background: rgba(24, 10, 36, .94); color: #fff; border-radius: 14px;
+  background: var(--ink); color: var(--app-bg); border-radius: 14px;
   padding: 12px 14px; font-size: 12.5px; line-height: 1.4;
-  box-shadow: 0 14px 34px -12px rgba(30, 10, 40, .55);
+  box-shadow: var(--lg-shadow);
   display: flex; flex-direction: column; gap: 10px;
   animation: rise .18s ease;
 }
@@ -125,7 +132,7 @@
 .cover {
   position: relative; width: 100%; aspect-ratio: 16 / 9;
   border-radius: 20px; overflow: hidden; flex: none;
-  box-shadow: 0 14px 34px -16px rgba(122,86,160,.65);
+  box-shadow: var(--lg-shadow);
 }
 .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .cover .cover-scene { position: absolute; inset: 0; }
@@ -156,21 +163,21 @@
 /* ---------- blocks ---------- */
 .memory {
   border: 1px solid var(--line); border-radius: 18px; padding: 14px;
-  background: linear-gradient(150deg, rgba(255,255,255,.85), rgba(255,225,240,.6));
+  background: var(--card);
   display: flex; gap: 13px; align-items: center; cursor: pointer; width: 100%;
   text-align: left; color: inherit;
 }
 .memory:hover { border-color: var(--dim); }
 .memory .body { flex: 1; min-width: 0; }
-.memory .kicker { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+.memory .kicker { font-size: var(--fs-micro); letter-spacing: .04em; text-transform: uppercase; color: var(--gold); font-weight: 650; }
 .memory .text { font-size: 13.5px; color: var(--ink); margin-top: 3px; overflow-wrap: anywhere;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .memory .when { font-family: var(--mono); font-size: 11px; color: var(--dim); margin-top: 4px; }
 .memory img { width: 54px; height: 54px; border-radius: 12px; object-fit: cover; flex: none; }
 
 .nudge {
-  border: 1px solid rgba(255,168,120,.45); border-radius: 16px;
-  background: linear-gradient(140deg, rgba(255,236,205,.95), rgba(255,214,232,.8)); padding: 13px 14px;
+  border: 1px solid var(--line); border-left: 2px solid var(--gold); border-radius: 16px;
+  background: var(--card); padding: 13px 14px;
   display: flex; gap: 12px; align-items: center;
 }
 .nudge .body { flex: 1; }
@@ -185,7 +192,14 @@
 }
 .code-value { font-family: var(--mono); font-size: 21px; font-weight: 600; letter-spacing: .06em; color: var(--ink); }
 
-.label { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); font-weight: 700; }
+/* Sentence case at a readable size, not tracked-out micro caps in the
+   faintest grey available. A section heading should be readable at a glance
+   by a child holding the phone at arm's length; this one needed leaning in
+   for. */
+.label {
+  font-size: var(--fs-sub); font-weight: 600; letter-spacing: -.005em;
+  text-transform: none; color: var(--muted);
+}
 .empty {
   color: var(--muted); font-size: 14px; text-align: center; padding: 26px 14px; line-height: 1.7;
   display: flex; flex-direction: column; align-items: center; gap: 10px;
@@ -224,5 +238,5 @@
 .setup-row .who { display: flex; align-items: center; gap: 10px; }
 .setup-row .who .n { font-family: var(--display); font-weight: 600; font-size: 14.5px; }
 
-.sub { font-size: 12px; color: var(--dim); }
+.sub { font-size: var(--fs-sub); color: var(--muted); line-height: 1.55; }
 .center { text-align: center; }

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useStore } from "./store/StoreContext";
 import { useAuth } from "./store/AuthContext";
@@ -9,17 +9,28 @@ import { DEFAULT_THEME } from "./lib/constants";
 import { useResolvedTheme } from "./lib/useResolvedTheme";
 import { useBadgeWatcher } from "./lib/useBadgeWatcher";
 import AuthFlow from "./components/auth/AuthFlow";
-import Onboarding from "./components/onboarding/Onboarding";
+import GuardianConsentPage from "./components/consent/GuardianConsentPage";
+import PendingConsentScreen from "./components/consent/PendingConsentScreen";
+import { guardianTokenFromLocation } from "./lib/guardianLink";
+import { myConsentStatus, refreshConsentState } from "./lib/remote";
+import { forgetConsentStatus } from "./lib/useConsentStatus";
 import HomeScreen from "./components/home/HomeScreen";
-import EducatorDashboard from "./components/home/EducatorDashboard";
-import InterestScreen from "./components/interest/InterestScreen";
-import PublicInterestScreen from "./components/interest/PublicInterestScreen";
-import ExploreScreen from "./components/explore/ExploreScreen";
-import ProfileScreen from "./components/profile/ProfileScreen";
-import MarketScreen from "./components/market/MarketScreen";
 import BottomNav from "./components/shared/BottomNav";
-import SheetHost from "./components/sheets/SheetHost";
-import PhotoViewer from "./components/interest/PhotoViewer";
+import ErrorBoundary from "./components/shared/ErrorBoundary";
+
+// Split at the route boundary. AuthFlow and HomeScreen stay eager because
+// one of them is always the first paint — lazy-loading those would only
+// trade bytes for a blank frame. Everything below is reached by a tap, by
+// which point the chunk has had the whole session to arrive.
+const Onboarding = lazy(() => import("./components/onboarding/Onboarding"));
+const EducatorDashboard = lazy(() => import("./components/home/EducatorDashboard"));
+const InterestScreen = lazy(() => import("./components/interest/InterestScreen"));
+const PublicInterestScreen = lazy(() => import("./components/interest/PublicInterestScreen"));
+const ExploreScreen = lazy(() => import("./components/explore/ExploreScreen"));
+const ProfileScreen = lazy(() => import("./components/profile/ProfileScreen"));
+const MarketScreen = lazy(() => import("./components/market/MarketScreen"));
+const SheetHost = lazy(() => import("./components/sheets/SheetHost"));
+const PhotoViewer = lazy(() => import("./components/interest/PhotoViewer"));
 import UndoToast from "./components/shared/UndoToast";
 import Toast from "./components/shared/Toast";
 import SyncStatusBadge from "./components/shared/SyncStatusBadge";
@@ -27,6 +38,7 @@ import SyncStatusBadge from "./components/shared/SyncStatusBadge";
 export default function App() {
   const { loading, profile, interests, entries, photos, clearAllData } = useStore();
   const { session, loading: authLoading, user } = useAuth();
+  const [consent, setConsent] = useState(undefined); // undefined = not asked yet
   const { lang, setLang, nameOf, t } = useI18n();
   const syncedLang = useRef(false);
   const lastUserId = useRef(null);
@@ -61,9 +73,39 @@ export default function App() {
   // the next login on this device doesn't inherit the previous user's data —
   // there's no per-user sync yet, so this is the only thing preventing a leak.
   useEffect(() => {
-    if (lastUserId.current && !user) clearAllData();
+    // Same reasoning as clearAllData: the next student on a shared computer
+    // must not inherit anything of the previous one's, and consent state
+    // decides what whole screens do.
+    if (lastUserId.current && !user) { clearAllData(); forgetConsentStatus(); }
     lastUserId.current = user ? user.id : null;
   }, [user, clearAllData]);
+
+  // Asked once per signed-in session. refreshConsentState is what notices a
+  // fourteenth birthday, and it deliberately does not unlock anything — see
+  // migration 20260918000000.
+  useEffect(() => {
+    let cancelled = false;
+    if (!user) { setConsent(null); return; }
+    (async () => {
+      await refreshConsentState();
+      const status = await myConsentStatus();
+      if (!cancelled) setConsent(status);
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  // The guardian is not a user of this app and has no session, so their page
+  // is resolved from the URL before the auth gate rather than inside the
+  // router — the router only mounts once someone is signed in with a
+  // profile, which a parent following a link never is.
+  const guardianToken = guardianTokenFromLocation();
+  if (guardianToken) {
+    return (
+      <div className="stage" data-theme={resolvedTheme}>
+        <div className="app"><GuardianConsentPage token={guardianToken} /></div>
+      </div>
+    );
+  }
 
   if (loading || authLoading) return null;
 
@@ -72,6 +114,13 @@ export default function App() {
       <div className="app">
         {!session ? (
           <AuthFlow />
+        ) : consent === undefined ? (
+          // Held rather than guessed: showing the app for a frame and then
+          // yanking it away is worse than a blank one, and this only lasts a
+          // single round trip.
+          <div className="view" />
+        ) : consent && consent.state === "pending" ? (
+          <PendingConsentScreen />
         ) : profile ? (
           <BrowserRouter basename={import.meta.env.BASE_URL}>
             <UIProvider>
@@ -79,7 +128,7 @@ export default function App() {
             </UIProvider>
           </BrowserRouter>
         ) : (
-          <Onboarding />
+          <Suspense fallback={<div className="view" />}><Onboarding /></Suspense>
         )}
       </div>
     </div>
@@ -142,18 +191,30 @@ function RoutedShell() {
 
   return (
     <>
-      <Routes>
-        <Route path="/" element={profile.accountType === "org" ? <EducatorDashboard /> : <HomeScreen />} />
-        <Route path="/interest/:id" element={<InterestScreen />} />
-        <Route path="/user/:userId/interest/:interestId" element={<PublicInterestScreen />} />
-        <Route path="/explore" element={<ExploreScreen />} />
-        <Route path="/profile" element={<ProfileScreen />} />
-        <Route path="/market" element={<MarketScreen />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      {/* Keyed on the path so moving to another tab clears a crashed screen.
+          The root boundary in main.jsx still catches anything outside this —
+          a provider blowing up, say — where reloading really is the only way
+          out. */}
+      <ErrorBoundary inline key={location.pathname}>
+        {/* An empty .view holds the frame's shape while a chunk lands, so
+            switching tabs doesn't collapse the layout for a frame. */}
+        <Suspense fallback={<div className="view" />}>
+        <Routes>
+          <Route path="/" element={profile.accountType === "org" ? <EducatorDashboard /> : <HomeScreen />} />
+          <Route path="/interest/:id" element={<InterestScreen />} />
+          <Route path="/user/:userId/interest/:interestId" element={<PublicInterestScreen />} />
+          <Route path="/explore" element={<ExploreScreen />} />
+          <Route path="/profile" element={<ProfileScreen />} />
+          <Route path="/market" element={<MarketScreen />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+        </Suspense>
+      </ErrorBoundary>
       {!hideNav && <BottomNav />}
-      {sheet && <SheetHost />}
-      {viewer && <PhotoViewer />}
+      <Suspense fallback={null}>
+        {sheet && <SheetHost />}
+        {viewer && <PhotoViewer />}
+      </Suspense>
       <UndoToast />
       <Toast />
       <SyncStatusBadge />

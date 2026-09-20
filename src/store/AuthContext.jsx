@@ -44,6 +44,37 @@ export function AuthProvider({ children }) {
     async signOut() {
       await supabase.auth.signOut();
     },
+    // Re-authenticates before changing anything. updateUser() on its own
+    // would let whoever is holding an already-unlocked phone change the
+    // password and lock the owner out of their own garden — and a shared
+    // or borrowed phone is the normal case for these students, not the
+    // edge case. Knowing the current password is the gate.
+    //
+    // The email is read back from the session rather than closed over, so
+    // this can't go stale inside a memo that never re-runs. Students don't
+    // have a real address; theirs is the one derived from their username
+    // (see lib/syntheticEmail.js), which is exactly what they signed in
+    // with, so the same re-auth works for both account types.
+    async changePassword(currentPassword, newPassword) {
+      const { data: current } = await supabase.auth.getUser();
+      const email = current && current.user && current.user.email;
+      if (!email) return { ok: false, reason: "error" };
+
+      const { error: reauthError } = await supabase.auth.signInWithPassword({
+        email, password: currentPassword,
+      });
+      if (reauthError) return { ok: false, reason: "wrong" };
+
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) {
+        // Deliberately not logging the error object here the way the rest
+        // of the app does — this is the one call whose payload is a
+        // password.
+        console.error("Password change failed:", error.message);
+        return { ok: false, reason: "error" };
+      }
+      return { ok: true };
+    },
     clearAuthError() {
       setAuthError(null);
     },

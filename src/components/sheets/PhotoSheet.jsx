@@ -4,7 +4,7 @@ import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
 import { uid } from "../../lib/id";
 import { COINS_PER_LOG } from "../../lib/constants";
-import { downscale, useObjectURL } from "../../lib/image";
+import { prepareImage, useObjectURL } from "../../lib/image";
 import { actsToNextStage } from "../../lib/tree";
 import { celebrate, levelUpCelebrate } from "../../lib/feedback";
 import Sheet from "../shared/Sheet";
@@ -23,6 +23,7 @@ export default function PhotoSheet({ interestId }) {
   const [caption, setCaption] = useState("");
   const [visibility, setVisibility] = useState("private");
   const [pinned, setPinned] = useState(false);
+  const [pickError, setPickError] = useState(null);
   const previewUrl = useObjectURL(blob);
 
   if (!it) return null;
@@ -30,7 +31,13 @@ export default function PhotoSheet({ interestId }) {
   function onFileChange(e) {
     const f = e.target.files && e.target.files[0];
     if (!f) return;
-    downscale(f, 1600, (out) => setBlob(out));
+    setPickError(null);
+    prepareImage(f, 1600, (out, reason) => {
+      if (reason) { setBlob(null); setPickError(reason); return; }
+      setBlob(out);
+    });
+    // so picking the same file again after an error still fires onChange
+    e.target.value = "";
   }
 
   function save() {
@@ -51,6 +58,7 @@ export default function PhotoSheet({ interestId }) {
       <h2>{t("addPhoto") + " · " + nameOf(it)}</h2>
       <button className="btn2" onClick={() => fileRef.current?.click()}>{t("choosePhoto")}</button>
       <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={onFileChange} />
+      {pickError && <div className="field-error">{t(pickError)}</div>}
       {blob && <img src={previewUrl} alt="" style={{ maxWidth: 150, borderRadius: 12 }} />}
       <Field label={t("caption")}>
         <input

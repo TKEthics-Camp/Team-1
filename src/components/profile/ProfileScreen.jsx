@@ -10,15 +10,22 @@ import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
 import Stats from "../shared/Stats";
 import PersonAvatar from "../shared/PersonAvatar";
+import { deleteMyAccount } from "../../lib/remote";
+import { useConsentStatus } from "../../lib/useConsentStatus";
 
 export default function ProfileScreen() {
   const { t, lang, nOf } = useI18n();
   const { profile, interests, photos, entries, clearGarden, updateProfile, setDiscoverable } = useStore();
-  const { signOut } = useAuth();
-  const { openSheet } = useUI();
+  const { signOut, user } = useAuth();
+  const { openSheet, showToast } = useUI();
   const navigate = useNavigate();
   const isOrg = profile && profile.accountType === "org";
   const [armed, setArmed] = useState(false);
+  const [deleteArmed, setDeleteArmed] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+
   const currentTheme = (profile && profile.theme) || DEFAULT_THEME;
   const [, bumpPermissionCheck] = useState(0);
   const coins = (profile && profile.coins) || 0;
@@ -27,6 +34,13 @@ export default function ProfileScreen() {
   const soundOn = !(profile && profile.soundOn === false);
   const publicCount = entries.filter((e) => e.visibility === "public").length
     + photos.filter((p) => p.visibility === "public").length;
+
+  // The database refuses these writes outright (20260918000000), so the job
+  // here is not to enforce anything — it is to not offer a control that is
+  // guaranteed to fail, and to say why instead.
+  const consent = useConsentStatus(user && user.id);
+  const locked = !!(consent && consent.disclosure_locked);
+  const needsReconsent = !!(consent && consent.state === "re_consent_required");
 
   const permission = window.Notification ? Notification.permission : "unsupported";
   const granted = permission === "granted";
@@ -41,9 +55,39 @@ export default function ProfileScreen() {
     }
   }
 
-  function handleClear() {
+  async function handleClear() {
     if (!armed) { setArmed(true); return; }
-    clearGarden();
+    setClearing(true);
+    const { ok } = await clearGarden();
+    setClearing(false);
+    setArmed(false);
+    // Local is already empty either way. Saying so matters when the server
+    // half failed, because that's the case where it all comes back later.
+    showToast(ok ? t("clearedToast") : t("clearedLocalOnly"));
+  }
+
+  // Two taps, same as clearing — but this one can't be undone by anything,
+  // so it says so before the second tap rather than after.
+  async function handleDeleteAccount() {
+    if (!deleteArmed) { setDeleteArmed(true); return; }
+    setDeleting(true);
+    setDeleteError(null);
+    const result = await deleteMyAccount(user && user.id);
+    if (!result.ok) {
+      setDeleting(false);
+      setDeleteArmed(false);
+      // Shown on the screen, not just toasted: this one can't be retried
+      // into working, and the server's own wording is the only thing that
+      // says what actually went wrong.
+      setDeleteError(result.message);
+      showToast(t("deleteAccountFailed"));
+      return;
+    }
+    // Signing out is all that's left: App.jsx wipes the local cache the
+    // moment `user` goes null. Calling clearGarden here would try to delete
+    // server rows for an account that no longer exists — and the server side
+    // of this is already done, buckets included.
+    await signOut();
   }
 
   return (
@@ -125,18 +169,30 @@ export default function ProfileScreen() {
           {soundOn ? "🔊 " + t("soundOn") : "🔈 " + t("soundOff")}
         </button>
 
-        <div className="label">{t("discoverableLabel")}</div>
-        <div className="seg">
-          <button type="button" aria-pressed={!discoverable ? "true" : "false"} onClick={() => setDiscoverable(false)}>
-            {t("discoverableOff")}
-          </button>
-          <button type="button" aria-pressed={discoverable ? "true" : "false"} onClick={() => setDiscoverable(true)}>
-            {t("discoverableOn")}
-          </button>
-        </div>
-        <div className="sub">{t(isOrg ? "discoverableNoteOrg" : "discoverableNote")}</div>
+        {locked ? (
+          <>
+            <div className="label">{t("dlTitle")}</div>
+            <div className="safe-note">
+              <span aria-hidden="true">🔒</span>
+              <span>{needsReconsent ? t("dlReconsent") : t("dlBody")}</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="label">{t("discoverableLabel")}</div>
+            <div className="seg">
+              <button type="button" aria-pressed={!discoverable ? "true" : "false"} onClick={() => setDiscoverable(false)}>
+                {t("discoverableOff")}
+              </button>
+              <button type="button" aria-pressed={discoverable ? "true" : "false"} onClick={() => setDiscoverable(true)}>
+                {t("discoverableOn")}
+              </button>
+            </div>
+            <div className="sub">{t(isOrg ? "discoverableNoteOrg" : "discoverableNote")}</div>
+          </>
+        )}
 
-        {!isOrg && (
+        {!isOrg && !locked && (
           profile.classCode ? (
             <div className="sub">{t("joinedClass")}</div>
           ) : (
@@ -152,9 +208,15 @@ export default function ProfileScreen() {
             <button className="btn2" onClick={() => openSheet("badges")}>{t("badges")}</button>
             <button className="btn2" onClick={() => openSheet("yearReview")}>{t("yearReview")}</button>
             <button className="btn2" onClick={() => openSheet("memories")}>{t("memories")}</button>
+            <button className="btn2" onClick={() => openSheet("watching")}>{t("watchingTitle")}</button>
             <button className="btn2" onClick={() => openSheet("trash")}>{t("recentlyDeleted")}</button>
           </>
         )}
+
+        {/* Both account types have a password, so this sits outside the
+            individual-only block above. */}
+        <button className="btn2" onClick={() => openSheet("password")}>{t("pwTitle")}</button>
+        <button className="btn2" onClick={() => openSheet("recovery")}>{t("recTitle")}</button>
 
         <div className="grow" />
 
@@ -162,11 +224,21 @@ export default function ProfileScreen() {
           <>
             <div className="sub">{t("dataNote")}</div>
 
-            <button className="btn2 btn-danger" onClick={handleClear}>
+            {/* The armed state used to be a label change and nothing else,
+                which is easy to tap straight past without noticing anything
+                happened at all. */}
+            {armed && <div className="sub">{t("clearAllWarning")}</div>}
+            <button className="btn2 btn-danger" onClick={handleClear} disabled={clearing}>
               {armed ? t("confirmClear") : t("clearAll")}
             </button>
           </>
         )}
+
+        {deleteArmed && <div className="sub">{t("deleteAccountWarning")}</div>}
+        {deleteError && <div className="field-error" style={{ overflowWrap: "anywhere" }}>{deleteError}</div>}
+        <button className="btn2 btn-danger" onClick={handleDeleteAccount} disabled={deleting}>
+          {deleteArmed ? t("deleteAccountConfirm") : t("deleteAccount")}
+        </button>
         <button className="btn2" onClick={signOut}>{t("logOut")}</button>
       </div>
     </>

@@ -8,20 +8,30 @@
    app keeps its own themed, gradient look untouched.
    ============================================================ */
 
-/* The start flow paints its own flat surface over the themed
-   stage — the Figma screens are white, not gradient. */
+/* The start flow paints its own flat surface over the themed stage. This
+   was a hardcoded #fff, which meant signup and login stayed white however
+   the app was themed — the one part of the product that ignored the Black
+   skin outright. Now it takes the same ground as everything else, which it
+   has to: --sf-ink is the shared --ink token now, and white ink on a
+   hardcoded white panel would be invisible rather than merely inconsistent. */
 .sf-view {
-  background: #fff;
+  background: var(--app-bg);
   padding: 0;
   gap: 0;
 }
 
 .sf {
-  --sf-blue: #0088ff;
-  --sf-ink: #1c1c1e;
-  --sf-muted: #6e6e73;
-  --sf-fill: #ececee;
-  --sf-line: #d6d6da;
+  /* Aliases, not a palette. These were five hardcoded literals with no
+     dark-mode override at all, which meant --sf-ink (#1c1c1e) landed on
+     --app-bg (#1C1C1E) under the Black skin: the entire signup and login
+     flow was near-black text on an identical ground. A student who chose
+     Black and signed out could not read the screen that lets them back in.
+     Pointing at the shared tokens fixes that and keeps it fixed. */
+  --sf-blue: var(--accent);
+  --sf-ink: var(--ink);
+  --sf-muted: var(--muted);
+  --sf-fill: var(--card-2);
+  --sf-line: var(--line);
 
   flex: 1;
   min-height: 0;
@@ -81,7 +91,7 @@
 
 .sf-btn {
   width: 100%; border: none; border-radius: 999px;
-  background: var(--sf-blue); color: #fff;
+  background: var(--sf-blue); color: var(--accent-ink);
   font-family: inherit; font-size: 17px; font-weight: 600;
   letter-spacing: -.01em; padding: 15px 20px;
   transition: transform .12s ease, opacity .12s ease;
@@ -105,7 +115,7 @@
   transition: background .15s ease, color .15s ease, transform .12s ease;
 }
 .sf-pill:active { transform: scale(.985); }
-.sf-pill[aria-pressed="true"] { background: var(--sf-blue); color: #fff; }
+.sf-pill[aria-pressed="true"] { background: var(--sf-blue); color: var(--accent-ink); }
 
 /* the look picker adds a leading glyph and a little more height */
 .sf-pill.sf-look {
@@ -126,7 +136,7 @@
 }
 .sf-box {
   width: 28px; height: 28px; flex: none; border-radius: 50%;
-  background: var(--sf-fill); color: #fff;
+  background: var(--sf-fill); color: var(--sf-ink);
   display: grid; place-items: center;
   font-size: 14px; font-weight: 700; line-height: 1;
   transition: background .15s ease;
@@ -143,7 +153,7 @@
    attribute selector out-specifies a bare .sf-field class */
 .sf .sf-field {
   width: 100%; font: inherit; font-size: 16px;
-  background: #fff; color: var(--sf-ink);
+  background: var(--card); color: var(--sf-ink);
   border: 1px solid var(--sf-line); border-radius: 8px;
   padding: 9px 12px;
 }
@@ -181,7 +191,7 @@
   font-family: inherit; font-size: 13px; font-weight: 600;
   transition: background .15s ease, color .15s ease;
 }
-.sf-day[aria-pressed="true"] { background: var(--sf-blue); color: #fff; }
+.sf-day[aria-pressed="true"] { background: var(--sf-blue); color: var(--accent-ink); }
 
 /* ---------- welcome / intro ---------- */
 
@@ -208,3 +218,73 @@
 
 .sf-notif-foot { display: flex; flex-direction: column; gap: 14px; }
 .sf-notif-foot .sf-linkbtn { padding-top: 0; text-align: center; }
+
+/* ---------- date of birth ---------- */
+/* Year first, then month, then day: correct for Chinese, unambiguous in
+   English, and nothing like the browser's mm/dd/yyyy guess. Year is given
+   the most room because it is the only one with four digits and the only
+   one anyone has to think about. */
+/* Year is four digits, Month is a word, Day is at most two digits — so the
+   columns are not equal. Sized off the content rather than split evenly,
+   which truncated "Month" to "Mo...". */
+.sf-date { display: grid; grid-template-columns: 1fr 1.15fr .95fr; gap: 8px; }
+.sf .sf-date .sf-field {
+  padding: 10px 8px;
+  /* Native select chrome varies wildly and none of it matches this app.
+     appearance:none strips it; the caret is drawn back on as a background
+     so the control still reads as a menu rather than a text box. */
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+                    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: calc(100% - 11px) calc(50% + 1px), calc(100% - 7px) calc(50% + 1px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 18px;
+  font-size: 15px;
+  text-overflow: ellipsis;
+}
+
+/* The lead-in under a heading is a sentence, not a footnote clinging to the
+   field below it. */
+.sf-hint-lead { margin: 6px 2px 22px; font-size: 14px; color: var(--muted); line-height: 1.5; }
+
+/* The class code is genuinely optional and should not compete with the
+   question the screen is actually asking. */
+.sf-optional { padding-top: 6px; border-top: 1px solid var(--sf-line); }
+.sf-optional .sf-label { padding-top: 12px; font-size: 14px; color: var(--muted); }
+
+
+/* ---------- screens that render their own frame ---------- */
+/* .sf-screen and .sf-inner were used by RecoverFlow from the day it was
+   written and never had a single line of CSS, so they were plain block
+   divs. That broke the flex chain .sf-grow depends on: the spacer could not
+   grow, and the button that should sit at the bottom of the screen floated
+   directly under the last field instead. The consent screens use the same
+   two classes, so this fixes all of them at once.
+
+   .sf-screen is written to work both nested inside .sf (signup, recovery)
+   and standing alone as the whole page (the guardian's consent link, which
+   is reached with no session and no app shell around it). */
+/* The --sf-* aliases only, not .sf's box. Sharing the whole rule gave
+   .sf-screen a second copy of .sf's padding and indented every nested
+   screen by an extra 24px on each side. */
+.sf-screen {
+  --sf-blue: var(--accent);
+  --sf-ink: var(--ink);
+  --sf-muted: var(--muted);
+  --sf-fill: var(--card-2);
+  --sf-line: var(--line);
+
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column;
+}
+.sf-inner {
+  flex: 1; min-height: 0; width: 100%;
+  display: flex; flex-direction: column;
+}
+
+/* Standing alone, it has to supply the padding .sf would otherwise give it. */
+.app > .sf-screen { padding: 4px 24px 28px; overflow-y: auto; }
+
+/* .sf-top is the same row as .sf-bar, for the screens that use that name. */
+.sf-top { display: flex; align-items: center; justify-content: space-between; flex: none; }

@@ -2,9 +2,11 @@ import { useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useAuth } from "../../store/AuthContext";
 import { supabase } from "../../lib/supabase";
+import { applyAgeGate } from "../../lib/remote";
 import { usernameToEmail } from "../../lib/syntheticEmail";
 import LangToggle from "../shared/LangToggle";
 import SfHead from "../onboarding/SfHead";
+import RecoverFlow from "./RecoverFlow";
 import AccountTypeStep from "../onboarding/AccountTypeStep";
 import Mascot from "../shared/Mascot";
 
@@ -15,19 +17,41 @@ import Mascot from "../shared/Mascot";
 // created (same server-side uniqueness check that used to live in
 // Onboarding's name step, just moved to where the username is actually
 // collected now) rather than at the end of onboarding.
+// Survives the remount that signing out causes. Not state, deliberately:
+// the component this belongs to is destroyed between setting it and reading
+// it back.
+let carriedError = null;
+
 export default function AuthFlow() {
   const { t } = useI18n();
   const { signUp, signIn, authError, clearAuthError } = useAuth();
-  const [screen, setScreen] = useState("welcome"); // "welcome" | "signup" | "login"
-  const [signupStep, setSignupStep] = useState("accountType"); // "accountType" | "credentials"
+  const [screen, setScreen] = useState("welcome"); // "welcome" | "signup" | "login" | "recover"
+  const [signupStep, setSignupStep] = useState("accountType"); // "accountType" | "age" | "credentials"
   const [accountType, setAccountType] = useState(null);
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [email, setEmail] = useState("");
-  const [localError, setLocalError] = useState(null);
+  const [localError, setLocalError] = useState(() => {
+    const carried = carriedError;
+    carriedError = null;
+    return carried;
+  });
   const [busy, setBusy] = useState(false);
+
+  // Collected before the account exists, so an account is never created
+  // without the thing that decides what it is allowed to do. Educators skip
+  // this entirely — they are adults by definition of the account type.
+  const [bdY, setBdY] = useState("");
+  const [bdM, setBdM] = useState("");
+  const [bdD, setBdD] = useState("");
+  const [classCode, setClassCode] = useState("");
+  // What the server wants, assembled from the three dropdowns. Zero-padded
+  // because the column is a date and "2015-4-9" is not one.
+  const birthdate = bdY && bdM && bdD
+    ? `${bdY}-${String(bdM).padStart(2, "0")}-${String(bdD).padStart(2, "0")}`
+    : "";
 
   const [loginId, setLoginId] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -60,16 +84,52 @@ export default function AuthFlow() {
     // If it fails, the auth account was still created, so it's rolled back
     // by signing out rather than left as a signed-in account with no valid
     // display name — Onboarding trusts that name is already reserved.
+    // account_type isn't set here any more — handle_new_user reads it from
+    // the signup metadata, and the column is frozen against client writes
+    // (see 20260912000000), since it's what decides who gets the educator
+    // dashboard. This is still where a taken username surfaces as a 23505.
     const { error } = await supabase
       .from("users")
-      .update({ display_name: trimmedUsername, account_type: accountType })
+      .update({ display_name: trimmedUsername })
       .eq("id", result.userId);
-    setBusy(false);
     if (error) {
+      setBusy(false);
       console.error("Failed to reserve username:", error);
       await supabase.auth.signOut();
       setLocalError(error.code === "23505" ? "usernameTaken" : "usernameError");
+      return;
     }
+
+    // The age gate runs here, once, while we still have the birthdate in
+    // hand and before anything can be logged. The server decides which of
+    // the three paths this is — an under-14 signup with no class lands in
+    // 'pending' and App shows the guardian screen instead of the app.
+    //
+    // Two failures, and they are nothing alike.
+    //
+    // reason "missing" means the migration is not applied on this project,
+    // so there is no gate to fail: signup has to complete exactly as it did
+    // before the gate was written. The first version of this treated that
+    // as an error and signed the new account out, which unmounted the whole
+    // flow and dropped the student back on the welcome screen with no
+    // message — signup was broken outright for everybody.
+    //
+    // Anything else means the gate IS live and did not run, which is the
+    // one outcome that must not leave an account behind. That rolls back.
+    if (!isOrg) {
+      const gate = await applyAgeGate(birthdate, classCode.trim() || null);
+      if (!gate.ok && gate.reason !== "missing") {
+        setBusy(false);
+        await supabase.auth.signOut();
+        // Signing out unmounts this component, so an error in local state
+        // would be thrown away with it. Module scope survives the remount
+        // within the same page load, which is the only lifetime that
+        // matters here.
+        carriedError = gate.message || "agBadDate";
+        return;
+      }
+    }
+    setBusy(false);
   }
 
   async function submitLogIn(e) {
@@ -115,6 +175,116 @@ export default function AuthFlow() {
     );
   }
 
+  // Asked before the account exists, so nothing can be created and then
+  // retro-fitted with an age. The class code is optional and is what
+  // separates the two under-14 paths: with one, the school's consent covers
+  // the account; without one, a guardian has to be asked directly.
+  //
+  // Three dropdowns rather than <input type="date">. A native date picker
+  // opens on today, so a twelve-year-old pages back through a hundred and
+  // fifty months to reach their own birth year, and it renders in the
+  // browser's locale order — mm/dd/yyyy for a Chinese reader who expects
+  // year first. Year/month/day reads correctly in both languages and puts
+  // the birth year one tap away.
+  if (screen === "signup" && signupStep === "age") {
+    const thisYear = new Date().getFullYear();
+    // Most recent first: almost everyone signing up is a child, so their
+    // year is at the top of the list rather than ninety scrolls down.
+    const years = Array.from({ length: 100 }, (_, i) => thisYear - i);
+    const months = Array.from({ length: 12 }, (_, i) => i + 1);
+    // Real length of the chosen month, so 31 February is never offered.
+    const daysInMonth = (bdY && bdM)
+      ? new Date(Number(bdY), Number(bdM), 0).getDate()
+      : 31;
+    const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+    const complete = bdY && bdM && bdD;
+
+    return (
+      <div className="view sf-view">
+        <div className="sf">
+          <div className="sf-screen">
+            <div className="sf-inner">
+              <div className="sf-top">
+                <button
+                  className="sf-back"
+                  type="button"
+                  aria-label={t("back")}
+                  onClick={() => setSignupStep("accountType")}
+                >‹</button>
+                <LangToggle />
+              </div>
+
+              <SfHead>{t("agTitle")}</SfHead>
+              <p className="sf-hint sf-hint-lead">{t("agSub")}</p>
+
+              <div className="sf-stack">
+                {/* No label above these: the heading already asks the
+                    question, and repeating it as "Date of birth" was just
+                    another line between the question and the answer. */}
+                <div className="sf-date">
+                  <select
+                    className="sf-field"
+                    aria-label={t("agYear")}
+                    value={bdY}
+                    onChange={(e) => setBdY(e.target.value)}
+                  >
+                    <option value="">{t("agYear")}</option>
+                    {years.map((y) => <option key={y} value={y}>{y}</option>)}
+                  </select>
+                  <select
+                    className="sf-field"
+                    aria-label={t("agMonth")}
+                    value={bdM}
+                    onChange={(e) => setBdM(e.target.value)}
+                  >
+                    <option value="">{t("agMonth")}</option>
+                    {months.map((m) => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                  <select
+                    className="sf-field"
+                    aria-label={t("agDay")}
+                    value={bdD}
+                    onChange={(e) => setBdD(e.target.value)}
+                  >
+                    <option value="">{t("agDay")}</option>
+                    {days.map((d) => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </div>
+
+                <div className="sf-optional">
+                  <label className="sf-label" htmlFor="ag-cc">{t("agClassLabel")}</label>
+                  <input
+                    id="ag-cc"
+                    className="sf-field"
+                    type="text"
+                    autoCapitalize="characters"
+                    autoComplete="off"
+                    spellCheck="false"
+                    value={classCode}
+                    onChange={(e) => setClassCode(e.target.value)}
+                  />
+                  <p className="sf-hint">{t("agClassHint")}</p>
+                </div>
+              </div>
+
+              <div className="sf-grow" />
+              <div className="sf-foot">
+                <button
+                  className="sf-btn"
+                  type="button"
+                  disabled={!complete}
+                  onClick={() => setSignupStep("credentials")}
+                >
+                  {t("agContinue")}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (screen === "signup" && signupStep === "accountType") {
     return (
       <div className="view sf-view">
@@ -127,7 +297,7 @@ export default function AuthFlow() {
           <AccountTypeStep
             value={accountType}
             setType={setAccountType}
-            onNext={() => setSignupStep("credentials")}
+            onNext={() => setSignupStep(accountType === "org" ? "credentials" : "age")}
           />
         </div>
       </div>
@@ -143,7 +313,7 @@ export default function AuthFlow() {
               type="button"
               className="sf-back"
               aria-label={t("back")}
-              onClick={() => setSignupStep("accountType")}
+              onClick={() => setSignupStep(accountType === "org" ? "accountType" : "age")}
             >
               ‹
             </button>
@@ -211,6 +381,16 @@ export default function AuthFlow() {
     );
   }
 
+  if (screen === "recover") {
+    return (
+      <div className="view sf-view">
+        <div className="sf">
+          <RecoverFlow onBack={() => setScreen("login")} onDone={() => setScreen("welcome")} />
+        </div>
+      </div>
+    );
+  }
+
   // screen === "login"
   return (
     <div className="view sf-view">
@@ -251,6 +431,10 @@ export default function AuthFlow() {
         <div className="sf-foot">
           <button className="sf-btn" type="submit" disabled={busy || !loginId.trim() || !loginPassword}>
             {busy ? t("authWorking") : t("sfContinue")}
+          </button>
+          {/* Students have no email, so this is the only way back in. */}
+          <button className="sf-linkbtn" type="button" onClick={() => setScreen("recover")}>
+            {t("recForgotLink")}
           </button>
         </div>
       </form>

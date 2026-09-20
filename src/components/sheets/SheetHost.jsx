@@ -12,6 +12,9 @@ import BadgesSheet from "./BadgesSheet";
 import RecentlyDeletedSheet from "./RecentlyDeletedSheet";
 import MemoriesSheet from "./MemoriesSheet";
 import UsernameSheet from "./UsernameSheet";
+import WatchingSheet from "./WatchingSheet";
+import PasswordSheet from "./PasswordSheet";
+import RecoveryCodeSheet from "./RecoveryCodeSheet";
 
 export default function SheetHost() {
   const { sheet } = useUI();
@@ -31,5 +34,8 @@ export default function SheetHost() {
   if (sheet.type === "trash") return <RecentlyDeletedSheet />;
   if (sheet.type === "memories") return <MemoriesSheet />;
   if (sheet.type === "username") return <UsernameSheet />;
+  if (sheet.type === "watching") return <WatchingSheet />;
+  if (sheet.type === "password") return <PasswordSheet />;
+  if (sheet.type === "recovery") return <RecoveryCodeSheet />;
   return null;
 }

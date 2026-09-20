@@ -8,6 +8,7 @@ import IdeasTab from "./IdeasTab";
 import CommunityTab from "./CommunityTab";
 import SchoolTab from "./SchoolTab";
 import UserSearch from "./UserSearch";
+import { useConsentStatus } from "../../lib/useConsentStatus";
 
 const ALL_TABS = [
   ["ideas", "tabIdeas"],
@@ -27,9 +28,19 @@ export default function ExploreScreen() {
   // own classCode — set via Me → Join a class).
   const isOrg = profile && profile.accountType === "org";
   const inClass = !!(profile && profile.classCode);
+
+  // An account consented under the no-disclosure standard is shut out of
+  // other people entirely, not just hidden from them: RLS returns nothing
+  // for Community or user search, so showing either would be an empty tab
+  // and a search box that never finds anybody. Ideas is a fixed local list
+  // with no accounts in it, so it stays.
+  const consent = useConsentStatus(user && user.id);
+  const locked = !!(consent && consent.disclosure_locked);
+
   const TABS = ALL_TABS.filter(([key]) => {
     if (key === "ideas") return !isOrg;
-    if (key === "school") return !isOrg && inClass;
+    if (key === "school") return !isOrg && inClass && !locked;
+    if (key === "community") return !locked;
     return true;
   });
 
@@ -45,7 +56,7 @@ export default function ExploreScreen() {
         <LangToggle />
       </TopBar>
       <div className="view">
-        {user && <UserSearch />}
+        {user && !locked && <UserSearch />}
         <div className="tabs">
           {TABS.map(([key, label]) => (
             <button key={key} aria-selected={activeTab === key} onClick={() => setTab(key)}>

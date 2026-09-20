@@ -1,5 +1,7 @@
 import { supabase } from "./supabase";
 import { randomClassCode } from "./id";
+import { canonicalRecoveryCode } from "./recoveryCode";
+import { TERMS_VERSION, PRIVACY_VERSION } from "./policyVersions";
 
 // users.avatar is '' until the first sync, and JSON.parse('') throws —
 // null here means "nothing remote yet" (render the default look), not
@@ -324,11 +326,43 @@ export async function downloadAudioBlob(storagePath) {
   }
 }
 
+// Storage has no cascade. Deleting a photos row leaves its file sitting in
+// the bucket, so every path that erases a user's content has to sweep the
+// buckets explicitly. Both bucket layouts are flat — `${userId}/${id}` — so
+// one non-recursive list per bucket is the whole set.
+async function clearBucket(bucket, userId) {
+  const { data, error } = await supabase.storage.from(bucket).list(userId, { limit: 1000 });
+  if (error) {
+    console.error(`Sync (list ${bucket}) failed:`, error);
+    return false;
+  }
+  const paths = (data || []).map((f) => `${userId}/${f.name}`);
+  if (!paths.length) return true;
+  const { error: removeError } = await supabase.storage.from(bucket).remove(paths);
+  if (removeError) {
+    console.error(`Sync (clear ${bucket}) failed:`, removeError);
+    return false;
+  }
+  return true;
+}
+
+// Erases everything this user planted, on the server. Reports whether it
+// actually worked: the caller has already wiped the local copy, so a silent
+// failure here means the trees come back on the next sign-in with nothing
+// ever having said so.
 export async function deleteAllMine(userId) {
   // Cascades to that user's entries and photos via the FK ON DELETE CASCADE
-  // in the migration, so one delete is enough to erase everything remote.
+  // in the migration, so one delete covers every row.
   const { error } = await supabase.from("interests").delete().eq("user_id", userId);
-  if (error) console.error("Sync (delete all) failed:", error);
+  if (error) {
+    console.error("Sync (delete all) failed:", error);
+    return false;
+  }
+  const swept = await Promise.all([
+    clearBucket("photos", userId),
+    clearBucket("voice-notes", userId),
+  ]);
+  return swept.every(Boolean);
 }
 
 export async function pullUserRow(userId) {
@@ -471,8 +505,11 @@ export async function updateDisplayName(userId, name) {
 // "does this row's class_code match *my own* class_code"), so an educator
 // who never gets this set can never see their own students no matter who
 // joins. Both have to be written for a code to actually work end to end.
-export async function setMyClassCode(userId, code) {
-  const { error } = await supabase.from("users").update({ class_code: code }).eq("id", userId);
+// Goes through join_class() like everyone else: users.class_code is frozen
+// against direct writes (see 20260912000000), and by the time this is
+// called createClass has already inserted the row, so the code validates.
+export async function setMyClassCode(code) {
+  const { error } = await supabase.rpc("join_class", { p_code: code });
   if (error) console.error("Sync (set own class_code) failed:", error);
 }
 
@@ -493,7 +530,7 @@ export async function createClass(userId, code) {
     console.error("Sync (create class) failed:", error);
     return { ok: false, taken: false, alreadyMinted: false };
   }
-  await setMyClassCode(userId, code);
+  await setMyClassCode(code);
   return { ok: true };
 }
 
@@ -522,7 +559,7 @@ export async function mintOrFetchClassCode(userId) {
     if (result.ok) return code;
     if (result.alreadyMinted) {
       const existing = await fetchMyClassCode(userId);
-      if (existing) await setMyClassCode(userId, existing);
+      if (existing) await setMyClassCode(existing);
       return existing;
     }
     if (!result.taken) break;
@@ -530,25 +567,53 @@ export async function mintOrFetchClassCode(userId) {
   return null;
 }
 
-// Whether a typed code belongs to a real class, checked before the typing
-// account has joined anything — see classes_select in the migration for
-// why this can't go through users_select instead.
-export async function classCodeExists(code) {
-  const { data, error } = await supabase.from("classes").select("code").eq("code", code).maybeSingle();
-  if (error) {
-    console.error("Sync (check class code) failed:", error);
-    return false;
-  }
-  return !!data;
-}
-
-export async function joinClass(userId, code) {
-  const { error } = await supabase.from("users").update({ class_code: code }).eq("id", userId);
+// Joins a class by code. The check for "is this a real code" lives inside
+// join_class() on the server now — the classes table isn't readable by
+// anyone but its owner, precisely so codes can't be listed and walked into,
+// which is what a client-side existence check allowed. A wrong code comes
+// back as a plain false, not an error: it's an ordinary thing to type.
+export async function joinClass(code) {
+  const { data, error } = await supabase.rpc("join_class", { p_code: code });
   if (error) {
     console.error("Sync (join class) failed:", error);
-    return false;
+    return "error";
   }
-  return true;
+  return data ? "joined" : "invalid";
+}
+
+// Erases the account for good: storage objects first, then the auth row,
+// which cascades every table that hangs off it. Server-side in one call
+// (see 20260912010000) because a client can't delete its own auth.users
+// row at all, and a half-finished deletion is worse than none.
+// Erases the account for good. Two halves, deliberately split.
+//
+// Storage goes first, from here, through the same storage API that "clear
+// all data" uses and that is known to work on this project. The SQL
+// function sweeps the buckets too, but deleting storage.objects by hand is
+// a different permission from asking the storage API to remove a file, and
+// it is the more fragile of the two. Doing it here means the photos and
+// voice notes are gone even if the SQL half cannot manage it.
+//
+// Then the auth row, which nothing but a definer function can remove.
+//
+// Returns the server's own message rather than a boolean. This is the one
+// action in the app a student cannot work around or retry their way out
+// of, and "that didn't work" tells them nothing and tells us less — the
+// real error names the exact table and privilege involved, and it was
+// going to a console nobody opens.
+export async function deleteMyAccount(userId) {
+  if (userId) {
+    await Promise.all([
+      clearBucket("photos", userId),
+      clearBucket("voice-notes", userId),
+    ]);
+  }
+  const { error } = await supabase.rpc("delete_my_account");
+  if (error) {
+    console.error("Account deletion failed:", error);
+    return { ok: false, message: error.message || error.hint || String(error) };
+  }
+  return { ok: true };
 }
 
 // Everyone else sharing this class_code — RLS's users_select class-code
@@ -714,6 +779,247 @@ export async function pullFeed(userId, limit = 40) {
       authorId: r.interests.users.id,
       authorName: r.interests.users.display_name,
       authorAvatar: parseAvatar(r.interests.users.avatar),
+    }));
+}
+
+// ==================================================== account recovery
+// A student has no email, so there is no reset link and no support desk.
+// A recovery code, written down while they still know their password, is
+// the only way back into an account whose password has been forgotten.
+// What a code is, and how it survives being copied by hand, lives in
+// lib/recoveryCode.js — this file only moves it to and from the server.
+
+// Stores the hash of a freshly generated code. The plaintext is returned to
+// the caller to show once and is never sent anywhere else or kept.
+// The current password is required, and checked on the server. Without it
+// this sheet would be a way around the check Me -> Change password makes:
+// a borrowed unlocked phone could mint a code and own the account for good
+// without ever knowing the password. See 20260917010000.
+export async function setRecoveryCode(code, password) {
+  const { error } = await supabase.rpc("set_recovery_code", {
+    p_code: canonicalRecoveryCode(code),
+    p_password: password,
+  });
+  if (error) {
+    console.error("Recovery code save failed:", error.message);
+    // 28P01 is what the function raises for a wrong password. It is the one
+    // failure here the student can do something about, so it gets its own
+    // message rather than the server's wording.
+    const wrong = error.code === "28P01" || /wrong password/i.test(error.message || "");
+    return {
+      ok: false,
+      reason: wrong ? "wrong" : "error",
+      message: wrong ? null : (error.message || error.hint || String(error)),
+    };
+  }
+  return { ok: true };
+}
+
+export async function hasRecoveryCode() {
+  const { data, error } = await supabase.rpc("has_recovery_code");
+  if (error) {
+    console.error("Recovery code check failed:", error.message);
+    return false;
+  }
+  return !!data;
+}
+
+// Redeems a code for a new password. Called by somebody who is not signed
+// in, which is why it takes a username. Returns a status of "ok",
+// "invalid" (wrong username or wrong code — the server deliberately cannot
+// tell you which), or "error", which carries the server's own message.
+export async function redeemRecoveryCode(username, code, newPassword) {
+  const { data, error } = await supabase.rpc("redeem_recovery_code", {
+    p_username: username,
+    p_code: canonicalRecoveryCode(code),
+    p_new_password: newPassword,
+  });
+  if (error) {
+    console.error("Recovery redemption failed:", error.message);
+    return { status: "error", message: error.message || error.hint || String(error) };
+  }
+  return { status: data ? "ok" : "invalid" };
+}
+
+// ============================================== age gate and consent
+// The three signup paths (PRD §14.2, migration 20260918000000):
+//   14 or over, or an educator   nothing happens
+//   under 14 with a class code   the school's consent covers the account
+//   under 14, alone              a guardian agrees twice, and the account
+//                                can disclose nothing, ever
+//
+// Every one of these decisions is made server side. The client passes the
+// birthdate in and is told which path it landed on; it never chooses.
+
+export async function applyAgeGate(birthdate, classCode) {
+  const { data, error } = await supabase.rpc("apply_age_gate", {
+    p_birthdate: birthdate,
+    p_class_code: classCode || null,
+  });
+  if (error) {
+    // PGRST202 is PostgREST saying the function is not in its schema cache,
+    // which here means 20260918000000 has not been applied to this project.
+    // That is a deployment state, not a failure: the age gate is simply not
+    // live yet, and signup must go through exactly as it did before it
+    // existed. Treating it as an error is what broke account creation
+    // outright — see the comment at the call site.
+    const missing = error.code === "PGRST202"
+      || /could not find the function/i.test(error.message || "");
+    if (missing) {
+      console.warn("Age gate not deployed; signup proceeding ungated.");
+      return { ok: false, reason: "missing" };
+    }
+    console.error("Age gate failed:", error.message);
+    return { ok: false, reason: "error", message: error.message || String(error) };
+  }
+  return { ok: true, state: data };
+}
+
+export async function startGuardianConsent(contact) {
+  const { error } = await supabase.rpc("start_guardian_consent", {
+    p_contact: contact,
+    p_terms_version: TERMS_VERSION,
+    p_privacy_version: PRIVACY_VERSION,
+  });
+  if (error) {
+    console.error("Guardian consent start failed:", error.message);
+    return { ok: false, message: error.message || String(error) };
+  }
+  return { ok: true };
+}
+
+export async function myConsentStatus() {
+  const { data, error } = await supabase.rpc("my_consent_status");
+  if (error) {
+    console.error("Consent status failed:", error.message);
+    return null;
+  }
+  return data;
+}
+
+// Called on sign-in. This is what turns an active no-disclosure account
+// into one that needs re-consent on its fourteenth birthday — deliberately
+// not an unlock, see the migration.
+export async function refreshConsentState() {
+  const { data, error } = await supabase.rpc("refresh_consent_state");
+  if (error) {
+    console.error("Consent refresh failed:", error.message);
+    return null;
+  }
+  return data;
+}
+
+// The two the guardian calls. They are not signed in and never will be, so
+// these run as anon and the token is the only credential.
+export async function describeGuardianConsent(token) {
+  const { data, error } = await supabase.rpc("describe_guardian_consent", { p_token: token });
+  if (error) {
+    console.error("Consent lookup failed:", error.message);
+    return { result: "error", message: error.message };
+  }
+  return data;
+}
+
+export async function confirmGuardianConsent(token) {
+  const { data, error } = await supabase.rpc("confirm_guardian_consent", { p_token: token });
+  if (error) {
+    console.error("Consent confirm failed:", error.message);
+    return { result: "error", message: error.message };
+  }
+  return data;
+}
+
+// ===================================================== watching a hobby
+// watches points at an interest, never at a user — there is no follows
+// table, deliberately (PRD §7). "Keep an eye on this hobby" is a different
+// social contract from "follow this child", and the schema is what stops
+// the second one being built by accident.
+
+export async function listWatchedIds(userId) {
+  if (!userId) return new Set();
+  const { data, error } = await supabase
+    .from("watches").select("interest_id").eq("user_id", userId);
+  if (error) {
+    console.error("Sync (watches) failed:", error);
+    return new Set();
+  }
+  return new Set((data || []).map((w) => w.interest_id));
+}
+
+export async function watchInterest(userId, interestId) {
+  const { error } = await supabase.from("watches").insert({
+    id: "wch-" + Math.random().toString(36).slice(2) + Date.now().toString(36),
+    user_id: userId,
+    interest_id: interestId,
+  });
+  // 23505 = already watching, which is the state the caller wanted anyway
+  if (error && error.code !== "23505") {
+    console.error("Sync (watch) failed:", error);
+    return false;
+  }
+  return true;
+}
+
+export async function unwatchInterest(userId, interestId) {
+  const { error } = await supabase
+    .from("watches").delete().eq("user_id", userId).eq("interest_id", interestId);
+  if (error) {
+    console.error("Sync (unwatch) failed:", error);
+    return false;
+  }
+  return true;
+}
+
+// The watched hobbies themselves, for the list in the Me tab.
+//
+// Two queries rather than one embed, on purpose. A PostgREST embed does not
+// re-apply the embedded table's RLS (see pullFeed's note) — so joining
+// interests onto watches would keep returning a hobby whose owner has since
+// turned discoverability off. Selecting the interests as their own
+// top-level query puts them back under interests_select, and anything no
+// longer visible simply doesn't come back. Watching something was never a
+// claim on it staying visible.
+export async function pullWatchedInterests(userId) {
+  if (!userId) return [];
+  const [{ data: rows, error }, blocked] = await Promise.all([
+    supabase
+      .from("watches")
+      .select("interest_id")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false }),
+    listBlockedIds(userId),
+  ]);
+  if (error) {
+    console.error("Sync (watched hobbies) failed:", error);
+    return [];
+  }
+  const ids = (rows || []).map((w) => w.interest_id);
+  if (!ids.length) return [];
+
+  const { data, error: interestsError } = await supabase
+    .from("interests")
+    .select("id, name, color, user_id, users(id, display_name, avatar)")
+    .in("id", ids);
+  if (interestsError) {
+    console.error("Sync (watched hobbies) failed:", interestsError);
+    return [];
+  }
+  // `in` returns rows in whatever order it likes, so the newest-first
+  // ordering from the watches query above has to be reapplied here — it is
+  // carried by the position of each id in `ids`, not by anything on the
+  // interests row itself.
+  const order = new Map(ids.map((id, i) => [id, i]));
+  return (data || [])
+    .filter((i) => i.users)
+    .filter((i) => !blocked.has(i.user_id))
+    .sort((a, b) => order.get(a.id) - order.get(b.id))
+    .map((i) => ({
+      id: i.id,
+      name: i.name,
+      color: i.color,
+      ownerId: i.users.id,
+      ownerName: i.users.display_name,
+      ownerAvatar: parseAvatar(i.users.avatar),
     }));
 }
 
