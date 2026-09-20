@@ -14,28 +14,18 @@
    one shared piece — see the .nav block in the Home section.
    ============================================================ */
 
+/* These used to be their own palette, hardcoded per skin, which is how the
+   home screens drifted to a different grey and a different blue from the
+   rest of the app. They are aliases now: one skin in tokens.css, and these
+   names kept only so the rules below don't all have to be rewritten. A
+   theme change reaches them for free, which is the point. */
 .home-bar, .home-view, .nav,
 .tree-bar, .tree-view, .tree-sheet {
-  --home-fill: #ececee;
-  --home-line: #d6d6da;
-  --home-blue: #0088ff;
-  /* raised surfaces — cards, fields, the sheet itself. Must be tokens, not
-     literal #fff: --ink flips to white under the Black skin, and a hardcoded
-     white card would leave white text on white. */
-  --home-card: #ffffff;
-  --home-surface: #ffffff;
-}
-.stage[data-theme="black"] .home-bar,
-.stage[data-theme="black"] .home-view,
-.stage[data-theme="black"] .nav,
-.stage[data-theme="black"] .tree-bar,
-.stage[data-theme="black"] .tree-view,
-.stage[data-theme="black"] .tree-sheet {
-  --home-fill: rgba(255, 255, 255, .10);
-  --home-line: rgba(255, 255, 255, .16);
-  --home-blue: #0a84ff;
-  --home-card: #2c2c2e;
-  --home-surface: #1c1c1e;
+  --home-fill: var(--card-2);
+  --home-line: var(--line);
+  --home-blue: var(--accent);
+  --home-card: var(--card);
+  --home-surface: var(--app-bg);
 }
 
 /* ---------- header: no rule, no glass, just the greeting ---------- */
@@ -413,13 +403,18 @@
   background: radial-gradient(ellipse, var(--wash-b), transparent 70%);
   animation: drift 34s ease-in-out infinite reverse;
 }
+/* These were a blue and a pink at .26 and .20, which is most of why every
+   screen read as washed out — a pastel haze sitting over the content at all
+   times. They existed to give the glass something to refract; with the blur
+   now reserved for three surfaces, that job is gone. What is left is a
+   single barely-there warm tint so the ground is not dead flat. */
 .stage, .stage[data-theme="white"] {
-  --wash-a: rgba(0, 136, 255, .26);
-  --wash-b: rgba(255, 122, 168, .20);
+  --wash-a: rgba(28, 112, 73, .05);
+  --wash-b: rgba(200, 129, 27, .04);
 }
 .stage[data-theme="black"] {
-  --wash-a: rgba(10, 132, 255, .34);
-  --wash-b: rgba(255, 122, 168, .20);
+  --wash-a: rgba(95, 191, 139, .06);
+  --wash-b: rgba(224, 163, 60, .04);
 }
 
 /* the device frame itself */
@@ -430,10 +425,12 @@
 
 /* ---------- the glass recipe, as one reusable block ---------- */
 
-.topbar, .nav, .sheet, .btn2, .chip, .tabs, .seg,
-.stat, .theme-btn, .idea, .post, .setup-row, .nudge, .memory,
-.code-card, .deco-card, .acct-card, .choice, .tree-status,
-.user-search-input, .day-btn, .species-btn {
+/* Blur is a material, and a material only reads as one if it is rare. This
+   used to name twenty-one selectors — a stat tile, a day button and the tab
+   bar were all made of the same stuff, which is why nothing on screen
+   looked more important than anything else. Only these three actually sit
+   over content that moves underneath them. */
+.topbar, .nav, .sheet {
   -webkit-backdrop-filter: var(--lg-blur);
   backdrop-filter: var(--lg-blur);
 }
@@ -526,13 +523,16 @@
 }
 
 /* fields */
-input[type="text"], input[type="date"], input[type="time"], textarea,
+input[type="text"], input[type="password"], input[type="email"],
+input[type="date"], input[type="time"], textarea,
 .user-search-input {
   background: var(--lg-fill); color: var(--ink);
   border: 1px solid var(--lg-edge); border-radius: 12px;
   font-family: var(--body);
 }
-input[type="text"]:focus, textarea:focus, .user-search-input:focus {
+input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus,
+input[type="date"]:focus, input[type="time"]:focus,
+textarea:focus, .user-search-input:focus {
   outline: none; border-color: var(--accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
 }
@@ -667,23 +667,35 @@ input[type="text"]:focus, textarea:focus, .user-search-input:focus {
   50%      { transform: rotate(7deg); }
 }
 
-/* the streak flame: a slow idle flicker, plus a pop each time the number
-   actually changes (HomeScreen keys the span on the streak value, so it
-   remounts and the animation replays) */
+/* the streak flame: an outer body and a brighter core, each licking on its
+   own clock. The two rates don't divide into each other, so they drift in
+   and out of phase and the silhouette never settles into a visible loop.
+   Plus a pop each time the number actually changes — HomeScreen keys the
+   icon on the streak value, so it remounts and the pop replays. */
 .flame-badge { display: inline-flex; align-items: center; gap: 5px; }
-.flame-badge .flame {
-  display: inline-block;
-  animation: flameIdle 2.6s ease-in-out infinite, flamePop .62s cubic-bezier(.32,.72,0,1);
-  transform-origin: 50% 85%;
+.streak-ico {
+  display: block; overflow: visible;
+  transform-origin: 50% 92%;
+  animation: streakPop .62s cubic-bezier(.32,.72,0,1);
 }
-@keyframes flameIdle {
-  0%, 100% { transform: scale(1) rotate(0deg); }
-  30%      { transform: scale(1.08) rotate(-5deg); }
-  65%      { transform: scale(.97) rotate(4deg); }
+.streak-ico .streak-flame-outer,
+.streak-ico .streak-flame-core { transform-box: view-box; transform-origin: 12px 28px; }
+.streak-ico .streak-flame-outer { animation: streakLickOuter 1.15s ease-in-out infinite; }
+.streak-ico .streak-flame-core  { animation: streakLickCore .78s ease-in-out infinite; }
+
+@keyframes streakLickOuter {
+  0%, 100% { transform: scale(1, 1) translateY(0); }
+  35%      { transform: scale(.94, 1.07) translateY(-.4px); }
+  70%      { transform: scale(1.05, .95) translateY(.2px); }
 }
-@keyframes flamePop {
-  0%   { transform: scale(.5) rotate(-18deg); opacity: .3; }
-  55%  { transform: scale(1.45) rotate(8deg); opacity: 1; }
+@keyframes streakLickCore {
+  0%, 100% { transform: scale(1, 1);     opacity: .95; }
+  40%      { transform: scale(.86, 1.14); opacity: 1; }
+  75%      { transform: scale(1.1, .9);   opacity: .82; }
+}
+@keyframes streakPop {
+  0%   { transform: scale(.4) rotate(-16deg); opacity: .2; }
+  55%  { transform: scale(1.35) rotate(6deg); opacity: 1; }
   100% { transform: scale(1) rotate(0deg); }
 }
 
@@ -778,11 +790,21 @@ input[type="text"]:focus, textarea:focus, .user-search-input:focus {
    the *viewport* origin, which sends rotations flying off-centre.
    ============================================================ */
 
+/* Pivots are in viewBox units, not fill-box. A leaf-arm has to swing from
+   the shoulder where it meets the body — a fixed point on the drawing, not
+   the centre of the leaf's own bounding box. fill-box also re-anchors any
+   `transform` attribute on the same element, which is what used to fling
+   the arms off into space; Mascot.jsx now keeps those attributes on the
+   shapes *inside* these wrappers, so the two never fight. */
 .sprig .sprig-body, .sprig .sprig-arm-l, .sprig .sprig-arm-r,
 .sprig .sprig-face, .sprig .sprig-tuft, .sprig .sprig-shadow {
-  transform-box: fill-box;
-  transform-origin: center;
+  transform-box: view-box;
 }
+.sprig .sprig-body   { transform-origin: 50px 60px; }
+.sprig .sprig-arm-l  { transform-origin: 26px 62px; }
+.sprig .sprig-arm-r  { transform-origin: 74px 62px; }
+.sprig .sprig-tuft   { transform-origin: 50px 34px; }
+.sprig .sprig-shadow { transform-origin: 50px 94px; }
 
 /* idle — a slow breath, so he's never completely still */
 .sprig[data-action="idle"] .sprig-body { animation: sprigBreathe 3.6s ease-in-out infinite; }
@@ -793,7 +815,6 @@ input[type="text"]:focus, textarea:focus, .user-search-input:focus {
 
 /* wave — one arm swings from its shoulder end */
 .sprig[data-action="wave"] .sprig-arm-l {
-  transform-origin: 100% 50%;
   animation: sprigWave 1.5s ease-in-out infinite;
 }
 .sprig[data-action="wave"] .sprig-body { animation: sprigBreathe 3.6s ease-in-out infinite; }
@@ -804,8 +825,8 @@ input[type="text"]:focus, textarea:focus, .user-search-input:focus {
 }
 
 /* cheer — both arms up, and the whole plant hops off its own shadow */
-.sprig[data-action="cheer"] .sprig-arm-l { transform-origin: 100% 50%; animation: sprigCheerL .9s ease-in-out infinite; }
-.sprig[data-action="cheer"] .sprig-arm-r { transform-origin: 0% 50%;   animation: sprigCheerR .9s ease-in-out infinite; }
+.sprig[data-action="cheer"] .sprig-arm-l { animation: sprigCheerL .9s ease-in-out infinite; }
+.sprig[data-action="cheer"] .sprig-arm-r { animation: sprigCheerR .9s ease-in-out infinite; }
 .sprig[data-action="cheer"] .sprig-body  { animation: sprigHop .9s ease-in-out infinite; }
 .sprig[data-action="cheer"] .sprig-shadow { animation: sprigShadow .9s ease-in-out infinite; }
 @keyframes sprigCheerL { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-34deg); } }
@@ -815,7 +836,7 @@ input[type="text"]:focus, textarea:focus, .user-search-input:focus {
 
 /* point — leans toward whatever's on his right */
 .sprig[data-action="point"] .sprig-body { animation: sprigLean 2.4s ease-in-out infinite; }
-.sprig[data-action="point"] .sprig-arm-r { transform-origin: 0% 50%; animation: sprigPoint 2.4s ease-in-out infinite; }
+.sprig[data-action="point"] .sprig-arm-r { animation: sprigPoint 2.4s ease-in-out infinite; }
 @keyframes sprigLean  { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(7deg); } }
 @keyframes sprigPoint { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-22deg) translateX(8%); } }
 
@@ -857,6 +878,19 @@ input[type="text"]:focus, textarea:focus, .user-search-input:focus {
 }
 .entry .voice-note { margin-top: 8px; }
 
-/* a streak currently held together by a rest day reads calm, not on fire */
+/* a streak currently held together by a rest day reads calm, not on fire:
+   the leaf sways instead of licking */
 .flame-badge.resting { color: var(--accent); }
-.flame-badge.resting .flame { animation: flameIdle 4.2s ease-in-out infinite; }
+.streak-ico .streak-leaf {
+  transform-box: view-box; transform-origin: 12px 24px;
+  animation: streakSway 4.2s ease-in-out infinite;
+}
+@keyframes streakSway {
+  0%, 100% { transform: rotate(-6deg); }
+  50%      { transform: rotate(6deg); }
+}
+
+/* motion here is decoration, never information — the number carries that */
+@media (prefers-reduced-motion: reduce) {
+  .streak-ico, .streak-ico * { animation: none; }
+}

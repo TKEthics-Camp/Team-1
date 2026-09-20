@@ -3,8 +3,8 @@ button { font: inherit; color: var(--ink); cursor: pointer; border-radius: 12px;
 button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
 .btn {
-  background: linear-gradient(135deg, #FF8FC0 0%, #FFAE7E 100%); color: #4A2140; border: none;
-  box-shadow: 0 8px 20px -8px rgba(255,120,170,.85);
+  background: var(--accent); color: var(--accent-ink); border: none;
+  box-shadow: var(--lg-shadow);
   padding: 13px 18px; font-weight: 700; font-size: 15px; width: 100%;
   font-family: var(--display);
 }
@@ -13,7 +13,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visib
 
 .btn2 { background: var(--card); border: 1px solid var(--line); padding: 11px 14px; font-size: 14px; font-weight: 600; width: 100%; font-family: var(--display); }
 .btn2:hover { background: var(--card-2); }
-.btn-danger { color: #D4456B; border-color: rgba(255,138,122,.3); }
+.btn-danger { color: var(--candy); border-color: color-mix(in srgb, var(--candy) 35%, var(--line)); }
 
 /* big either/or choice cards (onboarding) */
 .choice-list { display: flex; flex-direction: column; gap: 12px; }
@@ -24,8 +24,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visib
 }
 .choice:hover { background: var(--card-2); }
 .choice[aria-pressed="true"] {
-  border-color: var(--candy);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--candy) 28%, transparent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 .choice .emoji { font-size: 26px; line-height: 1; flex: none; margin-top: 1px; }
 .choice .ct { display: block; font-family: var(--display); font-weight: 700; font-size: 16px; color: var(--ink); }
@@ -41,13 +41,18 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visib
 }
 .lang:hover { color: var(--ink); border-color: var(--dim); }
 
-input[type="text"], input[type="date"], input[type="time"], textarea {
-  font: inherit; width: 100%; background: rgba(255,255,255,.75); color: var(--ink);
+/* password and email were missing from this list, so every field in the
+   change-password sheet and the educator signup rendered as a raw browser
+   default control — unstyled, wrong size, wrong corners, ignoring the
+   theme entirely. */
+input[type="text"], input[type="password"], input[type="email"],
+input[type="date"], input[type="time"], textarea {
+  font: inherit; width: 100%; background: var(--card); color: var(--ink);
   border: 1px solid var(--line); border-radius: 12px; padding: 11px 12px;
 }
 input::placeholder, textarea::placeholder { color: var(--dim); }
 textarea { resize: vertical; min-height: 92px; }
-input[type="date"], input[type="time"] { font-family: var(--mono); color-scheme: light; }
+input[type="date"], input[type="time"] { font-family: var(--mono); }
 
 .field { display: flex; flex-direction: column; gap: 7px; }
 .row { display: flex; gap: 10px; align-items: center; }
@@ -60,7 +65,7 @@ input[type="date"], input[type="time"] { font-family: var(--mono); color-scheme:
 .chips { display: flex; gap: 7px; flex-wrap: wrap; }
 .chip { background: var(--card); border: 1px solid var(--line); padding: 7px 12px; font-size: 13px; border-radius: 999px; }
 .chip:hover { border-color: var(--dim); }
-.chip[aria-pressed="true"] { background: linear-gradient(135deg,#FF8FC0,#FFAE7E); color: #4A2140; border-color: transparent; font-weight: 700; }
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: transparent; font-weight: 600; }
 .chip.flame-badge { font-family: var(--mono); font-weight: 600; color: var(--gold); flex: none; }
 
 .day-picker { display: flex; gap: 6px; }
@@ -70,7 +75,7 @@ input[type="date"], input[type="time"] { font-family: var(--mono); color-scheme:
 }
 .day-btn:hover { background: var(--card-2); }
 .day-btn[aria-pressed="true"] {
-  background: linear-gradient(135deg, #FF8FC0, #FFAE7E); color: #4A2140; border-color: transparent;
+  background: var(--accent); color: var(--accent-ink); border-color: transparent;
 }
 
 .tabs { display: flex; gap: 6px; background: var(--glass); padding: 4px; border-radius: 14px; }
@@ -79,22 +84,25 @@ input[type="date"], input[type="time"] { font-family: var(--mono); color-scheme:
 
 .stats { display: flex; gap: 8px; }
 .stat { flex: 1; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 11px 10px; text-align: center; }
-.stat .n { font-family: var(--mono); font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; display: block; }
-.stat .k { font-size: 10.5px; color: var(--dim); letter-spacing: .05em; }
+.stat .n { font-family: var(--display); font-size: 23px; font-weight: 650; letter-spacing: -.02em; font-variant-numeric: tabular-nums; display: block; color: var(--ink); }
+.stat .k { font-size: var(--fs-micro); color: var(--muted); letter-spacing: 0; }
 .stat.flame .n { color: var(--gold); }
 
 .photogrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .photogrid button { padding: 0; border: none; background: none; aspect-ratio: 1; border-radius: 10px; overflow: hidden; }
 .photogrid img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-.entry { border-top: 1px solid var(--line); padding: 13px 0; display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: start; }
+/* text, then edit, then delete — three columns, because there are three
+   children. With only two the delete button wrapped onto a row of its own
+   and stretched across it, centring the × under the entry text. */
+.entry { border-top: 1px solid var(--line); padding: 13px 0; display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: start; }
 .entry:first-child { border-top: none; }
 .entry .d { font-family: var(--mono); font-size: 11px; color: var(--dim); }
 .entry .t { font-size: 14px; margin-top: 3px; overflow-wrap: anywhere; white-space: pre-wrap; }
 .entry .pin { color: var(--gold); font-size: 11px; }
 
 /* ---------- sheet ---------- */
-.sheet-bg { position: absolute; inset: 0; background: rgba(74,51,99,.42); backdrop-filter: blur(4px); display: flex; align-items: flex-end; z-index: 20; }
+.sheet-bg { position: absolute; inset: 0; background: rgba(20,17,13,.42); backdrop-filter: blur(4px); display: flex; align-items: flex-end; z-index: 20; }
 .sheet {
   width: 100%; background: var(--shelf); border-top: 1px solid var(--line);
   border-radius: 22px 22px 0 0; padding: 20px 18px 22px;
@@ -102,7 +110,7 @@ input[type="date"], input[type="time"] { font-family: var(--mono); color-scheme:
   animation: rise .22s ease;
 }
 @keyframes rise { from { transform: translateY(16px); opacity: .6; } to { transform: none; opacity: 1; } }
-.sheet h2 { font-family: var(--display); font-size: 18px; font-weight: 600; margin: 0; }
+.sheet h2 { font-family: var(--display); font-size: var(--fs-title); font-weight: 650; letter-spacing: var(--tracking); margin: 0; }
 .orb-sheet-preview { display: flex; justify-content: center; padding: 2px 0 4px; }
 .field .hint { font-size: 11.5px; color: var(--dim); }
 .field-error { font-size: 12px; color: var(--candy); font-weight: 600; }
@@ -178,3 +186,43 @@ input[type="date"], input[type="time"] { font-family: var(--mono); color-scheme:
 .viewer { position: absolute; inset: 0; background: rgba(74,51,99,.93); z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 20px; }
 .viewer img { max-width: 100%; max-height: 62%; border-radius: 14px; }
 .viewer .cap { color: var(--muted); font-size: 13.5px; text-align: center; max-width: 30ch; }
+
+/* The recovery code, shown exactly once. Monospace and widely spaced
+   because it gets copied onto paper by a child and read back weeks later —
+   the job of this block is to be transcribed without error. */
+.rec-code {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-align: center;
+  padding: 18px 12px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  background: var(--sel);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+/* ---------- guardian consent ---------- */
+/* Read by a parent who has never seen this app, on a phone, once. Wider
+   measure and larger body text than the rest of the app: this is the only
+   screen whose job is to be read rather than used. */
+.consent-page { max-width: 34rem; margin: 0 auto; }
+.consent-h {
+  font-family: var(--display); font-size: var(--fs-display); font-weight: 650;
+  letter-spacing: var(--tracking); margin: 8px 0 6px; color: var(--ink);
+}
+.consent-h2 {
+  font-family: var(--display); font-size: var(--fs-body); font-weight: 650;
+  margin: 0 0 6px; color: var(--ink);
+}
+.consent-block {
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+  padding: 14px 15px; margin-top: 12px;
+}
+.consent-promise { border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.consent-list { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 5px; }
+.consent-list li { font-size: var(--fs-body); line-height: 1.55; color: var(--ink); }
+.consent-fine { font-size: var(--fs-sub); color: var(--muted); line-height: 1.5; margin: 10px 0 0; }

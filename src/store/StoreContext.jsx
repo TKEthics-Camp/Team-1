@@ -5,7 +5,7 @@ import { useAuth } from "./AuthContext";
 import {
   pushInterest as remotePushInterest, deleteRemoteInterest, pushEntry as remotePushEntry, deleteRemoteEntry,
   deleteAllMine, pullMine, pullUserRow, updateDiscovery, updateDisplayName,
-  classCodeExists, joinClass as joinClassRemote, setMyClassCode, updateAvatar,
+  joinClass as joinClassRemote, setMyClassCode, updateAvatar,
   parseAvatar, pushPhotoRow as remotePushPhotoRow, uploadPhotoBlob, updateCoins, deleteRemotePhoto,
   updateSoundOn, updateOwnedDecorations, updateEquippedDecoration, updateOwnedHair, updateOwnedOutfits,
   updateLang, updateTheme, uploadAudioBlob,
@@ -391,7 +391,7 @@ export function StoreProvider({ children }) {
             // (createClass used to only write the classes row) — local is
             // the known-good value in that case, so push it up instead of
             // pulling the gap back down.
-            setMyClassCode(user.id, profileRef.current.classCode);
+            setMyClassCode(profileRef.current.classCode);
           } else {
             const next = { ...profileRef.current, classCode: userRow.class_code || null };
             setProfileState(next);
@@ -571,11 +571,12 @@ export function StoreProvider({ children }) {
     async joinClass(code) {
       const trimmed = (code || "").trim().toUpperCase();
       if (!trimmed) return { ok: false, reason: "empty" };
-      const exists = await classCodeExists(trimmed);
-      if (!exists) return { ok: false, reason: "invalid" };
       if (userRef.current) {
-        const pushed = await joinClassRemote(userRef.current.id, trimmed);
-        if (!pushed) return { ok: false, reason: "error" };
+        // join_class() validates the code and writes the membership in one
+        // go, server-side — the client can't be trusted to check first,
+        // since it could just skip the check and write the column itself.
+        const result = await joinClassRemote(trimmed);
+        if (result !== "joined") return { ok: false, reason: result };
       }
       setProfileState((p) => {
         if (!p) return p;
@@ -988,12 +989,21 @@ export function StoreProvider({ children }) {
     // — and App renders <Onboarding/> whenever profile is null, so dropping
     // it here would send someone who just cleared their trees back through
     // the whole start flow.
-    clearGarden() {
-      if (userRef.current) deleteAllMine(userRef.current.id);
-      dbClearGarden();
+    // Local first, so the screen empties the moment it's asked to, then the
+    // server. Reports back whether the server half actually happened: it
+    // used to be fired off unawaited with its errors going to the console,
+    // so a failed wipe looked exactly like a successful one right up until
+    // the next sign-in pulled everything back.
+    //
+    // Anything queued for retry cleans itself up without help — retryPending
+    // drops any record that's gone from Dexie rather than re-pushing it.
+    async clearGarden() {
+      await dbClearGarden();
       setInterests([]);
       setPhotos([]);
       setEntries([]);
+      if (!userRef.current) return { ok: true };
+      return { ok: await deleteAllMine(userRef.current.id) };
     },
     // A manual "try again now" for the sync-status indicator — runs the
     // exact same retry the background timer would, just on demand.

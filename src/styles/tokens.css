@@ -3,7 +3,26 @@
    Only three themes: White, Black, and System (which resolves to White or
    Black live, based on the OS — see lib/useResolvedTheme). The .stage bare
    selector below (White's rule) is a CSS fallback for an unset data-theme
-   attribute; App.jsx always sets one explicitly in practice. */
+   attribute; App.jsx always sets one explicitly in practice.
+
+   ------------------------------------------------------------------------
+   THE DIRECTION: Notion's clarity, Apple's materials.
+
+   From Notion: warm neutrals instead of cool system greys, and a palette
+   that is almost entirely neutral so the one accent means something.
+   Hierarchy comes from type and space, not from giving every element its
+   own card, border and shadow. Ink is genuinely dark — the old skin ran
+   everything at #6E6E73 on near-white, which reads as permanently disabled.
+
+   From Apple: real materials where something actually floats over content,
+   the rounded geometry, the tight tracking on large type, and dark mode as
+   an equal rather than an inversion.
+
+   The accent is a deep forest green rather than system blue. Blue is what
+   an app picks when it hasn't decided what it is about; this one is about
+   growing things, and the accent should not be arguing with every tree on
+   screen.
+   ------------------------------------------------------------------------ */
 :root {
   --gold-on: #FFFFFF;
   /* One SF stack for everything. --display used to be SF Pro Rounded; the
@@ -15,71 +34,88 @@
   --body: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui,
     "PingFang SC", "Microsoft YaHei", sans-serif;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+
+  /* One scale, so a heading is never sized by eye. Screen title down to
+     the smallest label the app uses. */
+  --fs-display: 30px;
+  --fs-title:   21px;
+  --fs-lg:      17px;
+  --fs-body:    15.5px;
+  --fs-sub:     13.5px;
+  --fs-micro:   11.5px;
+  /* Large type needs negative tracking to stop looking loose; small type
+     needs none. Applied at the heading, not globally. */
+  --tracking:   -.022em;
 }
 
-/* ---- White (default): flat iOS system grey/white, no gradient blobs ---- */
+/* ---- White (default): warm paper, near-black ink, one green accent ---- */
 .stage, .stage[data-theme="white"] {
-  --stage-bg: #F2F2F7;
-  --app-bg: #FFFFFF;
+  --stage-bg: #EDEBE6;
+  --app-bg: #FDFCFA;
   --cloud: rgba(255,255,255,0);
-  --cast: rgba(0,0,0,.14);
-  --shelf: #F7F7FA;
-  --glass: rgba(255,255,255,.72);
-  --glass2: rgba(255,255,255,.82);
-  --sel: #fff;
-  --card:  rgba(255,255,255,.9);
-  --card-2:rgba(255,255,255,.98);
-  --line:  rgba(60,60,67,.29);
-  --ink:   #1C1C1E;
-  --muted: #6E6E73;
-  --dim:   #AEAEB2;
-  --gold:  #FF9500;
-  --candy: #FF3B30;
-  --accent: #0088FF;
+  --cast: rgba(42,36,28,.13);
+  --shelf: #F8F6F2;
+  --glass: rgba(253,252,250,.86);
+  --glass2: rgba(253,252,250,.94);
+  --sel: #FFFFFF;
+  --card:  #FFFFFF;
+  --card-2:#F5F3EF;
+  --line:  rgba(34,32,28,.13);
+  --ink:   #22201C;
+  --muted: #6B665E;
+  --dim:   #A39D93;
+  --gold:  #C8811B;
+  --candy: #C0453C;
+  --accent: #1C7049;
   --accent-ink: #FFFFFF;
 
-  /* ---- liquid glass ----
-     A glass pane is four things stacked: a translucent fill, a saturating
-     blur behind it, a hairline stroke, and a light catch along the top
-     edge. Tokens rather than literals so the Black skin can invert the
-     highlight instead of washing the pane out. */
-  --lg-fill:   rgba(255,255,255,.62);
-  --lg-fill-2: rgba(255,255,255,.78);
-  --lg-blur:   saturate(180%) blur(20px);
-  --lg-stroke: rgba(255,255,255,.7);
-  --lg-edge:   rgba(60,60,67,.16);
-  --lg-hi:     rgba(255,255,255,.9);
-  --lg-shadow: 0 8px 26px -12px rgba(28,28,40,.28);
-  --lg-shadow-lg: 0 24px 60px -24px rgba(28,28,40,.42);
+  /* ---- surfaces ----
+     These were four layers of glass on everything. They are now mostly
+     opaque, because a material only means something if it is rare: the
+     blur is reserved for the top bar, the tab bar and sheets — the three
+     things that genuinely sit over moving content. Everything else reads
+     as paper with a hairline, which is what lets the hierarchy show. */
+  --lg-fill:   rgba(253,252,250,.90);
+  --lg-fill-2: rgba(253,252,250,.96);
+  --lg-blur:   saturate(150%) blur(18px);
+  --lg-stroke: rgba(255,255,255,.55);
+  --lg-edge:   rgba(34,32,28,.11);
+  --lg-hi:     rgba(255,255,255,.8);
+  /* Two-stage shadow: a tight contact edge plus a wide soft cast. One big
+     blurry shadow reads as a sticker floating above the page. */
+  --lg-shadow: 0 1px 2px rgba(42,36,28,.05), 0 8px 20px -12px rgba(42,36,28,.16);
+  --lg-shadow-lg: 0 2px 4px rgba(42,36,28,.06), 0 28px 60px -28px rgba(42,36,28,.30);
 }
 
-/* ---- Black: flat true dark, matching iOS's dark grouped-table values ---- */
+/* ---- Black: warm near-black, not the blue-black of system dark ---- */
 .stage[data-theme="black"] {
-  --stage-bg: #000000;
-  --app-bg: #1C1C1E;
+  --stage-bg: #100F0E;
+  --app-bg: #1A1917;
   --cloud: rgba(255,255,255,0);
-  --cast: rgba(0,0,0,.6);
-  --shelf: #232326;
-  --glass: rgba(28,28,30,.72);
-  --glass2: rgba(28,28,30,.85);
-  --sel: rgba(255,255,255,.16);
-  --card:  rgba(255,255,255,.07);
-  --card-2:rgba(255,255,255,.13);
-  --line:  rgba(255,255,255,.14);
-  --ink:   #FFFFFF;
-  --muted: #98989D;
-  --dim:   #636366;
-  --gold:  #FF9F0A;
-  --candy: #FF453A;
-  --accent: #0A84FF;
-  --accent-ink: #FFFFFF;
+  --cast: rgba(0,0,0,.65);
+  --shelf: #211F1D;
+  --glass: rgba(26,25,23,.82);
+  --glass2: rgba(33,31,29,.92);
+  --sel: rgba(255,255,255,.10);
+  --card:  #242220;
+  --card-2:#2C2A27;
+  --line:  rgba(255,255,255,.12);
+  --ink:   #F3F0EB;
+  --muted: #A49E95;
+  --dim:   #6E6862;
+  --gold:  #E0A33C;
+  --candy: #E0675C;
+  --accent: #5FBF8B;
+  /* Dark ink on the light-green accent, not white — white on this green is
+     under 3:1 and the tab bar's selected label lives on it. */
+  --accent-ink: #10241A;
 
-  --lg-fill:   rgba(58,58,62,.55);
-  --lg-fill-2: rgba(72,72,78,.68);
-  --lg-blur:   saturate(180%) blur(20px);
-  --lg-stroke: rgba(255,255,255,.14);
+  --lg-fill:   rgba(33,31,29,.88);
+  --lg-fill-2: rgba(38,36,33,.95);
+  --lg-blur:   saturate(150%) blur(18px);
+  --lg-stroke: rgba(255,255,255,.06);
   --lg-edge:   rgba(255,255,255,.10);
-  --lg-hi:     rgba(255,255,255,.22);
-  --lg-shadow: 0 8px 26px -12px rgba(0,0,0,.6);
-  --lg-shadow-lg: 0 24px 60px -24px rgba(0,0,0,.75);
+  --lg-hi:     rgba(255,255,255,.09);
+  --lg-shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 20px -12px rgba(0,0,0,.6);
+  --lg-shadow-lg: 0 2px 4px rgba(0,0,0,.5), 0 28px 60px -28px rgba(0,0,0,.75);
 }
