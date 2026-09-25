@@ -251,6 +251,8 @@ export const STR = {
   pcDeleteAccount: ["Delete this account", "删除这个账号"],
   pcDeleteConfirm: ["Tap again to delete it for good", "再点一次永久删除"],
 
+  helpTitle:    ["Help and contact", "帮助与联系"],
+
   genderTitle:  ["One quick thing", "还有一个小问题"],
   genderSub:    ["Just to set a starting look for your avatar — you can change everything about it later from Me.", "只是为了给你的头像定一个初始样子 —— 之后随时可以在“我的”里重新改。"],
   genderBoy:    ["Boy", "男生"],

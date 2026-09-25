@@ -12,6 +12,7 @@ import AuthFlow from "./components/auth/AuthFlow";
 import GuardianConsentPage from "./components/consent/GuardianConsentPage";
 import PendingConsentScreen from "./components/consent/PendingConsentScreen";
 import PolicyScreen from "./components/policy/PolicyScreen";
+import SupportScreen from "./components/policy/SupportScreen";
 import { guardianTokenFromLocation, policyFromLocation } from "./lib/guardianLink";
 import { myConsentStatus, refreshConsentState } from "./lib/remote";
 import { forgetConsentStatus } from "./lib/useConsentStatus";
@@ -106,7 +107,9 @@ export default function App() {
   if (policy) {
     return (
       <div className="stage" data-theme={resolvedTheme}>
-        <div className="app"><PolicyScreen which={policy} /></div>
+        <div className="app">
+          {policy === "support" ? <SupportScreen /> : <PolicyScreen which={policy} />}
+        </div>
       </div>
     );
   }

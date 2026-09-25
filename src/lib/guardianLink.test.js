@@ -52,6 +52,7 @@ describe("policyFromPath", () => {
     expect(policyFromPath("/terms")).toBe("terms");
     expect(policyFromPath("/Team-1/privacy", "/Team-1/")).toBe("privacy");
     expect(policyFromPath("/terms/")).toBe("terms");
+    expect(policyFromPath("/support")).toBe("support");
   });
 
   it("ignores everything else", () => {

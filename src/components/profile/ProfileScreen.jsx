@@ -242,7 +242,9 @@ export default function ProfileScreen() {
         <button className="btn2" onClick={() => { window.location.href = (import.meta.env.BASE_URL || "/") + "terms"; }}>
           {t("termsTitle")}
         </button>
-        <div className="sub">{t("contactNote")}</div>
+        <button className="btn2" onClick={() => { window.location.href = (import.meta.env.BASE_URL || "/") + "support"; }}>
+          {t("helpTitle")}
+        </button>
 
         <div className="grow" />
 
