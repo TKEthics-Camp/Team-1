@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { containsProfanity } from "../../lib/textFilter";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
@@ -22,6 +23,7 @@ export default function PhotoSheet({ interestId }) {
   const [blob, setBlob] = useState(null);
   const [caption, setCaption] = useState("");
   const [visibility, setVisibility] = useState("private");
+  const [blocked, setBlocked] = useState(false);
   const [pinned, setPinned] = useState(false);
   const [pickError, setPickError] = useState(null);
   const previewUrl = useObjectURL(blob);
@@ -42,6 +44,13 @@ export default function PhotoSheet({ interestId }) {
 
   function save() {
     if (!blob) return;
+    // Same rule as a journal entry: private is the child's own, public is
+    // everyone's. The photo itself cannot be checked here — that is what
+    // reporting and the moderation queue are for — but its caption can.
+    if (visibility === "public" && containsProfanity(caption)) {
+      setBlocked(true);
+      return;
+    }
     const leveledUp = actsToNextStage(it, entries, photos) === 1;
     const rec = {
       id: uid(), interestId: it.id, blob, caption: caption.trim(),
@@ -69,7 +78,8 @@ export default function PhotoSheet({ interestId }) {
           onChange={(e) => setCaption(e.target.value)}
         />
       </Field>
-      <VisRow value={visibility} onChange={setVisibility} />
+      <VisRow value={visibility} onChange={(v) => { setVisibility(v); setBlocked(false); }} />
+      {blocked && <div className="field-error">{t("filterBlockedPublic")}</div>}
       <div className="chips">
         <Chip pressed={pinned} onClick={() => setPinned((p) => !p)}>
           {(pinned ? "★ " : "☆ ") + t("pin")}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
@@ -12,6 +12,7 @@ import Stats from "../shared/Stats";
 import PersonAvatar from "../shared/PersonAvatar";
 import { deleteMyAccount } from "../../lib/remote";
 import { useConsentStatus } from "../../lib/useConsentStatus";
+import { amIModerator } from "../../lib/remote";
 
 export default function ProfileScreen() {
   const { t, lang, nOf } = useI18n();
@@ -39,6 +40,15 @@ export default function ProfileScreen() {
   // here is not to enforce anything — it is to not offer a control that is
   // guaranteed to fail, and to say why instead.
   const consent = useConsentStatus(user && user.id);
+
+  // Only shown to an account that is actually in public.moderators. This is
+  // a convenience, not a gate: /reports refuses everyone else at the server.
+  const [isMod, setIsMod] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    amIModerator().then((v) => { if (!cancelled) setIsMod(v); });
+    return () => { cancelled = true; };
+  }, []);
   const locked = !!(consent && consent.disclosure_locked);
   const needsReconsent = !!(consent && consent.state === "re_consent_required");
 
@@ -213,10 +223,26 @@ export default function ProfileScreen() {
           </>
         )}
 
+        {isMod && (
+          <button className="btn2" onClick={() => navigate("/reports")}>
+            Reports
+          </button>
+        )}
+
         {/* Both account types have a password, so this sits outside the
             individual-only block above. */}
         <button className="btn2" onClick={() => openSheet("password")}>{t("pwTitle")}</button>
         <button className="btn2" onClick={() => openSheet("recovery")}>{t("recTitle")}</button>
+
+        {/* Apple 5.1.1(i) wants the policy reachable inside the app, and a
+            student or parent looking for it should not have to leave. */}
+        <button className="btn2" onClick={() => { window.location.href = (import.meta.env.BASE_URL || "/") + "privacy"; }}>
+          {t("privacyTitle")}
+        </button>
+        <button className="btn2" onClick={() => { window.location.href = (import.meta.env.BASE_URL || "/") + "terms"; }}>
+          {t("termsTitle")}
+        </button>
+        <div className="sub">{t("contactNote")}</div>
 
         <div className="grow" />
 

@@ -183,7 +183,10 @@ input[type="date"], input[type="time"] { font-family: var(--mono); }
 .species-btn:disabled { opacity: .45; }
 .species-btn .part-price { font-family: var(--mono); font-size: 10.5px; color: var(--gold); }
 
-.viewer { position: absolute; inset: 0; background: rgba(74,51,99,.93); z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 20px; }
+/* Was rgba(74,51,99,.93), a survivor of the candy palette the restyle
+   replaced. A near-neutral warm dark lets the photograph be the only
+   coloured thing on screen, which is the point of a viewer. */
+.viewer { position: absolute; inset: 0; background: rgba(24,21,17,.94); z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 20px; }
 .viewer img { max-width: 100%; max-height: 62%; border-radius: 14px; }
 .viewer .cap { color: var(--muted); font-size: 13.5px; text-align: center; max-width: 30ch; }
 
@@ -226,3 +229,55 @@ input[type="date"], input[type="time"] { font-family: var(--mono); }
 .consent-list { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 5px; }
 .consent-list li { font-size: var(--fs-body); line-height: 1.55; color: var(--ink); }
 .consent-fine { font-size: var(--fs-sub); color: var(--muted); line-height: 1.5; margin: 10px 0 0; }
+
+/* ---------- moderation queue ---------- */
+/* A staff tool, styled to be read quickly rather than to be pretty. The
+   reported words get the most weight on the row because they are the whole
+   basis of the decision. */
+.mod-row {
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+  padding: 12px 13px; margin-bottom: 10px;
+}
+.mod-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.mod-kind {
+  font-family: var(--mono); font-size: 11px; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--muted);
+}
+.mod-hidden {
+  font-size: 11px; font-weight: 700; color: var(--accent-ink);
+  background: var(--accent); border-radius: 999px; padding: 2px 8px;
+}
+.mod-when { font-family: var(--mono); font-size: 11px; color: var(--dim); margin-left: auto; }
+.mod-reason { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+.mod-content {
+  margin-top: 8px; padding: 10px 11px;
+  background: var(--sel); border-radius: 10px;
+  font-size: 14px; line-height: 1.5; color: var(--ink);
+  overflow-wrap: anywhere; white-space: pre-wrap;
+}
+.mod-by { font-size: 11.5px; color: var(--dim); margin-top: 8px; }
+.mod-actions { display: flex; gap: 8px; margin-top: 10px; }
+.mod-actions .btn2 { width: auto; flex: 1; padding: 9px 10px; font-size: 13px; }
+
+/* ---------- report / block sheet ---------- */
+/* Full-width rows, not a cramped dropdown. Reporting is one of the few
+   things in this app a child does when something is wrong, and it should be
+   hard to mis-tap and impossible to half-see. */
+/* Above .viewer (30) and .year-full (25); those are full-screen layers a
+   report can be raised from. */
+.report-bg { z-index: 40; }
+.report-sheet { gap: 10px; }
+.report-choice { text-align: center; padding: 14px 14px; font-size: 15px; }
+
+/* The photo viewer's own action row. Two equal controls, both readable on
+   the dark overlay the viewer paints — .btn2's normal card background has
+   nothing to sit on here. */
+.viewer-actions { display: flex; gap: 10px; width: 100%; max-width: 360px; }
+.viewer-actions > .btn2, .viewer-actions .post-menu-wrap { flex: 1 1 0; min-width: 0; }
+.viewer-actions .btn2 {
+  width: 100%;
+  background: rgba(255,255,255,.14);
+  border-color: rgba(255,255,255,.28);
+  color: #fff;
+}
+.viewer-actions .btn2:hover { background: rgba(255,255,255,.22); }

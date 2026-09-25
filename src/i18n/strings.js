@@ -103,7 +103,7 @@ export const STR = {
   reportMean:   ["Mean or bullying", "恶意或欺凌"],
   reportUnsafe: ["Unsafe or inappropriate", "不安全或不适宜"],
   reportOther:  ["Something else", "其他原因"],
-  reportedToast: ["Reported. Thanks for telling us.", "已举报，谢谢你告诉我们。"],
+  reportedToast: ["Reported, and hidden from you. An adult will look at it.", "已举报，并且不会再显示给你。会有成年人查看。"],
   blockedToast: ["Blocked. You won't see their posts.", "已拉黑，你不会再看到对方的动态。"],
   actionFailed: ["That didn't go through. Try again.", "操作没成功，请再试一次。"],
   coinsEarned:  ["🪙 +{n} coins", "🪙 +{n} 金币"],
@@ -210,6 +210,14 @@ export const STR = {
   dlTitle:      ["Sharing is off for this account", "此账号已关闭分享功能"],
   dlBody:       ["A parent or guardian agreed to Forest on the understanding that nothing here is ever shared or made public. That promise is built into the account, so sharing can't be switched on.", "父母或监护人同意使用 Forest 的前提是：这里的内容永远不会被分享或公开。这个承诺已内置在账号中，因此无法开启分享。"],
   dlReconsent:  ["You're 14 now. To use sharing, a parent or guardian needs to agree again — the first agreement was only for an account that shares nothing.", "你已经 14 岁了。要使用分享功能，需要父母或监护人重新同意 —— 之前的同意仅适用于完全不分享的账号。"],
+
+  filterBlockedPublic: ["This can't be shared with other people because of the words in it. You can still keep it private.", "由于其中的用词，这条内容不能分享给其他人。你仍然可以把它设为私密。"],
+
+  privacyTitle: ["Privacy Policy", "隐私政策"],
+  termsTitle:   ["Terms of Use", "使用条款"],
+  contactNote:  ["Questions, or something wrong? Ask the teacher or adult who gave you Forest.", "有疑问或发现问题？请联系把 Forest 介绍给你的老师或成年人。"],
+
+  reportOrBlockTitle: ["What do you want to do?", "你想做什么？"],
 
   genderTitle:  ["One quick thing", "还有一个小问题"],
   genderSub:    ["Just to set a starting look for your avatar — you can change everything about it later from Me.", "只是为了给你的头像定一个初始样子 —— 之后随时可以在“我的”里重新改。"],
