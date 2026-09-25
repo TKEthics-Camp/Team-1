@@ -1,0 +1,5 @@
+/* iOS 在 Forest 第一次请求各项权限时显示。 */
+NSCameraUsageDescription = "Forest 需要使用相机，让你为日记拍下自己的爱好。除非你选择分享，照片都是私密的。";
+NSMicrophoneUsageDescription = "Forest 需要使用麦克风，让你录下关于爱好的语音记录。除非你选择分享，录音都是私密的。";
+NSPhotoLibraryUsageDescription = "Forest 可以让你从相册中挑选爱好的照片放进日记。它只能看到你选中的照片。";
+CFBundleDisplayName = "Forest";

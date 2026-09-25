@@ -1,0 +1,13 @@
+{
+  "appId": "org.tkethicscamp.forest",
+  "appName": "Forest",
+  "webDir": "dist",
+  "ios": {
+    "contentInset": "never"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "iconColor": "#1C7049"
+    }
+  }
+}

@@ -1,0 +1,4 @@
+/* Shown by iOS the first time Forest asks for each permission. */
+NSCameraUsageDescription = "Forest uses the camera so you can take photos of your hobbies for your journal. Photos stay private unless you choose to share them.";
+NSMicrophoneUsageDescription = "Forest uses the microphone so you can record voice notes about your hobbies. Recordings stay private unless you choose to share them.";
+NSPhotoLibraryUsageDescription = "Forest lets you pick photos of your hobbies from your library for your journal. It only sees the photos you choose.";
