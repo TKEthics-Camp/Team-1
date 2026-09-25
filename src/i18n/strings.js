@@ -253,6 +253,12 @@ export const STR = {
 
   helpTitle:    ["Help and contact", "帮助与联系"],
 
+  exportData:     ["Download my data", "下载我的数据"],
+  exportPreparing: ["Preparing your download…", "正在准备下载…"],
+  exportDone:     ["Downloaded: your journal, photos and voice notes.", "已下载：你的日记、照片和语音。"],
+  exportMissing:  ["Downloaded, but {n} file(s) couldn't be fetched. They're listed in journal.txt.", "已下载，但有 {n} 个文件无法获取，已在 journal.txt 中列出。"],
+  exportFailed:   ["Couldn't make the download. Check your connection and try again.", "无法生成下载文件。请检查网络后重试。"],
+
   genderTitle:  ["One quick thing", "还有一个小问题"],
   genderSub:    ["Just to set a starting look for your avatar — you can change everything about it later from Me.", "只是为了给你的头像定一个初始样子 —— 之后随时可以在“我的”里重新改。"],
   genderBoy:    ["Boy", "男生"],

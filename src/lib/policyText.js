@@ -128,6 +128,10 @@ export const PRIVACY = {
       h: ["Deleting your account", "删除你的账号"],
       p: [
         [
+          "Me → Download my data gives you a copy of everything first: your journal as a text file, every photo and voice note, and all of it in a machine-readable file.",
+          "「我的」→「下载我的数据」可以先给你一份所有内容的副本：文本格式的日记、每张照片和每段语音，以及包含全部内容的机器可读文件。",
+        ],
+        [
           "Me → Delete my account removes everything: your account, your hobbies, entries, photos and voice notes, on your device and on the server. It cannot be undone and we cannot recover it afterwards.",
           "「我的」→「删除我的账号」会清除所有内容：你的账号、爱好、日记、照片和语音，设备上和服务器上的都会删除。此操作无法撤销，之后我们也无法恢复。",
         ],

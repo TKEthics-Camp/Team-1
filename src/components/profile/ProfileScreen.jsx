@@ -11,6 +11,8 @@ import LangToggle from "../shared/LangToggle";
 import Stats from "../shared/Stats";
 import PersonAvatar from "../shared/PersonAvatar";
 import { deleteMyAccount } from "../../lib/remote";
+import { buildExport } from "../../lib/exportData";
+import { saveFile } from "../../lib/saveFile";
 import { useConsentStatus } from "../../lib/useConsentStatus";
 import { amIModerator } from "../../lib/remote";
 
@@ -26,6 +28,7 @@ export default function ProfileScreen() {
   const [deleting, setDeleting] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+  const [exporting, setExporting] = useState(false);
 
   const currentTheme = (profile && profile.theme) || DEFAULT_THEME;
   const [, bumpPermissionCheck] = useState(0);
@@ -74,6 +77,27 @@ export default function ProfileScreen() {
     // Local is already empty either way. Saying so matters when the server
     // half failed, because that's the case where it all comes back later.
     showToast(ok ? t("clearedToast") : t("clearedLocalOnly"));
+  }
+
+  // Everything this account has put into Forest, as one zip. Slow on a big
+  // garden — every photo may have to come down from Storage — so the button
+  // says so while it works rather than looking dead.
+  async function handleExport() {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const { blob, missing } = await buildExport({ profile, interests, entries, photos, lang });
+      const stamp = new Date().toISOString().slice(0, 10);
+      const safeName = String(profile.name || "forest").replace(/[^a-zA-Z0-9_-]+/g, "-");
+      await saveFile(blob, `forest-${safeName}-${stamp}.zip`);
+      showToast(missing.length
+        ? t("exportMissing").replace("{n}", missing.length)
+        : t("exportDone"));
+    } catch (e) {
+      console.error("Export failed:", e);
+      showToast(t("exportFailed"));
+    }
+    setExporting(false);
   }
 
   // Two taps, same as clearing — but this one can't be undone by anything,
@@ -261,6 +285,12 @@ export default function ProfileScreen() {
             </button>
           </>
         )}
+
+        {/* Before delete, deliberately: someone about to erase everything
+            should pass the way to keep a copy on the way there. */}
+        <button className="btn2" disabled={exporting} onClick={handleExport}>
+          {exporting ? t("exportPreparing") : t("exportData")}
+        </button>
 
         {deleteArmed && <div className="sub">{t("deleteAccountWarning")}</div>}
         {deleteError && <div className="field-error" style={{ overflowWrap: "anywhere" }}>{deleteError}</div>}
