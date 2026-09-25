@@ -6,10 +6,10 @@
 // database queues a row and this drains it, out of band, holding both
 // secrets where only the platform can see them.
 //
-// Invoked on a schedule (see the cron SQL in the deployment notes). It is
-// safe to run at any frequency: rows are claimed by stamping sent_at, and
-// a row whose send_after is still in the future — which is every step-two
-// message for its first 24 hours — is simply not selected.
+// Invoked on a schedule (see schedule.sql). It is safe to run at any
+// frequency and to overlap with itself: rows are claimed in the database
+// before they are sent, and a row whose send_after is still in the future —
+// every step-two message for its first 24 hours — is not claimable at all.
 //
 // Environment:
 //   SUPABASE_URL              provided by the platform
@@ -25,7 +25,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const BATCH = 25;
-const MAX_ATTEMPTS = 5;
 
 Deno.serve(async () => {
   const url = Deno.env.get("SUPABASE_URL");
@@ -53,14 +52,10 @@ Deno.serve(async () => {
 
   const db = createClient(url!, key!, { auth: { persistSession: false } });
 
-  const { data: due, error } = await db
-    .from("consent_outbox")
-    .select("id, to_address, token, subject, body, attempts")
-    .is("sent_at", null)
-    .lte("send_after", new Date().toISOString())
-    .lt("attempts", MAX_ATTEMPTS)
-    .order("send_after", { ascending: true })
-    .limit(BATCH);
+  // Claimed, not merely selected: the database locks and stamps these rows
+  // in one step, so an overlapping run gets different rows or none, and no
+  // parent receives the same email twice. See 20260926010000.
+  const { data: due, error } = await db.rpc("claim_consent_outbox", { p_limit: BATCH });
 
   if (error) {
     return new Response(JSON.stringify({ error: error.message }), {
@@ -100,7 +95,8 @@ Deno.serve(async () => {
         .eq("id", row.id);
       sent += 1;
     } catch (e) {
-      // The row stays unsent and is retried next run until MAX_ATTEMPTS.
+      // The row stays unsent and is claimable again after its claim goes
+      // stale, up to five attempts (see claim_consent_outbox).
       // last_error is kept because "the parent never got it" is otherwise
       // impossible to tell apart from "the parent ignored it".
       await db
