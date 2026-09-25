@@ -69,8 +69,11 @@ Deno.serve(async () => {
 
   for (const row of due ?? []) {
     const link = `${baseUrl}/consent/${row.token}`;
+    // The footer is the parent's standing instruction for the life of the
+    // account: this one link is also how they withdraw or delete later.
     const text = `${row.body}\n\n${link}\n\n` +
-      `If you were not expecting this, you can ignore it. Nothing happens unless you open the link and agree.`;
+      `If you were not expecting this, you can ignore it. Nothing happens unless you open the link and agree.\n\n` +
+      `Keep this email. You can take permission back, or have the account deleted with everything in it, at any time by opening the same link.`;
 
     try {
       const res = await fetch("https://api.resend.com/emails", {

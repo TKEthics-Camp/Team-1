@@ -993,6 +993,26 @@ export async function moderateResolve(reportId, status) {
   return { ok: true };
 }
 
+// What a guardian can do with their link besides agreeing. Both run as
+// anon: the guardian has no session, and the token is the credential.
+export async function withdrawGuardianConsent(token) {
+  const { data, error } = await supabase.rpc("withdraw_guardian_consent", { p_token: token });
+  if (error) {
+    console.error("Consent withdrawal failed:", error.message);
+    return { result: "error", message: error.message };
+  }
+  return data;
+}
+
+export async function deleteAccountAsGuardian(token) {
+  const { data, error } = await supabase.rpc("delete_account_as_guardian", { p_token: token });
+  if (error) {
+    console.error("Guardian deletion failed:", error.message);
+    return { result: "error", message: error.message };
+  }
+  return data;
+}
+
 // ===================================================== watching a hobby
 // watches points at an interest, never at a user — there is no follows
 // table, deliberately (PRD §7). "Keep an eye on this hobby" is a different

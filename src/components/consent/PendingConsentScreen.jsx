@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useAuth } from "../../store/AuthContext";
-import { startGuardianConsent, myConsentStatus, joinClassFromPending } from "../../lib/remote";
+import { startGuardianConsent, myConsentStatus, joinClassFromPending, deleteMyAccount } from "../../lib/remote";
 import { forgetConsentStatus } from "../../lib/useConsentStatus";
 import LangToggle from "../shared/LangToggle";
 import Mascot from "../shared/Mascot";
@@ -12,9 +12,32 @@ import Mascot from "../shared/Mascot";
 // until a guardian has agreed twice. That is enforced in RLS, not here; this
 // screen's job is to explain the wait and let the child fix a wrong number,
 // which is the failure that would otherwise strand them forever.
-export default function PendingConsentScreen() {
+// `withdrawn` is the screen a child sees after their guardian took permission
+// back. It has no class-code box and no way to send a new request, by
+// design: anything the child could do from here would undo the parent's
+// decision. What it does keep is deletion — Apple 5.1.1(v) requires every
+// account to be deletable from inside the app, and this screen is the only
+// part of the app these accounts can reach.
+export default function PendingConsentScreen({ withdrawn = false }) {
   const { t } = useI18n();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
+  const [deleteArmed, setDeleteArmed] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+
+  async function deleteAccount() {
+    if (!deleteArmed) { setDeleteArmed(true); return; }
+    setDeleting(true);
+    setDeleteError(null);
+    const result = await deleteMyAccount(user && user.id);
+    if (!result.ok) {
+      setDeleting(false);
+      setDeleteArmed(false);
+      setDeleteError(result.message);
+      return;
+    }
+    await signOut();
+  }
   const [status, setStatus] = useState(null);
   const [contact, setContact] = useState("");
   const [busy, setBusy] = useState(false);
@@ -75,9 +98,11 @@ export default function PendingConsentScreen() {
           <Mascot action="sleep" size={96} />
         </div>
 
-        <h1 className="consent-h">{t("pcTitle")}</h1>
+        <h1 className="consent-h">{withdrawn ? t("pcWithdrawnTitle") : t("pcTitle")}</h1>
 
-        {midway ? (
+        {withdrawn ? (
+          <p className="sf-hint">{t("pcWithdrawnBody")}</p>
+        ) : midway ? (
           <>
             <p className="sf-hint">{t("pcMidwayBody")}</p>
             <p className="consent-fine">{t("pcMidwayWhen")}</p>
@@ -91,7 +116,7 @@ export default function PendingConsentScreen() {
           <p className="sf-hint">{t("pcAskBody")}</p>
         )}
 
-        {!midway && (
+        {!withdrawn && !midway && (
           <div className="sf-stack">
             <div>
               <label className="sf-label" htmlFor="pc-email">{t("pcEmailLabel")}</label>
@@ -116,7 +141,7 @@ export default function PendingConsentScreen() {
           </div>
         )}
 
-        <div className="sf-optional">
+        {!withdrawn && <div className="sf-optional">
           <label className="sf-label" htmlFor="pc-code">{t("pcCodeLabel")}</label>
           <div className="pc-code-row">
             <input
@@ -137,12 +162,16 @@ export default function PendingConsentScreen() {
           </div>
           {codeError && <p className="sf-err" style={{ overflowWrap: "anywhere" }}>{codeError}</p>}
           <p className="sf-hint">{t("pcCodeHint")}</p>
-        </div>
+        </div>}
 
         <div className="sf-grow" />
         <div className="sf-foot">
-          <button className="btn2" onClick={load}>{t("pcRefresh")}</button>
+          {!withdrawn && <button className="btn2" onClick={load}>{t("pcRefresh")}</button>}
           <button className="btn2" onClick={signOut}>{t("logOut")}</button>
+          {deleteError && <p className="sf-err" style={{ overflowWrap: "anywhere" }}>{deleteError}</p>}
+          <button className="btn2 btn-danger" disabled={deleting} onClick={deleteAccount}>
+            {deleteArmed ? t("pcDeleteConfirm") : t("pcDeleteAccount")}
+          </button>
         </div>
       </div>
     </div>

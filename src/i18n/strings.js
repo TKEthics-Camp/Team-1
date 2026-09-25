@@ -224,6 +224,33 @@ export const STR = {
   pcCodeHint:   ["With a class code you can start right away — no email needed.", "有班级代码就可以马上开始，不需要发邮件。"],
   pcCodeWrong:  ["That class code doesn't exist. Check it with your teacher.", "这个班级代码不存在。请和老师核对一下。"],
 
+  // ---- guardian page: managing permission after the fact
+  gcCanWithdraw: ["You can take this back at any time, or have the account deleted, by opening this same link again.", "你可以随时撤回同意，或要求删除该账号 —— 只需再次打开这个链接。"],
+  gcAccountName: ["Account name:", "账号名称："],
+  gcActiveTitle: ["Permission is on", "已同意"],
+  gcActiveBody:  ["You agreed twice, so this child's account is switched on. Nothing in it can ever be shared or made public.", "你已经同意了两次，这个孩子的账号已开通。其中的内容永远不会被分享或公开。"],
+  gcWaitingSecondBody: ["You've agreed once. We'll email you again for the second check about a day after you agreed.", "你已经同意了一次。在你同意大约一天后，我们会再发一封邮件做第二次确认。"],
+  gcRevokedTitle: ["Permission withdrawn", "已撤回同意"],
+  gcRevokedBody: ["You withdrew permission, so this account is switched off. The child can't use it or change that themselves. You can also delete it completely below.", "你已撤回同意，这个账号已停用。孩子无法使用它，也无法自行恢复。你也可以在下方把它彻底删除。"],
+  gcManageTitle: ["Change your mind", "改变主意"],
+  gcWithdrawNote: ["Withdrawing switches the account off straight away. What's in it is kept, but nobody can use it.", "撤回同意会立即停用该账号。里面的内容会保留，但任何人都无法使用。"],
+  gcWithdraw:    ["Withdraw permission", "撤回同意"],
+  gcWithdrawConfirm: ["Tap again to withdraw", "再点一次确认撤回"],
+  gcDeleteNote:  ["Deleting removes the account and everything in it — photos, voice notes and writing — permanently, including your email address.", "删除会永久移除该账号及其中所有内容 —— 照片、语音和文字 —— 也包括你的电子邮箱。"],
+  gcDeleteNoteDecline: ["If you don't agree, you don't have to do anything and the account stays switched off. Or you can delete it now, with everything in it.", "如果你不同意，什么都不用做，账号会保持停用。你也可以现在就把它连同所有内容一起删除。"],
+  gcDelete:      ["Delete the account and everything in it", "删除该账号及所有内容"],
+  gcDeleteConfirm: ["Tap again — this can't be undone", "再点一次 —— 此操作无法撤销"],
+  gcDeletedTitle: ["Deleted", "已删除"],
+  gcDeletedBody: ["The account and everything in it are gone, and so is your email address. This link won't work any more.", "该账号及其所有内容都已删除，你的电子邮箱也一并删除。这个链接将不再有效。"],
+  gcErrorTitle:  ["That didn't work", "操作没有成功"],
+  gcErrorBody:   ["Nothing has changed. Please try again in a moment by opening the link from the email.", "什么都没有改变。请稍后通过邮件里的链接再试一次。"],
+
+  // ---- child's side: withdrawn, and deleting from the waiting screen
+  pcWithdrawnTitle: ["This account is switched off", "这个账号已停用"],
+  pcWithdrawnBody: ["Your parent or guardian has withdrawn permission, so this account can't be used. If you think this is a mistake, talk to them.", "你的父母或监护人已经撤回了同意，所以这个账号无法使用。如果你觉得有误，请和他们沟通。"],
+  pcDeleteAccount: ["Delete this account", "删除这个账号"],
+  pcDeleteConfirm: ["Tap again to delete it for good", "再点一次永久删除"],
+
   genderTitle:  ["One quick thing", "还有一个小问题"],
   genderSub:    ["Just to set a starting look for your avatar — you can change everything about it later from Me.", "只是为了给你的头像定一个初始样子 —— 之后随时可以在“我的”里重新改。"],
   genderBoy:    ["Boy", "男生"],

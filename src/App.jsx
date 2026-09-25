@@ -132,8 +132,8 @@ export default function App() {
           // yanking it away is worse than a blank one, and this only lasts a
           // single round trip.
           <div className="view" />
-        ) : consent && consent.state === "pending" ? (
-          <PendingConsentScreen />
+        ) : consent && (consent.state === "pending" || consent.state === "withdrawn") ? (
+          <PendingConsentScreen withdrawn={consent.state === "withdrawn"} />
         ) : profile ? (
           <BrowserRouter basename={import.meta.env.BASE_URL}>
             <UIProvider>

@@ -132,8 +132,8 @@ export const PRIVACY = {
           "「我的」→「删除我的账号」会清除所有内容：你的账号、爱好、日记、照片和语音，设备上和服务器上的都会删除。此操作无法撤销，之后我们也无法恢复。",
         ],
         [
-          "There is currently no way to download a copy of your data before deleting it. We know this is a gap and intend to fix it.",
-          "目前还无法在删除前下载你的数据副本。我们知道这是一个缺口，并打算修复它。",
+          "A parent or guardian who gave permission for an account can take it back, or have the account deleted, at any time by opening the link in the permission email again. Withdrawing switches the account off straight away; the child cannot switch it back on.",
+          "给予账号使用许可的父母或监护人，可以随时再次打开许可邮件中的链接，撤回同意或要求删除该账号。撤回会立即停用账号，孩子无法自行恢复。",
         ],
       ],
     },
