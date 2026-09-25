@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useAuth } from "../../store/AuthContext";
-import { startGuardianConsent, myConsentStatus } from "../../lib/remote";
+import { startGuardianConsent, myConsentStatus, joinClassFromPending } from "../../lib/remote";
+import { forgetConsentStatus } from "../../lib/useConsentStatus";
 import LangToggle from "../shared/LangToggle";
 import Mascot from "../shared/Mascot";
 
@@ -19,6 +20,9 @@ export default function PendingConsentScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [sent, setSent] = useState(false);
+  const [code, setCode] = useState("");
+  const [codeBusy, setCodeBusy] = useState(false);
+  const [codeError, setCodeError] = useState(null);
 
   async function load() {
     setStatus(await myConsentStatus());
@@ -36,6 +40,24 @@ export default function PendingConsentScreen() {
     setSent(true);
     setContact("");
     load();
+  }
+
+  // The way out if the email never comes. A class code puts the account on
+  // the school path, which needs no guardian email — the same code works at
+  // signup, so this is the design rather than a loophole.
+  async function submitClassCode() {
+    if (codeBusy || !code.trim()) return;
+    setCodeBusy(true);
+    setCodeError(null);
+    const result = await joinClassFromPending(code.trim());
+    setCodeBusy(false);
+    if (result.status === "invalid") { setCodeError(t("pcCodeWrong")); return; }
+    if (result.status !== "ok") { setCodeError(result.message); return; }
+    // App decided to show this screen from consent state it fetched at
+    // sign-in. Reloading is the simplest way to have it ask again, and it
+    // happens exactly once, at the moment the account is let in.
+    forgetConsentStatus();
+    window.location.reload();
   }
 
   const waiting = status && status.has_request && !status.step1_confirmed_at;
@@ -93,6 +115,29 @@ export default function PendingConsentScreen() {
             </button>
           </div>
         )}
+
+        <div className="sf-optional">
+          <label className="sf-label" htmlFor="pc-code">{t("pcCodeLabel")}</label>
+          <div className="pc-code-row">
+            <input
+              id="pc-code"
+              className="sf-field"
+              type="text"
+              autoCapitalize="characters"
+              autoComplete="off"
+              spellCheck="false"
+              disabled={codeBusy}
+              value={code}
+              onChange={(e) => { setCode(e.target.value); setCodeError(null); }}
+              onKeyDown={(e) => { if (e.key === "Enter") submitClassCode(); }}
+            />
+            <button className="btn2" disabled={codeBusy || !code.trim()} onClick={submitClassCode}>
+              {codeBusy ? t("authWorking") : t("pcCodeGo")}
+            </button>
+          </div>
+          {codeError && <p className="sf-err" style={{ overflowWrap: "anywhere" }}>{codeError}</p>}
+          <p className="sf-hint">{t("pcCodeHint")}</p>
+        </div>
 
         <div className="sf-grow" />
         <div className="sf-foot">

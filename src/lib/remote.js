@@ -909,6 +909,18 @@ export async function refreshConsentState() {
   return data;
 }
 
+// The way out of pending: a class code moves the account onto the path the
+// school's consent covers. Returns "ok", "invalid" (no such class), or
+// "error" with the server's wording.
+export async function joinClassFromPending(code) {
+  const { data, error } = await supabase.rpc("join_class_from_pending", { p_code: code });
+  if (error) {
+    console.error("Class join from pending failed:", error.message);
+    return { status: "error", message: error.message };
+  }
+  return { status: data ? "ok" : "invalid" };
+}
+
 // The two the guardian calls. They are not signed in and never will be, so
 // these run as anon and the token is the only credential.
 export async function describeGuardianConsent(token) {

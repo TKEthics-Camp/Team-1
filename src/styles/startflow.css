@@ -288,3 +288,9 @@
 
 /* .sf-top is the same row as .sf-bar, for the screens that use that name. */
 .sf-top { display: flex; align-items: center; justify-content: space-between; flex: none; }
+
+/* Code field and its button on one line: the code is six characters, so the
+   field never needs the full width, and the action sits where the thumb is. */
+.pc-code-row { display: flex; gap: 8px; }
+.pc-code-row .sf-field { flex: 1; min-width: 0; }
+.pc-code-row .btn2 { width: auto; flex: none; padding-inline: 18px; }

@@ -219,6 +219,11 @@ export const STR = {
 
   reportOrBlockTitle: ["What do you want to do?", "你想做什么？"],
 
+  pcCodeLabel:  ["Or, got a class code from your teacher?", "或者，老师给过你班级代码吗？"],
+  pcCodeGo:     ["Use it", "使用"],
+  pcCodeHint:   ["With a class code you can start right away — no email needed.", "有班级代码就可以马上开始，不需要发邮件。"],
+  pcCodeWrong:  ["That class code doesn't exist. Check it with your teacher.", "这个班级代码不存在。请和老师核对一下。"],
+
   genderTitle:  ["One quick thing", "还有一个小问题"],
   genderSub:    ["Just to set a starting look for your avatar — you can change everything about it later from Me.", "只是为了给你的头像定一个初始样子 —— 之后随时可以在“我的”里重新改。"],
   genderBoy:    ["Boy", "男生"],
