@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "TZ=Asia/Singapore vitest run",
-    "test:watch": "TZ=Asia/Singapore vitest"
+    "test:watch": "TZ=Asia/Singapore vitest",
+    "design": "vite --config vite.preview.config.js --port 5181"
   },
   "dependencies": {
     "@capacitor/core": "^8.5.2",

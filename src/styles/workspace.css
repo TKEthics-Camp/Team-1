@@ -1,0 +1,248 @@
+/* ==========================================================================
+   The "workspace" direction: neutral, flat, black on white.
+
+   Taken from a reference the owner picked (a clean project dashboard):
+   a pale grey page, white cards with a hairline and the faintest shadow,
+   near-black type, grey secondary text, uppercase letter-spaced section
+   labels, black primary buttons, rounded rectangles rather than pills,
+   and colour kept for meaning — green for good, red for bad — rather than
+   decoration.
+
+   It lives in one file, loaded last, on purpose. The owner is designing
+   something in Figma; when that arrives this file is the thing to replace,
+   and deleting it returns the previous skin intact.
+
+   The trees keep their colour. They are the content, not the chrome, and a
+   monochrome interface is what lets them be the only green on screen.
+   ========================================================================== */
+
+.stage, .stage[data-theme="white"] {
+  --stage-bg: #E9EAEC;
+  --app-bg:   #F7F7F8;
+  --shelf:    #FFFFFF;
+  --card:     #FFFFFF;
+  --card-2:   #F3F4F6;
+  --sel:      #F1F1F3;
+  --line:     #E6E6E9;
+  --ink:      #111111;
+  --muted:    #6B7280;
+  --dim:      #9CA3AF;
+  --accent:   #111111;
+  --accent-ink: #FFFFFF;
+  --candy:    #DC2626;
+  --good:     #15803D;
+  --good-bg:  #DCFCE7;
+  --bad:      #DC2626;
+  --bad-bg:   #FEE2E2;
+
+  --glass:  #FFFFFF;
+  --glass2: #FFFFFF;
+  --cloud:  transparent;
+  --wash-a: transparent;
+  --wash-b: transparent;
+
+  --lg-fill:   #FFFFFF;
+  --lg-fill-2: #FFFFFF;
+  --lg-blur:   none;
+  --lg-stroke: #E6E6E9;
+  --lg-edge:   #E6E6E9;
+  --lg-hi:     transparent;
+  --lg-shadow:    0 1px 2px rgba(17,17,17,.04), 0 1px 3px rgba(17,17,17,.05);
+  --lg-shadow-lg: 0 12px 32px -12px rgba(17,17,17,.20);
+
+  --r-card: 14px;
+  --r-ctl:  10px;
+}
+
+.stage[data-theme="black"] {
+  --stage-bg: #050505;
+  --app-bg:   #0B0B0C;
+  --shelf:    #161618;
+  --card:     #161618;
+  --card-2:   #1F1F22;
+  --sel:      #232326;
+  --line:     #2A2A2E;
+  --ink:      #F5F5F5;
+  --muted:    #A1A1AA;
+  --dim:      #71717A;
+  --accent:   #FAFAFA;
+  --accent-ink: #111111;
+  --candy:    #F87171;
+  --good:     #4ADE80;
+  --good-bg:  rgba(74,222,128,.14);
+  --bad:      #F87171;
+  --bad-bg:   rgba(248,113,113,.14);
+
+  --glass:  #161618;
+  --glass2: #161618;
+  --cloud:  transparent;
+  --wash-a: transparent;
+  --wash-b: transparent;
+
+  --lg-fill:   #161618;
+  --lg-fill-2: #161618;
+  --lg-blur:   none;
+  --lg-stroke: #2A2A2E;
+  --lg-edge:   #2A2A2E;
+  --lg-hi:     transparent;
+  --lg-shadow:    0 1px 2px rgba(0,0,0,.5);
+  --lg-shadow-lg: 0 12px 32px -12px rgba(0,0,0,.8);
+
+  --r-card: 14px;
+  --r-ctl:  10px;
+}
+
+/* ---------- frame and headers ---------- */
+.app { background: var(--app-bg); }
+.topbar {
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+.topbar h1 {
+  font-size: 22px; font-weight: 700; letter-spacing: -.025em; color: var(--ink);
+}
+.page-sub { margin: -2px 0 2px; font-size: 14.5px; color: var(--muted); }
+
+/* Section labels: small, uppercase, spaced, grey — the reference's
+   "RECENT ACTIVITY". */
+.label, .memory .kicker {
+  font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted);
+}
+.sub { color: var(--muted); }
+
+/* ---------- controls ---------- */
+.btn {
+  background: var(--accent); color: var(--accent-ink);
+  border-radius: var(--r-ctl); box-shadow: none; font-weight: 600;
+}
+.btn:hover { filter: none; opacity: .88; }
+.btn2 {
+  background: var(--card); color: var(--ink);
+  border: 1px solid var(--line); border-radius: var(--r-ctl);
+  font-weight: 550; box-shadow: var(--lg-shadow);
+}
+.btn2:hover { background: var(--card-2); }
+.btn-danger { color: var(--bad); border-color: var(--line); }
+
+.chip, .lang {
+  border-radius: 8px; border: 1px solid var(--line);
+  background: var(--card); color: var(--ink); font-weight: 500;
+}
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.chip.flame-badge { color: var(--ink); font-weight: 650; }
+
+input[type="text"], input[type="password"], input[type="email"],
+input[type="date"], input[type="time"], textarea, .sf .sf-field {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r-ctl);
+}
+input:focus-visible, textarea:focus-visible, .sf .sf-field:focus {
+  outline: none; border-color: var(--ink);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+/* ---------- cards ---------- */
+.nudge, .memory, .stat, .theme-btn, .choice, .memory-row,
+.consent-block, .mod-row, .post, .post-card, .user-row {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  box-shadow: var(--lg-shadow);
+}
+.consent-promise { border-color: var(--line); }
+
+/* Stats: label above a large number, two to a row, like the reference's
+   summary cards. Four across left each number about sixty pixels to live
+   in. */
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat {
+  display: flex; flex-direction: column-reverse; align-items: flex-start;
+  gap: 4px; padding: 14px 16px; text-align: left;
+}
+.stat .k { font-size: 13px; font-weight: 500; color: var(--muted); }
+.stat .n { font-size: 28px; font-weight: 700; letter-spacing: -.03em; color: var(--ink); }
+.stat.flame .n { color: var(--ink); }
+
+/* Journal lists read as one card of rows, divided, like Recent activity. */
+.entry { border-top-color: var(--line); }
+
+/* ---------- bottom navigation ----------
+   The reference's sidebar, turned on its side for a phone: icon above
+   label, the current item on a grey rounded tile. The sliding glass thumb
+   belongs to the old skin. */
+.nav {
+  margin: 0; padding: 6px 10px calc(6px + env(safe-area-inset-bottom, 0px));
+  border: none; border-top: 1px solid var(--line); border-radius: 0;
+  background: var(--card); box-shadow: none;
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+.nav-thumb { display: none; }
+.nav button {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 7px 4px 6px; border-radius: var(--r-ctl);
+  font-size: 11.5px; font-weight: 500; color: var(--muted);
+}
+.nav button svg { width: 22px; height: 22px; }
+.nav button[aria-current="page"] { background: var(--sel); color: var(--ink); font-weight: 650; }
+
+/* ---------- sheets ---------- */
+.sheet {
+  background: var(--shelf); border-top: 1px solid var(--line);
+  border-radius: 20px 20px 0 0; box-shadow: var(--lg-shadow-lg);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+.sheet-bg { background: rgba(17,17,17,.36); backdrop-filter: none; }
+
+/* ---------- semantic colour ---------- */
+.field-error, .sf-err { color: var(--bad); }
+
+/* ---------- Home ---------- */
+.topbar.home-bar { background: var(--card); border-bottom: 1px solid var(--line); }
+.home-bar .chip, .home-bar .lang {
+  background: var(--card); border: 1px solid var(--line); border-radius: 8px; color: var(--ink);
+}
+.brand { display: flex; align-items: center; gap: 9px; margin-right: auto; }
+.brand-mark {
+  width: 28px; height: 28px; border-radius: 8px; flex: none;
+  display: grid; place-items: center;
+  background: var(--accent); color: var(--accent-ink);
+}
+.brand-mark svg { width: 17px; height: 17px; }
+.brand-name { font-size: 18px; font-weight: 700; letter-spacing: -.02em; color: var(--ink); }
+
+.page-head { display: flex; flex-direction: column; gap: 4px; padding: 6px 0 4px; }
+.page-head h1 {
+  margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -.03em;
+  line-height: 1.15; color: var(--ink); text-wrap: balance;
+}
+.page-head .page-sub { margin: 0; }
+
+.nudge { align-items: flex-start; }
+.nudge .bell { width: 22px; height: 22px; flex: none; color: var(--ink); margin-top: 1px; }
+.nudge .head { font-size: 15.5px; font-weight: 650; color: var(--ink); }
+.nudge-actions { display: flex; gap: 8px; margin-top: 12px; }
+.nudge-actions .btn, .nudge-actions .btn2 { width: auto; padding: 9px 16px; font-size: 14px; }
+
+.memory .when { font-family: var(--body); font-size: 13px; color: var(--muted); }
+.memory .text { color: var(--ink); }
+
+/* ---------- Me ---------- */
+/* The name sat flush left under a centred avatar — it was a flex row with
+   nothing telling it where to go. */
+.center > button.row { margin-left: auto; margin-right: auto; }
+.stat .k::first-letter { text-transform: uppercase; }
+
+/* ---------- Explore ---------- */
+/* The explanation under a section title stacks beneath it: squeezed beside
+   "For you" it forced the title itself onto two lines. */
+.section-head { flex-direction: column; align-items: flex-start; gap: 2px; border-bottom: none; }
+.section-head .h { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.idea-add {
+  background: var(--card); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 8px;
+  font-weight: 600; box-shadow: none;
+}
+.idea-add:hover { background: var(--card-2); }
+.tabs { border-radius: var(--r-ctl); background: var(--card-2); }
+.tabs button { border-radius: 8px; }
