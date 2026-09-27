@@ -329,21 +329,31 @@ export async function downloadAudioBlob(storagePath) {
 // Storage has no cascade. Deleting a photos row leaves its file sitting in
 // the bucket, so every path that erases a user's content has to sweep the
 // buckets explicitly. Both bucket layouts are flat — `${userId}/${id}` — so
-// one non-recursive list per bucket is the whole set.
+// listing this folder is the whole set.
+//
+// list() only ever returns up to PAGE entries at a time, so an account with
+// more files than that needs more than one round — past ~1,000 photos or
+// voice notes, whatever didn't fit in the first page used to silently stay
+// behind. Removing each page before asking for the next means the next
+// list() call is still asking for "what's left", with no offset math that
+// could skip or repeat entries as the folder shrinks underneath it.
 async function clearBucket(bucket, userId) {
-  const { data, error } = await supabase.storage.from(bucket).list(userId, { limit: 1000 });
-  if (error) {
-    console.error(`Sync (list ${bucket}) failed:`, error);
-    return false;
+  const PAGE = 1000;
+  for (;;) {
+    const { data, error } = await supabase.storage.from(bucket).list(userId, { limit: PAGE });
+    if (error) {
+      console.error(`Sync (list ${bucket}) failed:`, error);
+      return false;
+    }
+    const paths = (data || []).map((f) => `${userId}/${f.name}`);
+    if (!paths.length) return true;
+    const { error: removeError } = await supabase.storage.from(bucket).remove(paths);
+    if (removeError) {
+      console.error(`Sync (clear ${bucket}) failed:`, removeError);
+      return false;
+    }
+    if (data.length < PAGE) return true;
   }
-  const paths = (data || []).map((f) => `${userId}/${f.name}`);
-  if (!paths.length) return true;
-  const { error: removeError } = await supabase.storage.from(bucket).remove(paths);
-  if (removeError) {
-    console.error(`Sync (clear ${bucket}) failed:`, removeError);
-    return false;
-  }
-  return true;
 }
 
 // Erases everything this user planted, on the server. Reports whether it
