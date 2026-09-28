@@ -861,7 +861,7 @@ export async function redeemRecoveryCode(username, code, newPassword) {
 // Every one of these decisions is made server side. The client passes the
 // birthdate in and is told which path it landed on; it never chooses.
 
-export async function applyAgeGate(birthdate, classCode) {
+export async function applyAgeGate(birthdate, classCode, userId) {
   const { data, error } = await supabase.rpc("apply_age_gate", {
     p_birthdate: birthdate,
     p_class_code: classCode || null,
@@ -877,6 +877,22 @@ export async function applyAgeGate(birthdate, classCode) {
       || /could not find the function/i.test(error.message || "");
     if (missing) {
       console.warn("Age gate not deployed; signup proceeding ungated.");
+      // Best-effort: record that this account slipped through ungated, so
+      // whoever is responsible for the app has something to find instead of
+      // a console.warn nobody watches. If 20260928000000 itself isn't
+      // deployed either, this insert fails the same way apply_age_gate did
+      // above — that's fine, there's nowhere left to escalate to, and it
+      // must never block or fail the signup it's merely recording.
+      if (userId) {
+        supabase
+          .from("age_gate_bypass_log")
+          .insert({ user_id: userId })
+          .then(({ error: logError }) => {
+            if (logError && logError.code !== "PGRST205" && logError.code !== "42P01") {
+              console.error("Failed to record age gate bypass:", logError.message);
+            }
+          });
+      }
       return { ok: false, reason: "missing" };
     }
     console.error("Age gate failed:", error.message);
@@ -1001,6 +1017,23 @@ export async function moderateResolve(reportId, status) {
     return { ok: false, message: error.message };
   }
   return { ok: true };
+}
+
+// How many accounts have signed up while the age gate was undeployed (see
+// applyAgeGate's "missing" branch). Same PGRST202/42P01 tolerance as
+// amIModerator — a project without 20260928000000 simply has nothing to
+// report, which is not an error.
+export async function ageGateBypassCount() {
+  const { count, error } = await supabase
+    .from("age_gate_bypass_log")
+    .select("id", { count: "exact", head: true });
+  if (error) {
+    if (error.code !== "PGRST205" && error.code !== "42P01") {
+      console.error("Age gate bypass count failed:", error.message);
+    }
+    return 0;
+  }
+  return count || 0;
 }
 
 // What a guardian can do with their link besides agreeing. Both run as

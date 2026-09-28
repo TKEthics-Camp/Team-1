@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
-import { moderationQueue, moderateHide, moderateResolve } from "../../lib/remote";
+import { moderationQueue, moderateHide, moderateResolve, ageGateBypassCount } from "../../lib/remote";
 import { usePhotoURL, useAudioURL } from "../../lib/image";
 import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
@@ -39,6 +39,7 @@ export default function ModerationScreen() {
   const [rows, setRows] = useState(null);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(null);
+  const [bypassCount, setBypassCount] = useState(0);
 
   async function load() {
     const result = await moderationQueue();
@@ -47,7 +48,10 @@ export default function ModerationScreen() {
     setRows(result.rows);
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    ageGateBypassCount().then(setBypassCount);
+  }, []);
 
   async function hide(row, hidden) {
     setBusy(row.id);
@@ -73,6 +77,18 @@ export default function ModerationScreen() {
       </TopBar>
       <div className="view">
         {error && <div className="field-error" style={{ overflowWrap: "anywhere" }}>{error}</div>}
+
+        {/* The age gate degrades to "let signup through" when its migration
+            isn't deployed (see applyAgeGate). That's the right call for one
+            account, but silent forever is not — this is where it stops
+            being silent. */}
+        {bypassCount > 0 && (
+          <div className="field-error" style={{ overflowWrap: "anywhere" }}>
+            {bypassCount} account{bypassCount === 1 ? "" : "s"} signed up while the age gate was
+            not deployed on this project — every signup went through ungated. Deploy
+            20260918000000_age_gate_guardian_consent.sql to close this.
+          </div>
+        )}
 
         {rows === null ? (
           <div className="sub">Loading…</div>

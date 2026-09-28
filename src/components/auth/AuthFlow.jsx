@@ -117,7 +117,7 @@ export default function AuthFlow() {
     // Anything else means the gate IS live and did not run, which is the
     // one outcome that must not leave an account behind. That rolls back.
     if (!isOrg) {
-      const gate = await applyAgeGate(birthdate, classCode.trim() || null);
+      const gate = await applyAgeGate(birthdate, classCode.trim() || null, result.userId);
       if (!gate.ok && gate.reason !== "missing") {
         setBusy(false);
         await supabase.auth.signOut();
