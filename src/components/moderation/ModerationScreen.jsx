@@ -1,6 +1,40 @@
 import { useEffect, useState } from "react";
+
+// The reported photo or voice note itself. Storage lets a moderator read a
+// file only while a report on it is open (20261011010000), so this asks for
+// it when the row is drawn and lets go of it when the row goes away.
+function ReportedMedia({ kind, path }) {
+  const [url, setUrl] = useState(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let objectUrl = null;
+    let cancelled = false;
+    const fetchBlob = kind === "photo" ? downloadPhotoBlob : downloadAudioBlob;
+    fetchBlob(path).then((blob) => {
+      if (cancelled) return;
+      if (!blob) { setFailed(true); return; }
+      objectUrl = URL.createObjectURL(blob);
+      setUrl(objectUrl);
+    });
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [kind, path]);
+
+  if (failed) return <div className="mod-media"><em>(couldn't load the file)</em></div>;
+  if (!url) return <div className="mod-media"><em>Loading the file…</em></div>;
+  return (
+    <div className="mod-media">
+      {kind === "photo"
+        ? <img src={url} alt="The reported photo" />
+        : <audio controls src={url} />}
+    </div>
+  );
+}
 import { useI18n } from "../../i18n/I18nContext";
-import { moderationQueue, moderateHide, moderateResolve } from "../../lib/remote";
+import { moderationQueue, moderateHide, moderateResolve, downloadPhotoBlob, downloadAudioBlob } from "../../lib/remote";
 import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
 
@@ -9,7 +43,8 @@ import LangToggle from "../shared/LangToggle";
 // Deliberately plain and deliberately fast: the whole reason reports went
 // unread was that reading them was impossible, and the next worst thing is
 // making it tedious. Every report arrives with the reported text already
-// attached, so a decision takes one read and one tap.
+// attached — and the photo or voice note, if that is what was reported — so
+// a decision takes one look and one tap.
 //
 // English only, on purpose. This is a staff tool for whoever is named
 // responsible for the app, not a screen any student will ever open — and
@@ -74,9 +109,17 @@ export default function ModerationScreen() {
 
                 {/* The reported words themselves. A moderator deciding
                     without seeing them is guessing. */}
-                <div className="mod-content">
-                  {row.content ? row.content : <em>(no text — a photo or voice note)</em>}
-                </div>
+                {row.media_path && (
+                  <ReportedMedia
+                    kind={row.target_type === "photo" ? "photo" : "audio"}
+                    path={row.media_path}
+                  />
+                )}
+                {(row.content || !row.media_path) && (
+                  <div className="mod-content">
+                    {row.content ? row.content : <em>(no text)</em>}
+                  </div>
+                )}
 
                 <div className="mod-by">filed by {row.reporter_name || "unknown"}</div>
 
