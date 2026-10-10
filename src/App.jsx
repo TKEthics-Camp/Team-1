@@ -4,6 +4,7 @@ import { useStore } from "./store/StoreContext";
 import { useAuth } from "./store/AuthContext";
 import { useI18n } from "./i18n/I18nContext";
 import { useReminderTimers } from "./lib/useReminderTimers";
+import { listenForReminderTaps, takeOpenPath, onOpenPath } from "./lib/notifications";
 import { UIProvider, useUI } from "./ui/UIContext";
 import { DEFAULT_THEME } from "./lib/constants";
 import { useResolvedTheme } from "./lib/useResolvedTheme";
@@ -49,6 +50,9 @@ export default function App() {
   const resolvedTheme = useResolvedTheme((profile && profile.theme) || DEFAULT_THEME);
 
   useReminderTimers(interests, entries, photos, lang, nameOf, t);
+  // Registered as early as possible: a reminder tapped while the app was
+  // closed is delivered once something is listening.
+  useEffect(() => listenForReminderTaps(), []);
 
   // syncedLang latches so a later manual toggle isn't stomped by the profile
   // it came from. It has to unlatch when the account changes, though: left
@@ -182,9 +186,11 @@ function RoutedShell() {
   // existing profile, or right after onboarding finishes. Whatever the
   // address bar happened to be showing (a leftover route from before the
   // page reloaded, or from onboarding running with no router underneath
-  // it to control), always land on Home instead of wherever that was.
+  // it to control), land on Home instead of wherever that was — unless a
+  // tapped reminder opened the app, in which case go where it points.
   useEffect(() => {
-    navigate("/", { replace: true });
+    navigate(takeOpenPath() || "/", { replace: true });
+    return onOpenPath((path) => navigate(path));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

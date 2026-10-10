@@ -15,6 +15,7 @@ import { buildExport } from "../../lib/exportData";
 import { saveFile } from "../../lib/saveFile";
 import { useConsentStatus } from "../../lib/useConsentStatus";
 import { amIModerator } from "../../lib/remote";
+import { useNotificationPermission, requestNotificationPermission, isNative } from "../../lib/notifications";
 
 export default function ProfileScreen() {
   const { t, lang, nOf } = useI18n();
@@ -43,7 +44,6 @@ export default function ProfileScreen() {
   const [exporting, setExporting] = useState(false);
 
   const currentTheme = (profile && profile.theme) || DEFAULT_THEME;
-  const [, bumpPermissionCheck] = useState(0);
   const coins = (profile && profile.coins) || 0;
   const equippedDecoration = DECORATIONS.find((d) => d.id === (profile && profile.equippedDecoration)) || null;
   const discoverable = !!(profile && profile.discoverable);
@@ -67,17 +67,17 @@ export default function ProfileScreen() {
   const locked = !!(consent && consent.disclosure_locked);
   const needsReconsent = !!(consent && consent.state === "re_consent_required");
 
-  const permission = window.Notification ? Notification.permission : "unsupported";
+  // null while the iPhone app is still asking iOS; see lib/notifications.
+  const permission = useNotificationPermission();
   const granted = permission === "granted";
   const blocked = permission === "denied";
+  const unsupported = permission === "unsupported";
 
   function requestReminders() {
-    // Once a browser has denied notifications, it won't show the prompt
-    // again — only the user can re-allow it from the browser's own site
-    // settings, so there's nothing left for this click to do.
-    if (window.Notification && permission === "default") {
-      Notification.requestPermission().then(() => bumpPermissionCheck((n) => n + 1));
-    }
+    // Once notifications have been denied, neither a browser nor iOS will
+    // show the question again — only their own settings can — so there's
+    // nothing for this click to do but ask the first time.
+    if (permission === "prompt") requestNotificationPermission();
   }
 
   async function handleClear() {
@@ -205,8 +205,11 @@ export default function ProfileScreen() {
 
         {!isOrg && (
           <>
-            <button className="btn2" disabled={granted || blocked} onClick={requestReminders}>
-              {granted ? "✓ " + t("remindersOn") : blocked ? t("remindersBlocked") : t("turnOn")}
+            <button className="btn2" disabled={!permission || granted || blocked || unsupported} onClick={requestReminders}>
+              {granted ? "✓ " + t("remindersOn")
+                : blocked ? (isNative() ? t("remindersBlockedIos") : t("remindersBlocked"))
+                : unsupported ? t("remindersUnsupported")
+                : t("turnOn")}
             </button>
           </>
         )}

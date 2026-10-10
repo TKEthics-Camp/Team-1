@@ -410,6 +410,8 @@ export const STR = {
   remindersOn:  ["Reminders are on", "提醒已开启"],
   turnOn:       ["Turn on reminders", "开启提醒"],
   remindersBlocked: ["Blocked — enable in browser settings", "已被拦截——请在浏览器设置中开启"],
+  remindersBlockedIos: ["Reminders are off — turn them on in Settings › Forest › Notifications", "提醒已关闭——请在「设置 › Forest › 通知」中开启"],
+  remindersUnsupported: ["This browser can't show reminders", "这个浏览器无法显示提醒"],
   remindNote:   ["Reminders fire while this app is open in your browser. Nothing is sent to a server.", "只有在浏览器中打开这个应用时，提醒才会触发，不会发送到任何服务器。"],
   soundOn:      ["Sound effects on", "音效已开启"],
   soundOff:     ["Sound effects off", "音效已关闭"],
