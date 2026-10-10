@@ -176,10 +176,10 @@ export default function ProfileScreen() {
         {!isOrg && (
           <>
             <Stats items={[
-              { n: globalStreak(entries, photos), k: t("totalStreak"), flame: true },
-              { n: interests.length, k: nOf(interests.length, "orbsCount") },
-              { n: photos.length, k: nOf(photos.length, "photos") },
-              { n: entries.length, k: nOf(entries.length, "entries") },
+              { n: globalStreak(entries, photos), k: t("totalStreak"), flame: true, icon: "flame", tone: "amber" },
+              { n: interests.length, k: nOf(interests.length, "orbsCount"), icon: "tree", tone: "green" },
+              { n: photos.length, k: nOf(photos.length, "photos"), icon: "image", tone: "purple" },
+              { n: entries.length, k: nOf(entries.length, "entries"), icon: "book", tone: "blue" },
             ]} />
             <div className="sub">{publicCount + " " + nOf(publicCount, "publicCount")}</div>
           </>

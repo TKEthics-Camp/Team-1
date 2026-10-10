@@ -36,11 +36,18 @@
   --bad:      #E5484D;
   --bad-bg:   #FDECEC;
 
-  /* the small tinted tags */
-  --tag-blue:      #2F7DE1;
+  /* The only colour in the interface besides the trees: four soft tones,
+     always a saturated word on a pale wash of the same hue. */
+  --tag-amber:     #D48A0C;
+  --tag-amber-bg:  #FDF5E3;
+  --tag-green:     #13A389;
+  --tag-green-bg:  #E5F7F2;
+  --tag-purple:    #8B5CF6;
+  --tag-purple-bg: #F2EDFE;
+  --tag-blue:      #3B7FE6;
   --tag-blue-bg:   #EAF2FD;
-  --tag-amber:     #D9890B;
-  --tag-amber-bg:  #FDF4E3;
+  --tag-grey:      #707070;
+  --tag-grey-bg:   #F0F0F0;
 
   --glass:  #FFFFFF;
   --glass2: #FFFFFF;
@@ -86,10 +93,16 @@
   --bad:      #FF6B70;
   --bad-bg:   rgba(255,107,112,.14);
 
-  --tag-blue:      #7AB2F5;
-  --tag-blue-bg:   rgba(122,178,245,.14);
   --tag-amber:     #F2B14A;
   --tag-amber-bg:  rgba(242,177,74,.14);
+  --tag-green:     #4FD1B5;
+  --tag-green-bg:  rgba(79,209,181,.13);
+  --tag-purple:    #B39BFA;
+  --tag-purple-bg: rgba(179,155,250,.15);
+  --tag-blue:      #7AB2F5;
+  --tag-blue-bg:   rgba(122,178,245,.14);
+  --tag-grey:      #A0A0A6;
+  --tag-grey-bg:   rgba(255,255,255,.07);
 
   --glass:  #242427;
   --glass2: #242427;
@@ -238,7 +251,6 @@ input:focus-visible, textarea:focus-visible, .sf .sf-field:focus {
 .tree-view .tree-status { padding: 14px 16px; }
 .tree-view .tree-status .st-stage { font-size: 16px; font-weight: 750; letter-spacing: -.025em; }
 .tree-view .cover { border-radius: var(--r-card); border: none; box-shadow: var(--lg-shadow); }
-.tree-view .planted-label { background: var(--card-2); }
 
 /* ---------- journal: a timeline ----------
    Day on the left, a small dot, the entry as a card on the right. */
@@ -285,14 +297,44 @@ input:focus-visible, textarea:focus-visible, .sf .sf-field:focus {
 .entry-actions .icon { color: var(--dim); font-size: 15px; }
 .entry-actions .icon:hover { color: var(--ink); }
 
-/* small tinted tags, as on the reference's "Reflection" */
+/* ---------- tags: small tinted pills with a line icon ----------
+   As on the reference's "Ideas", "Reading", "Travel". Used for a journal
+   entry's details, Explore's categories, the memory card, "planted" and
+   the stat badges. */
 .tag {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 4px 11px; border-radius: 999px;
-  font-size: 12.5px; font-weight: 600; letter-spacing: .01em;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px 5px 10px; border-radius: 999px;
+  font-family: var(--body); font-size: 13px; font-weight: 600;
+  letter-spacing: .005em; line-height: 1.2; white-space: nowrap;
+  text-transform: none;
 }
-.tag-public { color: var(--tag-blue);  background: var(--tag-blue-bg); }
-.tag-pin    { color: var(--tag-amber); background: var(--tag-amber-bg); }
+.tag .ico { flex: none; }
+.tag-amber,  .stat-ico.tag-amber  { color: var(--tag-amber);  background: var(--tag-amber-bg); }
+.tag-green,  .stat-ico.tag-green  { color: var(--tag-green);  background: var(--tag-green-bg); }
+.tag-purple, .stat-ico.tag-purple { color: var(--tag-purple); background: var(--tag-purple-bg); }
+.tag-blue,   .stat-ico.tag-blue   { color: var(--tag-blue);   background: var(--tag-blue-bg); }
+.tag-grey,   .stat-ico.tag-grey   { color: var(--tag-grey);   background: var(--tag-grey-bg); }
+
+/* the round badge in the corner of a stat card */
+.stat-ico {
+  width: 30px; height: 30px; border-radius: 999px;
+  display: grid; place-items: center; margin-bottom: 6px;
+}
+
+/* "Planted today" / "24 days since planted" is a green sprout tag */
+.planted-label, .tree-view .planted-label, .home-view .planted-label {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px 5px 10px; border-radius: 999px; border: none;
+  color: var(--tag-green); background: var(--tag-green-bg);
+  font-family: var(--body); font-size: 13px; font-weight: 600; letter-spacing: .005em;
+}
+
+/* "Remember this?" is an amber tag rather than a grey label */
+.memory .kicker-tag { align-self: flex-start; margin-bottom: 4px; }
+
+/* Explore: the category under an idea's name */
+.idea .idea-cat-tag { margin-top: 5px; font-size: 12px; padding: 3px 10px 3px 8px; }
+.idea .idea-cat-tag .ico { width: 13px; height: 13px; }
 
 /* ---------- bottom navigation ---------- */
 .nav {
@@ -385,3 +427,6 @@ input:focus-visible, textarea:focus-visible, .sf .sf-field:focus {
 .tree-sheet .btn, .tree-sheet .btn2, .tree-sheet .day-btn {
   border-radius: 999px;
 }
+
+/* A button with a leading line icon, e.g. "Watch it grow". */
+.btn-with-ico { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }

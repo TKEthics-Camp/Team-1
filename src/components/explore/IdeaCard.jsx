@@ -3,6 +3,7 @@ import { useUI } from "../../ui/UIContext";
 import { PALETTE } from "../../lib/constants";
 import { catLabel } from "../../lib/explore";
 import Tree from "../shared/Tree";
+import { Tag, CATEGORY_LOOK } from "../shared/Icon";
 
 // One hobby idea: an orb, its name + category, and a button that opens the
 // new-orb sheet prefilled from it — the offline call to action.
@@ -25,7 +26,13 @@ export default function IdeaCard({ idea }) {
       </div>
       <div className="grow">
         <div className="idea-nm">{name}</div>
-        <div className="idea-cat">{catLabel(idea[3], lang)}</div>
+        <Tag
+          tone={(CATEGORY_LOOK[idea[3]] || {}).tone}
+          icon={(CATEGORY_LOOK[idea[3]] || {}).icon}
+          className="idea-cat-tag"
+        >
+          {catLabel(idea[3], lang)}
+        </Tag>
       </div>
       <button
         className="idea-add"

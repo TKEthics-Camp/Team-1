@@ -9,6 +9,7 @@ import {
 } from "../../lib/remote";
 import { usePhotoURL } from "../../lib/image";
 import { entriesOf, photosOf, minutesOf, fmtHours } from "../../lib/derived";
+import Icon from "../shared/Icon";
 import { treeStage, treeHealth, daysPlanted, STAGE_KEY } from "../../lib/tree";
 import TopBar from "../shared/TopBar";
 import Stats from "../shared/Stats";
@@ -153,6 +154,7 @@ export default function PublicInterestScreen() {
       </TopBar>
       <div className="view">
         <div className="planted-label center-label">
+          <Icon name="sprout" size={14} />
           {planted === 0 ? t("plantedToday") : t("plantedDays").replace("{n}", planted)}
         </div>
 
@@ -164,9 +166,9 @@ export default function PublicInterestScreen() {
         </div>
 
         <Stats items={[
-          { n: fmtHours(minutes), k: t("hours") },
-          { n: ph.length, k: nOf(ph.length, "photos") },
-          { n: en.length, k: nOf(en.length, "entries") },
+          { n: fmtHours(minutes), k: t("hours"), icon: "clock", tone: "green" },
+          { n: ph.length, k: nOf(ph.length, "photos"), icon: "image", tone: "purple" },
+          { n: en.length, k: nOf(en.length, "entries"), icon: "book", tone: "blue" },
         ]} />
 
         {it.why && <div className="sub">{`“${it.why}”`}</div>}

@@ -6,6 +6,7 @@ import { useAudioURL } from "../../lib/image";
 import EmptyState from "../shared/EmptyState";
 import VoiceNote from "../shared/VoiceNote";
 import ReportMenu from "../shared/ReportMenu";
+import Icon, { Tag } from "../shared/Icon";
 
 // Own component so useAudioURL (which may need to fetch from Storage) runs
 // once per entry rather than inside the list's own render — same shape as
@@ -15,13 +16,12 @@ function EntryVoiceNote({ entry, cacheEntryAudio }) {
   return <VoiceNote url={url} ms={entry.audioMs} />;
 }
 
-const GLOBE = (
-  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"
-       strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-    <circle cx="12" cy="12" r="9" />
-    <path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z" />
-  </svg>
-);
+// "30 min", "1.5 h" — how long the entry was for.
+function durationOf(minutes, t) {
+  if (!minutes) return null;
+  if (minutes < 60) return t("durMin").replace("{n}", minutes);
+  return t("durHours").replace("{n}", +(minutes / 60).toFixed(1));
+}
 
 // "THU" / "周四" — the day an entry was for, read from its date key
 // (local, never UTC; see lib/dates).
@@ -55,12 +55,14 @@ export default function JournalTab({ entries, readOnly, authorId = null, onEntry
             <span className="d">{fmtDate(e.date, lang)}</span>
           </div>
           <div className="entry-card">
-            {(e.isPinned || e.visibility === "public") && (
-              <div className="entry-tags">
-                {e.isPinned && <span className="tag tag-pin">★ {t("pinned")}</span>}
-                {e.visibility === "public" && <span className="tag tag-public">{GLOBE} {t("visPublic")}</span>}
-              </div>
-            )}
+            {/* Small tinted tags, each with its own icon and colour, so a
+                glance down the timeline reads how long, how, and who for. */}
+            <div className="entry-tags">
+              {e.minutes > 0 && <Tag tone="green" icon="clock">{durationOf(e.minutes, t)}</Tag>}
+              {(e.audio || e.audioPath) && <Tag tone="purple" icon="mic">{t("tagVoice")}</Tag>}
+              {e.isPinned && <Tag tone="amber" icon="pin">{t("pinned")}</Tag>}
+              {e.visibility === "public" && <Tag tone="blue" icon="globe">{t("visPublic")}</Tag>}
+            </div>
             {e.text && <div className="t">{e.text}</div>}
             {(e.audio || e.audioPath) && <EntryVoiceNote entry={e} cacheEntryAudio={readOnly ? null : cacheEntryAudio} />}
             {!readOnly && (
@@ -70,9 +72,11 @@ export default function JournalTab({ entries, readOnly, authorId = null, onEntry
                   aria-label={t("editEntry")}
                   onClick={() => openSheet("entry", { id: e.interestId, entryId: e.id })}
                 >
-                  ✎
+                  <Icon name="pencil" size={15} />
                 </button>
-                <button className="icon" aria-label={t("del")} onClick={() => remove(e.id)}>×</button>
+                <button className="icon" aria-label={t("del")} onClick={() => remove(e.id)}>
+                  <Icon name="x" size={16} />
+                </button>
               </div>
             )}
             {readOnly && authorId && (

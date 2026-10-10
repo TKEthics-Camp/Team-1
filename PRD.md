@@ -543,9 +543,14 @@ at the first screen after auth.
   (1, 3).
 
   Visual language (src/styles/workspace.css, loaded last so it can be
-  replaced without touching behaviour): an off-white page, white cards with
-  large corners and a faint shadow, heavy headings, matte grey-black for
-  whatever is selected or primary, and every text button fully rounded.
+  replaced without touching behaviour): mostly matte grey-black and very
+  light grey — an off-white page, white cards with large corners and a
+  faint shadow, heavy headings, grey-black for whatever is selected or
+  primary, every text button fully rounded. Colour appears only in small
+  tinted tags with thin line icons (src/components/shared/Icon.jsx), in
+  four soft tones — amber, green, purple, blue — used for a journal
+  entry's duration, voice note, pinned and public state, Explore's
+  categories, the memory card, "planted", and the stat badges.
 
 
 --------------------------------------------------------------------------

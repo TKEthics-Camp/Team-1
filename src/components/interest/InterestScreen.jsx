@@ -7,6 +7,7 @@ import { photosOf, entriesOf, globalStreak } from "../../lib/derived";
 import { treeStage, treeHealth, daysPlanted, actsToNextStage, growthTimeline, STAGE_KEY, HEALTH_KEY, REVIVE_COST } from "../../lib/tree";
 import TopBar from "../shared/TopBar";
 import Stats from "../shared/Stats";
+import Icon from "../shared/Icon";
 import Tree from "../shared/Tree";
 import InterestCover from "./InterestCover";
 import AlbumTab from "./AlbumTab";
@@ -64,6 +65,7 @@ export default function InterestScreen() {
         <InterestCover interest={it} firstPhoto={first} />
 
         <div className="planted-label center-label">
+          <Icon name="sprout" size={14} />
           {planted === 0 ? t("plantedToday") : t("plantedDays").replace("{n}", planted)}
         </div>
 
@@ -93,13 +95,15 @@ export default function InterestScreen() {
         )}
 
         {canReplay && (
-          <button className="btn2" onClick={() => setReplaying(true)}>{t("watchGrow")}</button>
+          <button className="btn2 btn-with-ico" onClick={() => setReplaying(true)}>
+            <Icon name="sparkles" size={16} />{t("watchGrow")}
+          </button>
         )}
 
         <Stats items={[
-          { n: st, k: t("yourStreak"), flame: true },
-          { n: ph.length, k: nOf(ph.length, "photos") },
-          { n: en.length, k: nOf(en.length, "entries") },
+          { n: st, k: t("yourStreak"), flame: true, icon: "flame", tone: "amber" },
+          { n: ph.length, k: nOf(ph.length, "photos"), icon: "image", tone: "purple" },
+          { n: en.length, k: nOf(en.length, "entries"), icon: "book", tone: "blue" },
         ]} />
 
         {it.why && <div className="sub">{`“${it.why}”`}</div>}

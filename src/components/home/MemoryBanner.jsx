@@ -3,6 +3,7 @@ import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { usePhotoURL } from "../../lib/image";
 import { fmtDate } from "../../lib/dates";
+import { Tag } from "../shared/Icon";
 import Tree from "../shared/Tree";
 
 export default function MemoryBanner({ memory }) {
@@ -28,9 +29,9 @@ export default function MemoryBanner({ memory }) {
         <div style={{ flex: "none" }}><Tree interest={memory.interest} size={54} stage={3} health="healthy" /></div>
       )}
       <div className="body">
-        <span className="kicker">
+        <Tag tone="amber" icon={memory.quietDays ? "clock" : "sparkles"} className="kicker-tag">
           {memory.quietDays ? t("quietDays").replace("{n}", memory.quietDays) : t("remember")}
-        </span>
+        </Tag>
         <div className="text">{memory.text || nameOf(memory.interest)}</div>
         <div className="when">
           {nameOf(memory.interest) + " · " + (memory.quietDays ? t("quietSub") : fmtDate(memory.date, lang))}
