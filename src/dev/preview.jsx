@@ -1,4 +1,4 @@
-import { StrictMode, Suspense } from "react";
+import { StrictMode, Suspense, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { I18nProvider } from "../i18n/I18nContext";
@@ -9,6 +9,7 @@ import ExploreScreen from "../components/explore/ExploreScreen";
 import InterestScreen from "../components/interest/InterestScreen";
 import BottomNav from "../components/shared/BottomNav";
 import PendingConsentScreen from "../components/consent/PendingConsentScreen";
+import LookStep from "../components/onboarding/LookStep";
 import SheetHost from "../components/sheets/SheetHost";
 import Toast from "../components/shared/Toast";
 import "../styles/index.css";
@@ -16,10 +17,23 @@ import "../styles/index.css";
 // A design preview: the app's real screens, fed sample data. Run with
 //   npx vite --config vite.preview.config.js
 // Nothing here ships — it is a separate entry with its own config.
+function LookPreview() {
+  const [look, setLook] = useState("system");
+  return (
+    <div className="view sf-view">
+      <div className="sf">
+        <LookStep value={look} setTheme={setLook} onEnter={() => {}} />
+      </div>
+    </div>
+  );
+}
+
 function Shell() {
   const { sheet } = useUI();
   // Full-screen states the real app shows instead of the tabs.
-  if (useLocation().pathname === "/pending") return <PendingConsentScreen />;
+  const path = useLocation().pathname;
+  if (path === "/pending") return <PendingConsentScreen />;
+  if (path === "/look") return <LookPreview />;
   return (
     <>
       <Suspense fallback={<div className="view" />}>
