@@ -10,7 +10,7 @@
 // long it is kept; existing consent records keep the version they were
 // taken under, which is the point.
 export const TERMS_VERSION = "2026-09-18.draft";
-export const PRIVACY_VERSION = "2026-09-18.draft";
+export const PRIVACY_VERSION = "2026-10-11.draft";
 
 // What the guardian is told Forest collects, in the consent screen's own
 // words. Kept here rather than inline so the SMS, the consent page and the
