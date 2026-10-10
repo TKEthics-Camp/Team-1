@@ -6,7 +6,8 @@
    only just notice, no hairlines around them, heavy tight headings, grey
    body text, and pills everywhere — the filter row, the buttons, the small
    coloured tags. Black is the one strong colour for the thing that is
-   selected or the thing to press; colour otherwise appears only in small
+   selected or the thing to press — a matte, slightly grey black rather
+   than pure black, and the dark theme is charcoal rather than ink; colour otherwise appears only in small
    tinted tags.
 
    It lives in one file, loaded last, on purpose: replacing this file
@@ -23,11 +24,11 @@
   --card-2:   #F2F2F2;
   --sel:      #F2F2F2;
   --line:     #E8E8E8;
-  --ink:      #141414;
+  --ink:      #232325;
   --body-ink: #3D3D3D;
   --muted:    #707070;
   --dim:      #A6A6A6;
-  --accent:   #141414;
+  --accent:   #2C2C2E;
   --accent-ink: #FFFFFF;
   --candy:    #E5484D;
   --good:     #1F8A4C;
@@ -58,7 +59,7 @@
 
   --home-fill: #F2F2F2;
   --home-card: #FFFFFF;
-  --home-blue: #141414;
+  --home-blue: #2C2C2E;
 
   --r-card: 24px;
   --r-ctl:  999px;
@@ -66,13 +67,13 @@
 }
 
 .stage[data-theme="black"] {
-  --stage-bg: #050505;
-  --app-bg:   #0E0E0F;
-  --shelf:    #19191B;
-  --card:     #19191B;
-  --card-2:   #232326;
-  --sel:      #232326;
-  --line:     #2C2C30;
+  --stage-bg: #121214;
+  --app-bg:   #1A1A1C;
+  --shelf:    #242427;
+  --card:     #242427;
+  --card-2:   #2E2E32;
+  --sel:      #2E2E32;
+  --line:     #36363B;
   --ink:      #F4F4F4;
   --body-ink: #D0D0D0;
   --muted:    #A0A0A6;
@@ -90,14 +91,14 @@
   --tag-amber:     #F2B14A;
   --tag-amber-bg:  rgba(242,177,74,.14);
 
-  --glass:  #19191B;
-  --glass2: #19191B;
+  --glass:  #242427;
+  --glass2: #242427;
   --cloud:  transparent;
   --wash-a: transparent;
   --wash-b: transparent;
 
-  --lg-fill:   #19191B;
-  --lg-fill-2: #19191B;
+  --lg-fill:   #242427;
+  --lg-fill-2: #242427;
   --lg-blur:   none;
   --lg-stroke: transparent;
   --lg-edge:   transparent;
@@ -105,8 +106,8 @@
   --lg-shadow:    0 1px 2px rgba(0,0,0,.5);
   --lg-shadow-lg: 0 18px 40px -16px rgba(0,0,0,.8);
 
-  --home-fill: #232326;
-  --home-card: #19191B;
+  --home-fill: #2E2E32;
+  --home-card: #242427;
   --home-blue: #F4F4F4;
 
   --r-card: 24px;
@@ -151,7 +152,7 @@
 .btn, .tree-view .btn {
   background: var(--accent); color: var(--accent-ink);
   border: none; border-radius: var(--r-ctl);
-  box-shadow: 0 6px 16px -8px rgba(0,0,0,.45);
+  box-shadow: 0 6px 16px -8px rgba(0,0,0,.30);
   font-weight: 600; letter-spacing: -.01em;
 }
 .btn:hover { filter: none; opacity: .9; }
@@ -170,7 +171,7 @@
 }
 .chip[aria-pressed="true"], .tree-view .chip[aria-pressed="true"] {
   background: var(--accent); color: var(--accent-ink); border-color: var(--accent);
-  box-shadow: 0 6px 14px -8px rgba(0,0,0,.5);
+  box-shadow: 0 6px 14px -8px rgba(0,0,0,.32);
 }
 .chip.flame-badge { color: var(--ink); font-weight: 650; }
 .home-bar .chip, .home-bar .lang { background: var(--card); border: 1px solid var(--line); color: var(--ink); }
@@ -192,7 +193,7 @@
 .tabs button[aria-selected="true"], .seg button[aria-pressed="true"],
 .tree-view .tabs button[aria-selected="true"] {
   background: var(--accent); color: var(--accent-ink); border-color: var(--accent);
-  font-weight: 600; box-shadow: 0 6px 14px -8px rgba(0,0,0,.5);
+  font-weight: 600; box-shadow: 0 6px 14px -8px rgba(0,0,0,.32);
 }
 
 /* ---------- fields ---------- */
