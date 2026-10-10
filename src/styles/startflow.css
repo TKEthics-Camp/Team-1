@@ -294,3 +294,16 @@
 .pc-code-row { display: flex; gap: 8px; }
 .pc-code-row .sf-field { flex: 1; min-width: 0; }
 .pc-code-row .btn2 { width: auto; flex: none; padding-inline: 18px; }
+
+/* The waiting-for-a-grown-up screen. Its pieces sat directly on top of each
+   other — the explanation ran into the email label, the class-code section
+   started on the send button's edge, and the three buttons at the foot
+   touched. Spaced here, on this screen only. */
+.pc-screen .sf-inner { gap: 18px; }
+.pc-screen .consent-h { margin: 0; line-height: 1.2; }
+.pc-screen .sf-hint { margin: 0; font-size: 14px; line-height: 1.6; }
+.pc-screen .consent-fine { margin: 0; }
+.pc-screen .sf-optional { padding-top: 4px; }
+.pc-screen .sf-optional .sf-hint { margin-top: 8px; }
+.pc-screen .sf-grow { min-height: 4px; }
+.pc-screen .sf-foot { display: flex; flex-direction: column; gap: 10px; padding: 4px 0 12px; }

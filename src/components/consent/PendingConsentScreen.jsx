@@ -87,15 +87,15 @@ export default function PendingConsentScreen({ withdrawn = false }) {
   const midway = status && status.step1_confirmed_at && !status.step2_confirmed_at;
 
   return (
-    <div className="sf-screen">
+    <div className="sf-screen pc-screen">
       <div className="sf-inner">
         <div className="sf-top">
           <span />
           <LangToggle />
         </div>
 
-        <div className="center" style={{ marginBottom: 8 }}>
-          <Mascot action="sleep" size={96} />
+        <div className="center">
+          <Mascot action="sleep" size={84} />
         </div>
 
         <h1 className="consent-h">{withdrawn ? t("pcWithdrawnTitle") : t("pcTitle")}</h1>

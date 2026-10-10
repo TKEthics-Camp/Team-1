@@ -69,12 +69,19 @@ export default function App() {
     if (!id) setLang("en");
   }, [user, setLang]);
 
+  // Only this account's own profile may set the language. A browser can
+  // still be holding the previous person's cached profile when someone new
+  // signs up — its owner is checked and it is cleared during sign-in sync,
+  // but that comes a moment later, after this has already run. Taken at
+  // face value, a new account inherited whatever language the last person
+  // here used. A profile with no userId yet is a cache from before that
+  // field existed; sign-in sync stamps it, and this runs again when it does.
   useEffect(() => {
-    if (!syncedLang.current && profile && profile.lang) {
-      setLang(profile.lang);
-      syncedLang.current = true;
-    }
-  }, [profile, setLang]);
+    if (syncedLang.current || !profile || !profile.lang || !user) return;
+    if (profile.userId !== user.id) return;
+    setLang(profile.lang);
+    syncedLang.current = true;
+  }, [profile, user, setLang]);
 
   // A device's local cache belongs to whoever's signed in. If someone signs
   // out (shared computer, different student next), wipe the local cache so

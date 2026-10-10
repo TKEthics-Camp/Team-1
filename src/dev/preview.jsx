@@ -1,6 +1,6 @@
 import { StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { I18nProvider } from "../i18n/I18nContext";
 import { UIProvider, useUI } from "../ui/UIContext";
 import HomeScreen from "../components/home/HomeScreen";
@@ -8,6 +8,7 @@ import ProfileScreen from "../components/profile/ProfileScreen";
 import ExploreScreen from "../components/explore/ExploreScreen";
 import InterestScreen from "../components/interest/InterestScreen";
 import BottomNav from "../components/shared/BottomNav";
+import PendingConsentScreen from "../components/consent/PendingConsentScreen";
 import SheetHost from "../components/sheets/SheetHost";
 import Toast from "../components/shared/Toast";
 import "../styles/index.css";
@@ -17,6 +18,8 @@ import "../styles/index.css";
 // Nothing here ships — it is a separate entry with its own config.
 function Shell() {
   const { sheet } = useUI();
+  // Full-screen states the real app shows instead of the tabs.
+  if (useLocation().pathname === "/pending") return <PendingConsentScreen />;
   return (
     <>
       <Suspense fallback={<div className="view" />}>
