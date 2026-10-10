@@ -353,8 +353,8 @@ at the first screen after auth.
 
   Journal: a timeline, newest first. Each entry shows its weekday and date
   on the left and a card on the right with its text, a voice note player
-  if present, small "Pinned" and "Public" tags, and edit and delete
-  controls.
+  if present, small tags for its duration, a voice note, "Pinned" and
+  "Public", and edit and delete controls.
 
   Album: photo grid. Tap opens the full viewer. A photo can be pinned as
   the tree's cover image; with no photo, the cover falls back to a
