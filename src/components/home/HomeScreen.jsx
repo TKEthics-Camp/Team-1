@@ -81,7 +81,6 @@ export default function HomeScreen() {
       <div className="view home-view">
         <header className="page-head">
           <h1>{t(greetingKey()) + profile.name}</h1>
-          <p className="page-sub">{t("homeSub")}</p>
         </header>
         {dying && <DyingBanner interest={dying} entries={entries} photos={photos} />}
         {due.length > 0 && <NudgeBanner interests={due} />}
