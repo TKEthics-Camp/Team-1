@@ -430,6 +430,7 @@ export const STR = {
   deleteAccount: ["Delete my account", "删除我的账号"],
   deleteAccountConfirm: ["Yes, delete everything forever", "确认永久删除"],
   deleteAccountWarning: ["This erases your account, every tree, photo, journal entry and voice note. It cannot be undone.", "这会永久删除你的账号，以及所有的树、照片、日记和语音。此操作无法撤销。"],
+  deleteFilesFailed: ["Some of your photos or voice notes couldn't be removed, so your account wasn't deleted yet. Check your connection and try again.", "有些照片或语音没能删除，所以账号还没有被删除。请检查网络后再试一次。"],
   deleteAccountFailed: ["Couldn't delete the account. Try again.", "删除失败，请重试。"],
   done:         ["Done — now go do it.", "好了 —— 去做吧。"],
   leveledUpTitle: ["Your {h} tree grew!", "你的{h}长大了！"],

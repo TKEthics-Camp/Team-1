@@ -33,7 +33,7 @@ export default function PendingConsentScreen({ withdrawn = false }) {
     if (!result.ok) {
       setDeleting(false);
       setDeleteArmed(false);
-      setDeleteError(result.message);
+      setDeleteError(result.reason === "files" ? t("deleteFilesFailed") : result.message);
       return;
     }
     await signOut();

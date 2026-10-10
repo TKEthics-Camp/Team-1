@@ -113,7 +113,7 @@ export default function ProfileScreen() {
       // Shown on the screen, not just toasted: this one can't be retried
       // into working, and the server's own wording is the only thing that
       // says what actually went wrong.
-      setDeleteError(result.message);
+      setDeleteError(result.reason === "files" ? t("deleteFilesFailed") : result.message);
       showToast(t("deleteAccountFailed"));
       return;
     }

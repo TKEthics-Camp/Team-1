@@ -329,21 +329,34 @@ export async function downloadAudioBlob(storagePath) {
 // Storage has no cascade. Deleting a photos row leaves its file sitting in
 // the bucket, so every path that erases a user's content has to sweep the
 // buckets explicitly. Both bucket layouts are flat — `${userId}/${id}` — so
-// one non-recursive list per bucket is the whole set.
+// a non-recursive list is the whole set.
+//
+// A list returns at most 1,000 names, so this goes round until a list comes
+// back empty. Each pass deletes what it listed, which is why it always asks
+// for the first page rather than paging forward. A pass that lists files and
+// then fails to remove them stops the loop: going round again would only see
+// the same files.
+const CLEAR_BATCH = 1000;
+
 async function clearBucket(bucket, userId) {
-  const { data, error } = await supabase.storage.from(bucket).list(userId, { limit: 1000 });
-  if (error) {
-    console.error(`Sync (list ${bucket}) failed:`, error);
-    return false;
+  for (;;) {
+    const { data, error } = await supabase.storage.from(bucket).list(userId, { limit: CLEAR_BATCH });
+    if (error) {
+      console.error(`Sync (list ${bucket}) failed:`, error);
+      return false;
+    }
+    const paths = (data || []).map((f) => `${userId}/${f.name}`);
+    if (!paths.length) return true;
+    const { data: removed, error: removeError } = await supabase.storage.from(bucket).remove(paths);
+    if (removeError) {
+      console.error(`Sync (clear ${bucket}) failed:`, removeError);
+      return false;
+    }
+    if (!removed || removed.length === 0) {
+      console.error(`Sync (clear ${bucket}) removed nothing; stopping.`);
+      return false;
+    }
   }
-  const paths = (data || []).map((f) => `${userId}/${f.name}`);
-  if (!paths.length) return true;
-  const { error: removeError } = await supabase.storage.from(bucket).remove(paths);
-  if (removeError) {
-    console.error(`Sync (clear ${bucket}) failed:`, removeError);
-    return false;
-  }
-  return true;
 }
 
 // Erases everything this user planted, on the server. Reports whether it
@@ -601,12 +614,20 @@ export async function joinClass(code) {
 // of, and "that didn't work" tells them nothing and tells us less — the
 // real error names the exact table and privilege involved, and it was
 // going to a console nobody opens.
+//
+// If the files could not all be removed, the account is left in place and
+// this says so. Deleting the account anyway would strand whatever files were
+// left with no owner and no way for anyone to ask for them to go; leaving it
+// means trying again finishes the job.
 export async function deleteMyAccount(userId) {
   if (userId) {
-    await Promise.all([
+    const swept = await Promise.all([
       clearBucket("photos", userId),
       clearBucket("voice-notes", userId),
     ]);
+    if (!swept.every(Boolean)) {
+      return { ok: false, reason: "files" };
+    }
   }
   const { error } = await supabase.rpc("delete_my_account");
   if (error) {
