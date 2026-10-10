@@ -141,7 +141,14 @@
   font-size: 14px; font-weight: 700; line-height: 1;
   transition: background .15s ease;
 }
-.sf-check[aria-pressed="true"] .sf-box { background: var(--sf-blue); }
+/* The tick has to be the opposite colour of the filled circle: it was the
+   ink colour on an ink-coloured circle, so a chosen hobby looked like a
+   plain dark dot. An empty circle gets an outline, since its pale fill
+   alone all but vanished against the page. */
+.sf-box { border: 1.5px solid color-mix(in srgb, var(--dim) 55%, var(--sf-line)); background: var(--card); }
+.sf-check[aria-pressed="true"] .sf-box {
+  background: var(--sf-blue); border-color: var(--sf-blue); color: var(--accent-ink);
+}
 .sf-check-label { font-size: 17px; letter-spacing: -.015em; }
 
 /* ---------- fields ---------- */
