@@ -337,6 +337,26 @@ input:focus-visible, textarea:focus-visible, .sf .sf-field:focus {
 .nudge-actions { display: flex; gap: 8px; margin-top: 14px; }
 .nudge-actions .btn, .nudge-actions .btn2 { width: auto; padding: 9px 18px; font-size: 14px; }
 
+/* several hobbies due: one tappable pill each, "Later" quietly at the end */
+.nudge-chips {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px;
+}
+.nudge-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px 8px 16px; border-radius: 999px;
+  background: var(--card-2); color: var(--ink); border: none;
+  font-family: var(--body); font-size: 14px; font-weight: 600; letter-spacing: -.01em;
+  cursor: pointer;
+}
+.nudge-chip span { color: var(--muted); font-weight: 500; }
+.nudge-chip:hover { background: var(--line); }
+.nudge-later {
+  margin-left: auto; padding: 8px 6px;
+  background: none; border: none; color: var(--muted);
+  font-family: var(--body); font-size: 14px; font-weight: 550; cursor: pointer;
+}
+.nudge-later:hover { color: var(--ink); }
+
 .memory .when { font-family: var(--body); font-size: 13px; color: var(--dim); }
 .memory .text { color: var(--body-ink); line-height: 1.6; }
 
