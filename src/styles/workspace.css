@@ -352,3 +352,16 @@ input:focus-visible, textarea:focus-visible, .sf .sf-field:focus {
   font-weight: 600; box-shadow: none;
 }
 .idea-add:hover { background: var(--card-2); }
+
+/* ---------- every button is a pill ----------
+   The owner's rule: every button gets the same fully rounded ends as
+   Continue. Listed in one place, with the context-specific selectors that
+   used to give some of them squarer corners (.tree-sheet, .tree-view), so
+   nothing elsewhere can quietly win. Round icon buttons and the picture
+   tiles (species, themes) keep their own shapes. */
+.btn, .btn2, .sf-btn, .sf-pill, .sf-pill.sf-look, .sf-day,
+.chip, .lang, .idea-add, .tabs button, .seg button,
+.tree-view .btn, .tree-view .btn2, .tree-view .chip, .tree-view .tabs button,
+.tree-sheet .btn, .tree-sheet .btn2, .tree-sheet .day-btn {
+  border-radius: 999px;
+}
