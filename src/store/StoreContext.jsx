@@ -11,6 +11,7 @@ import {
   updateLang, updateTheme, uploadAudioBlob,
 } from "../lib/remote";
 import { earnedIds } from "../lib/badges";
+import { loadPendingSync, savePendingSync, forgetPendingSync } from "../lib/pendingSync";
 
 const StoreCtx = createContext(null);
 
@@ -41,15 +42,39 @@ export function StoreProvider({ children }) {
   // "retry" just means "call the same push again later with whatever the
   // record looks like now" — no need to remember what specifically
   // changed, only which records still owe the server a successful push.
-  // Kept in memory only (not persisted to Dexie): if the app is fully
-  // closed before a retry lands, the next sign-in's reconciliation still
-  // picks up brand-new records the same way it always has, and a fresh
-  // edit re-triggers a push on its own anyway. What this adds is retrying
-  // failed *updates* to something that already exists remotely, which
-  // reconciliation alone never covered.
+  //
+  // What this adds over reconciliation is retrying failed *updates* to
+  // something that already exists remotely: reconciliation only compares
+  // IDs, so an edit to a record the server already has never goes up on its
+  // own. The list is saved per account (see lib/pendingSync), so closing the
+  // app before a retry lands no longer loses the edit — the next open loads
+  // the list back and retries it once reconciliation has run.
   const [pendingSyncIds, setPendingSyncIds] = useState(() => new Set());
   const pendingSyncRef = useRef(pendingSyncIds);
   useEffect(() => { pendingSyncRef.current = pendingSyncIds; }, [pendingSyncIds]);
+
+  // Which account's saved list is loaded. Writing is held off until the
+  // load has happened, or the empty set every session starts with would
+  // overwrite the list it was about to read.
+  const pendingLoadedForRef = useRef(null);
+  useEffect(() => {
+    if (!user || user.isDebug) {
+      // Signing out wipes the local records these keys point at, so the
+      // list means nothing any more — for this device or the next person.
+      if (pendingLoadedForRef.current) forgetPendingSync(pendingLoadedForRef.current);
+      pendingLoadedForRef.current = null;
+      setPendingSyncIds((prev) => (prev.size ? new Set() : prev));
+      return;
+    }
+    if (pendingLoadedForRef.current === user.id) return;
+    const saved = loadPendingSync(user.id);
+    pendingLoadedForRef.current = user.id;
+    if (saved.length) setPendingSyncIds((prev) => new Set([...prev, ...saved]));
+  }, [user]);
+  useEffect(() => {
+    const id = pendingLoadedForRef.current;
+    if (id) savePendingSync(id, pendingSyncIds);
+  }, [pendingSyncIds]);
 
   function markSyncResult(store, id, ok) {
     const key = store + ":" + id;
@@ -500,6 +525,11 @@ export function StoreProvider({ children }) {
           return [...list, ...adoptedPhotos.filter((p) => !ids.has(p.id))];
         });
       }
+
+      // Edits that failed last time the app was open. Run after the
+      // reconcile rather than waiting 45 seconds for the timer, so a student
+      // who opens the app, glances and closes it again still gets them up.
+      retryPendingRef.current();
     })();
   }, [user, loading]);
 

@@ -18,7 +18,7 @@ import { amIModerator } from "../../lib/remote";
 
 export default function ProfileScreen() {
   const { t, lang, nOf } = useI18n();
-  const { profile, interests, photos, entries, clearGarden, updateProfile, setDiscoverable } = useStore();
+  const { profile, interests, photos, entries, clearGarden, updateProfile, setDiscoverable, pendingSyncCount, retrySync } = useStore();
   const { signOut, user } = useAuth();
   const { openSheet, showToast } = useUI();
   const navigate = useNavigate();
@@ -28,6 +28,18 @@ export default function ProfileScreen() {
   const [deleting, setDeleting] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+  // Logging out wipes this device's copy, so anything that never reached
+  // the server goes with it. With changes still waiting, the first tap
+  // says so and tries once more; the second tap logs out regardless.
+  const [logoutArmed, setLogoutArmed] = useState(false);
+  function handleLogOut() {
+    if (pendingSyncCount > 0 && !logoutArmed) {
+      setLogoutArmed(true);
+      retrySync();
+      return;
+    }
+    signOut();
+  }
   const [exporting, setExporting] = useState(false);
 
   const currentTheme = (profile && profile.theme) || DEFAULT_THEME;
@@ -297,7 +309,10 @@ export default function ProfileScreen() {
         <button className="btn2 btn-danger" onClick={handleDeleteAccount} disabled={deleting}>
           {deleteArmed ? t("deleteAccountConfirm") : t("deleteAccount")}
         </button>
-        <button className="btn2" onClick={signOut}>{t("logOut")}</button>
+        {logoutArmed && pendingSyncCount > 0 && <div className="sub">{t("logOutUnsaved")}</div>}
+        <button className="btn2" onClick={handleLogOut}>
+          {logoutArmed && pendingSyncCount > 0 ? t("logOutAnyway") : t("logOut")}
+        </button>
       </div>
     </>
   );
