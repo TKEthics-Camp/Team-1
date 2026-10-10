@@ -11,11 +11,12 @@ import { useBadgeWatcher } from "./lib/useBadgeWatcher";
 import AuthFlow from "./components/auth/AuthFlow";
 import GuardianConsentPage from "./components/consent/GuardianConsentPage";
 import PendingConsentScreen from "./components/consent/PendingConsentScreen";
+import AgeRequiredScreen from "./components/consent/AgeRequiredScreen";
 import PolicyScreen from "./components/policy/PolicyScreen";
 import SupportScreen from "./components/policy/SupportScreen";
 import { guardianTokenFromLocation, policyFromLocation } from "./lib/guardianLink";
 import { myConsentStatus, refreshConsentState } from "./lib/remote";
-import { forgetConsentStatus } from "./lib/useConsentStatus";
+import { forgetConsentStatus, signupGateSettled } from "./lib/useConsentStatus";
 import HomeScreen from "./components/home/HomeScreen";
 import BottomNav from "./components/shared/BottomNav";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
@@ -90,6 +91,7 @@ export default function App() {
     let cancelled = false;
     if (!user) { setConsent(null); return; }
     (async () => {
+      await signupGateSettled();
       await refreshConsentState();
       const status = await myConsentStatus();
       if (!cancelled) setConsent(status);
@@ -135,6 +137,8 @@ export default function App() {
           // yanking it away is worse than a blank one, and this only lasts a
           // single round trip.
           <div className="view" />
+        ) : consent && consent.state === "age_required" ? (
+          <AgeRequiredScreen />
         ) : consent && (consent.state === "pending" || consent.state === "withdrawn") ? (
           <PendingConsentScreen withdrawn={consent.state === "withdrawn"} />
         ) : profile ? (

@@ -161,6 +161,7 @@ export const STR = {
   agClassHint:  ["Leave this empty if you're joining on your own.", "如果你是自己加入的，请留空。"],
   agContinue:   ["Continue", "继续"],
   agNeedDate:   ["Please enter your date of birth.", "请输入你的出生日期。"],
+  arSub:        ["Your account was made, but we didn't get your birthday. Forest needs it before you can start.", "你的账号已经创建，但我们还没收到你的生日。开始使用 Forest 之前需要先填写。"],
   agBadDate:    ["That date doesn't look right.", "这个日期看起来不太对。"],
 
   // ---- pending consent (the child's waiting screen)
