@@ -145,7 +145,7 @@ Open Explore → "For you", a short personalised set of hobby ideas from categor
 
 ### 6.1 Home — garden (individual accounts)
 
-- A greeting by time of day and name.
+- A greeting by time of day and name, under a small line with today's date.
 - A horizontally swipeable wall of trees, one per interest, each drawn at its computed stage and health, with a page indicator.
 - A zoomed-out grid of the whole forest, toggled from the top bar, for gardens too large to swipe.
 - **Streak chip:** days logged across all hobbies combined. Logging any one tree keeps the whole streak alive. Shows an animated flame, or a leaf while a rest day is bridging the gap.
@@ -261,7 +261,7 @@ Route `/user/:userId/interest/:interestId`. Read-only with respect to the owner'
 - The language toggle is in nearly every top bar.
 - A sync indicator appears only after something has been stuck for 30 seconds, and offers a manual retry.
 - **Badges:** 12 total, across four families — logs (1, 25, 100), streak (3, 7, 30, 100), trees planted (1, 5) and species variety (5), fully grown trees (1, 3).
-- **Visual language** (`src/styles/workspace.css`, loaded last so it can be replaced without touching behaviour): mostly matte grey-black and very light grey — an off-white page, white cards with large corners and a faint shadow, heavy headings, grey-black for whatever is selected or primary, every text button fully rounded. Colour appears only in small tinted tags with thin line icons (`src/components/shared/Icon.jsx`), in four soft tones — amber, green, purple, blue — for a journal entry's duration, voice note, pinned and public state, Explore's categories, the memory card, "planted", and the stat badges.
+- **Visual language** (`src/styles/workspace.css`, loaded last so it can be replaced without touching behaviour): calm and flat, after a reference the owner chose. A cool light-grey page, white cards with a hairline outline and no shadow, one heavy heading with a small date line above it and a short green rule below it, plain sentence-case section titles, and matte grey-black for whatever is selected or primary, with every text button fully rounded. Colour appears only in thin line icons and tiny tinted tags (`src/components/shared/Icon.jsx`) in four tones — green, blue, purple, amber — for a journal entry's duration, voice note, pinned and public state, Explore's categories, the memory card, "planted", and the stat icons.
 
 ---
 

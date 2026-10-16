@@ -16,6 +16,7 @@ import { saveFile } from "../../lib/saveFile";
 import { useConsentStatus } from "../../lib/useConsentStatus";
 import { amIModerator } from "../../lib/remote";
 import { useNotificationPermission, requestNotificationPermission, isNative } from "../../lib/notifications";
+import Icon from "../shared/Icon";
 
 export default function ProfileScreen() {
   const { t, lang, nOf } = useI18n();
@@ -214,8 +215,9 @@ export default function ProfileScreen() {
           </>
         )}
 
-        <button className="btn2" onClick={() => updateProfile({ soundOn: !soundOn })}>
-          {soundOn ? "🔊 " + t("soundOn") : "🔈 " + t("soundOff")}
+        <button className="btn2 btn-with-ico" onClick={() => updateProfile({ soundOn: !soundOn })}>
+          <Icon name={soundOn ? "volume" : "volumeOff"} size={17} />
+          {soundOn ? t("soundOn") : t("soundOff")}
         </button>
 
         {locked ? (
