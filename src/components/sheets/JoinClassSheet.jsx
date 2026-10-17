@@ -4,6 +4,7 @@ import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
 import Sheet from "../shared/Sheet";
 import Field from "../shared/Field";
+import Icon from "../shared/Icon";
 
 // Lets an "individual" account join a class with the code their teacher's
 // org account generated at onboarding. Only sets classCode, never accountType: joining a class doesn't
@@ -39,7 +40,7 @@ export default function JoinClassSheet() {
       <p className="sub">{t("classCodeSub")}</p>
 
       <div className="safe-note">
-        <span aria-hidden="true">👀</span>
+        <span aria-hidden="true"><Icon name="eye" size={16} /></span>
         <span>{t("classCodeWarning")}</span>
       </div>
 

@@ -18,6 +18,20 @@ import { amIModerator } from "../../lib/remote";
 import { useNotificationPermission, requestNotificationPermission, isNative } from "../../lib/notifications";
 import Icon from "../shared/Icon";
 
+// One row of a grouped list: an icon, the label, and a chevron (or
+// whatever `trailing` says; null for actions that do not open anything).
+// The grouped list is the reference's way of holding many settings without
+// a wall of buttons.
+function ListRow({ icon, children, onClick, disabled = false, danger = false, trailing }) {
+  return (
+    <button type="button" className={"list-row" + (danger ? " danger" : "")} onClick={onClick} disabled={disabled}>
+      <Icon name={icon} size={18} className="list-ico" />
+      <span className="list-label">{children}</span>
+      {trailing === undefined ? <Icon name="chevronRight" size={16} className="list-chev" /> : trailing}
+    </button>
+  );
+}
+
 export default function ProfileScreen() {
   const { t, lang, nOf } = useI18n();
   const { profile, interests, photos, entries, clearGarden, updateProfile, setDiscoverable, pendingSyncCount, retrySync } = useStore();
@@ -152,7 +166,7 @@ export default function ProfileScreen() {
             onClick={() => openSheet("avatar")}
           >
             <PersonAvatar avatar={profile.avatar} decoration={equippedDecoration} size={76} />
-            <span className="avatar-edit-badge" aria-hidden="true">✎</span>
+            <span className="avatar-edit-badge" aria-hidden="true"><Icon name="pencil" size={13} /></span>
           </button>
           <button
             type="button"
@@ -164,11 +178,11 @@ export default function ProfileScreen() {
             <span style={{ fontFamily: "var(--display)", fontSize: 19, fontWeight: 600 }}>
               {profile.name}
             </span>
-            <span aria-hidden="true">✎</span>
+            <span aria-hidden="true" style={{ color: "var(--muted)", display: "inline-flex" }}><Icon name="pencil" size={15} /></span>
           </button>
           {!isOrg && (
             <div className="coin-row">
-              <span className="chip coin-pill">{"🪙 " + coins}</span>
+              <span className="chip coin-pill"><Icon name="coin" size={15} />{coins}</span>
               <button className="chip" onClick={() => navigate("/market")}>{t("market")}</button>
             </div>
           )}
@@ -204,27 +218,30 @@ export default function ProfileScreen() {
         </div>
         <div className="sub">{t("themeNote")}</div>
 
-        {!isOrg && (
-          <>
-            <button className="btn2" disabled={!permission || granted || blocked || unsupported} onClick={requestReminders}>
-              {granted ? "✓ " + t("remindersOn")
+        <div className="list-group">
+          {!isOrg && (
+            <ListRow
+              icon="bell"
+              disabled={!permission || granted || blocked || unsupported}
+              onClick={requestReminders}
+              trailing={granted ? <Icon name="check" size={16} /> : null}
+            >
+              {granted ? t("remindersOn")
                 : blocked ? (isNative() ? t("remindersBlockedIos") : t("remindersBlocked"))
                 : unsupported ? t("remindersUnsupported")
                 : t("turnOn")}
-            </button>
-          </>
-        )}
-
-        <button className="btn2 btn-with-ico" onClick={() => updateProfile({ soundOn: !soundOn })}>
-          <Icon name={soundOn ? "volume" : "volumeOff"} size={17} />
-          {soundOn ? t("soundOn") : t("soundOff")}
-        </button>
+            </ListRow>
+          )}
+          <ListRow icon={soundOn ? "volume" : "volumeOff"} onClick={() => updateProfile({ soundOn: !soundOn })} trailing={null}>
+            {soundOn ? t("soundOn") : t("soundOff")}
+          </ListRow>
+        </div>
 
         {locked ? (
           <>
             <div className="label">{t("dlTitle")}</div>
             <div className="safe-note">
-              <span aria-hidden="true">🔒</span>
+              <span aria-hidden="true"><Icon name="lock" size={16} /></span>
               <span>{needsReconsent ? t("dlReconsent") : t("dlBody")}</span>
             </div>
           </>
@@ -248,76 +265,72 @@ export default function ProfileScreen() {
             <div className="sub">{t("joinedClass")}</div>
           ) : (
             <>
-              <button className="btn2" onClick={() => openSheet("joinClass")}>{t("joinClass")}</button>
+              <div className="list-group">
+                <ListRow icon="school" onClick={() => openSheet("joinClass")}>{t("joinClass")}</ListRow>
+              </div>
               <div className="sub">{t("joinClassNote")}</div>
             </>
           )
         )}
 
         {!isOrg && (
-          <>
-            <button className="btn2" onClick={() => openSheet("badges")}>{t("badges")}</button>
-            <button className="btn2" onClick={() => openSheet("yearReview")}>{t("yearReview")}</button>
-            <button className="btn2" onClick={() => openSheet("memories")}>{t("memories")}</button>
-            <button className="btn2" onClick={() => openSheet("watching")}>{t("watchingTitle")}</button>
-            <button className="btn2" onClick={() => openSheet("trash")}>{t("recentlyDeleted")}</button>
-          </>
-        )}
-
-        {isMod && (
-          <button className="btn2" onClick={() => navigate("/reports")}>
-            Reports
-          </button>
+          <div className="list-group">
+            <ListRow icon="trophy" onClick={() => openSheet("badges")}>{t("badges")}</ListRow>
+            <ListRow icon="calendar" onClick={() => openSheet("yearReview")}>{t("yearReview")}</ListRow>
+            <ListRow icon="sparkles" onClick={() => openSheet("memories")}>{t("memories")}</ListRow>
+            <ListRow icon="eye" onClick={() => openSheet("watching")}>{t("watchingTitle")}</ListRow>
+            <ListRow icon="trash" onClick={() => openSheet("trash")}>{t("recentlyDeleted")}</ListRow>
+          </div>
         )}
 
         {/* Both account types have a password, so this sits outside the
             individual-only block above. */}
-        <button className="btn2" onClick={() => openSheet("password")}>{t("pwTitle")}</button>
-        <button className="btn2" onClick={() => openSheet("recovery")}>{t("recTitle")}</button>
+        <div className="list-group">
+          <ListRow icon="key" onClick={() => openSheet("password")}>{t("pwTitle")}</ListRow>
+          <ListRow icon="shield" onClick={() => openSheet("recovery")}>{t("recTitle")}</ListRow>
+          {isMod && <ListRow icon="flag" onClick={() => navigate("/reports")}>Reports</ListRow>}
+        </div>
 
         {/* Apple 5.1.1(i) wants the policy reachable inside the app, and a
             student or parent looking for it should not have to leave. */}
-        <button className="btn2" onClick={() => { window.location.href = (import.meta.env.BASE_URL || "/") + "privacy"; }}>
-          {t("privacyTitle")}
-        </button>
-        <button className="btn2" onClick={() => { window.location.href = (import.meta.env.BASE_URL || "/") + "terms"; }}>
-          {t("termsTitle")}
-        </button>
-        <button className="btn2" onClick={() => { window.location.href = (import.meta.env.BASE_URL || "/") + "support"; }}>
-          {t("helpTitle")}
-        </button>
+        <div className="list-group">
+          <ListRow icon="lock" onClick={() => { window.location.href = (import.meta.env.BASE_URL || "/") + "privacy"; }}>
+            {t("privacyTitle")}
+          </ListRow>
+          <ListRow icon="book" onClick={() => { window.location.href = (import.meta.env.BASE_URL || "/") + "terms"; }}>
+            {t("termsTitle")}
+          </ListRow>
+          <ListRow icon="help" onClick={() => { window.location.href = (import.meta.env.BASE_URL || "/") + "support"; }}>
+            {t("helpTitle")}
+          </ListRow>
+        </div>
 
-        <div className="grow" />
-
-        {!isOrg && (
-          <>
-            <div className="sub">{t("dataNote")}</div>
-
-            {/* The armed state used to be a label change and nothing else,
-                which is easy to tap straight past without noticing anything
-                happened at all. */}
-            {armed && <div className="sub">{t("clearAllWarning")}</div>}
-            <button className="btn2 btn-danger" onClick={handleClear} disabled={clearing}>
-              {armed ? t("confirmClear") : t("clearAll")}
-            </button>
-          </>
-        )}
-
-        {/* Before delete, deliberately: someone about to erase everything
-            should pass the way to keep a copy on the way there. */}
-        <button className="btn2" disabled={exporting} onClick={handleExport}>
-          {exporting ? t("exportPreparing") : t("exportData")}
-        </button>
-
+        {!isOrg && <div className="sub">{t("dataNote")}</div>}
+        {/* The armed state used to be a label change and nothing else,
+            which is easy to tap straight past without noticing anything
+            happened at all. */}
+        {armed && <div className="sub">{t("clearAllWarning")}</div>}
         {deleteArmed && <div className="sub">{t("deleteAccountWarning")}</div>}
         {deleteError && <div className="field-error" style={{ overflowWrap: "anywhere" }}>{deleteError}</div>}
-        <button className="btn2 btn-danger" onClick={handleDeleteAccount} disabled={deleting}>
-          {deleteArmed ? t("deleteAccountConfirm") : t("deleteAccount")}
-        </button>
         {logoutArmed && pendingSyncCount > 0 && <div className="sub">{t("logOutUnsaved")}</div>}
-        <button className="btn2" onClick={handleLogOut}>
-          {logoutArmed && pendingSyncCount > 0 ? t("logOutAnyway") : t("logOut")}
-        </button>
+        <div className="list-group">
+          {/* Before delete, deliberately: someone about to erase everything
+              should pass the way to keep a copy on the way there. */}
+          <ListRow icon="download" disabled={exporting} onClick={handleExport} trailing={null}>
+            {exporting ? t("exportPreparing") : t("exportData")}
+          </ListRow>
+          {!isOrg && (
+            <ListRow icon="trash" danger disabled={clearing} onClick={handleClear} trailing={null}>
+              {armed ? t("confirmClear") : t("clearAll")}
+            </ListRow>
+          )}
+          <ListRow icon="x" danger disabled={deleting} onClick={handleDeleteAccount} trailing={null}>
+            {deleteArmed ? t("deleteAccountConfirm") : t("deleteAccount")}
+          </ListRow>
+          <ListRow icon="logout" onClick={handleLogOut} trailing={null}>
+            {logoutArmed && pendingSyncCount > 0 ? t("logOutAnyway") : t("logOut")}
+          </ListRow>
+        </div>
       </div>
     </>
   );

@@ -45,7 +45,7 @@ export default function OrbWall({ interests, photos, entries }) {
               <Tree interest={it} size={280} stage={stage} health={health} className={alive && health === "healthy" ? "alive" : ""} />
               <div className="tree-name">{nameOf(it)}</div>
               <div className="tree-meta">
-                {health === "dead" ? <span className="dead">🥀 {t("hlDead")}</span> : fmtHours(minutes)}
+                {health === "dead" ? <span className="dead">{t("hlDead")}</span> : fmtHours(minutes)}
               </div>
             </button>
           );

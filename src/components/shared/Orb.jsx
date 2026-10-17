@@ -2,6 +2,7 @@ import { useI18n } from "../../i18n/I18nContext";
 import { useObjectURL } from "../../lib/image";
 import { fmtHours } from "../../lib/derived";
 import { shade } from "../../lib/color";
+import Icon from "./Icon";
 
 // The glowing sphere: replaces the original orbEl(). `label` shows the
 // interest's own name + hours + streak baked into the glass.
@@ -26,7 +27,7 @@ export default function Orb({ interest, size, faceBlob = null, label = false, mi
             <span className="nm" style={{ fontSize: Math.round(size * 0.125) }}>{nameOf(interest)}</span>
             <span className="hrs" style={{ fontSize: Math.round(size * 0.115) }}>{fmtHours(minutes)}</span>
             {streak > 0 && (
-              <span className="flame" style={{ fontSize: Math.round(size * 0.10) }}>{"🔥 " + streak}</span>
+              <span className="flame" style={{ fontSize: Math.round(size * 0.10) }}><Icon name="flame" size={Math.round(size * 0.1)} />{" " + streak}</span>
             )}
           </span>
         )}

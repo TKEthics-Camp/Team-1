@@ -5,6 +5,7 @@ import { useUI } from "../../ui/UIContext";
 import { DECORATIONS } from "../../lib/constants";
 import { fetchClassmates } from "../../lib/remote";
 import PersonAvatar from "../shared/PersonAvatar";
+import Icon from "../shared/Icon";
 
 // The interconnected web: you at the centre, real classmates (anyone who's
 // joined with the same class code) orbiting. Tapping a node opens their
@@ -39,7 +40,7 @@ export default function SchoolTab() {
   return (
     <>
       <div className="safe-note">
-        <span aria-hidden="true">🏫</span>
+        <span aria-hidden="true"><Icon name="school" size={16} /></span>
         <span>{t("schoolNote")}</span>
       </div>
       <div className="row">

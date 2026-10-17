@@ -140,7 +140,7 @@ export default function PublicInterestScreen() {
   return (
     <>
       <TopBar>
-        <button className="icon" aria-label={t("home")} onClick={goBack}>←</button>
+        <button className="icon" aria-label={t("home")} onClick={goBack}><Icon name="chevronLeft" size={22} /></button>
         <h1>{nameOf(it)}</h1>
         <span className="sub grow">{t("viewOnly")}</span>
         {/* Reports the tree itself. Blocking its owner takes their whole

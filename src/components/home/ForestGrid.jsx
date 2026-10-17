@@ -36,7 +36,7 @@ export default function ForestGrid({ interests, photos, entries }) {
             />
             <div className="tree-name">{nameOf(it)}</div>
             <div className="tree-meta">
-              {health === "dead" ? <span className="dead">🥀 {t("hlDead")}</span> : fmtHours(minutes)}
+              {health === "dead" ? <span className="dead">{t("hlDead")}</span> : fmtHours(minutes)}
             </div>
           </button>
         );

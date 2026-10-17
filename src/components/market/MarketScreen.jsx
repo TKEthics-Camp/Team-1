@@ -6,6 +6,7 @@ import { PALETTE, DECORATIONS } from "../../lib/constants";
 import TopBar from "../shared/TopBar";
 import PersonAvatar from "../shared/PersonAvatar";
 import { coinSound } from "../../lib/feedback";
+import Icon from "../shared/Icon";
 
 export default function MarketScreen() {
   const { t, lang } = useI18n();
@@ -22,9 +23,9 @@ export default function MarketScreen() {
   return (
     <>
       <TopBar>
-        <button className="icon" aria-label={t("back")} onClick={() => navigate("/profile")}>←</button>
+        <button className="icon" aria-label={t("back")} onClick={() => navigate("/profile")}><Icon name="chevronLeft" size={22} /></button>
         <h1>{t("market")}</h1>
-        <span className="chip coin-pill">{"🪙 " + coins}</span>
+        <span className="chip coin-pill"><Icon name="coin" size={15} />{coins}</span>
       </TopBar>
       <div className="view">
         <div className="sub">{t("marketNote")}</div>
@@ -51,7 +52,7 @@ export default function MarketScreen() {
                       disabled={coins < deco.price}
                       onClick={() => { if (buyDecoration(deco.id)) { coinSound(profile); showToast(t("coinsSpent").replace("{n}", deco.price)); } }}
                     >
-                      {"🪙 " + deco.price}
+                      <Icon name="coin" size={14} />{deco.price}
                     </button>
                   )}
                 </div>

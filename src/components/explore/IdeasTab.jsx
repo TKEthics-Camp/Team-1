@@ -4,6 +4,7 @@ import { useStore } from "../../store/StoreContext";
 import { IDEAS } from "../../lib/constants";
 import { recommendations, shuffled, haveName } from "../../lib/explore";
 import IdeaCard from "./IdeaCard";
+import Icon from "../shared/Icon";
 
 export default function IdeasTab() {
   const { t, lang, nameOf } = useI18n();
@@ -40,7 +41,7 @@ export default function IdeasTab() {
         <div className="section-head">
           <span className="h">{r.list.length ? t("allHobbies") : t("exploreSub")}</span>
           <span className="spacer" />
-          <button className="chip" onClick={() => setSeed((s) => s + 1)}>{"🔀 " + t("reshuffle")}</button>
+          <button className="chip btn-with-ico" onClick={() => setSeed((s) => s + 1)}><Icon name="shuffle" size={14} />{t("reshuffle")}</button>
         </div>
         <div className="section-rule" />
         <div className="ideas" style={{ marginTop: 10 }}>

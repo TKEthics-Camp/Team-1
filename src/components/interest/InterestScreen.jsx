@@ -57,7 +57,7 @@ export default function InterestScreen() {
   return (
     <>
       <TopBar className="tree-bar">
-        <button className="icon" aria-label={t("home")} onClick={() => navigate("/")}>←</button>
+        <button className="icon" aria-label={t("home")} onClick={() => navigate("/")}><Icon name="chevronLeft" size={22} /></button>
         <h1>{nameOf(it)}</h1>
         <button className="icon" aria-label={t("editOrb")} onClick={() => openSheet("orb", it.id)}>⋯</button>
       </TopBar>

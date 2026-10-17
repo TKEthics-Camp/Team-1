@@ -383,7 +383,7 @@ input:focus-visible, textarea:focus-visible, .sf .sf-field:focus {
 .section-head .chip { margin-top: 8px; }
 .section-rule { display: none; }
 .ideas {
-  gap: 0; background: var(--card);
+  flex: none; gap: 0; background: var(--card);
   border: 1px solid var(--line); border-radius: var(--r-card); overflow: hidden;
 }
 .ideas .idea {
@@ -510,3 +510,96 @@ select:focus-visible, summary:focus-visible {
 .nudge-later::after, .sf-back::after, .sf-x::after {
   content: ""; position: absolute; inset: -7px;
 }
+
+/* ---------- signup and onboarding ----------
+   The same language as the rest of the app: white hairline pills for
+   choices, the matte pill for what is chosen, a heavy wordmark with the
+   green rule under it, and headings set left beside the mascot rather
+   than centred in what space was left over. */
+.sf-wordmark { font-weight: 800; letter-spacing: -.035em; }
+.sf-wordmark::after {
+  content: ""; display: block; width: 48px; height: 4px; border-radius: 999px;
+  background: var(--rule); margin: 16px auto 0;
+}
+.sf-tagline { color: var(--muted); font-size: 16px; line-height: 1.45; }
+.sf-head { gap: 14px; padding: 4px 0 24px; }
+.sf-head h2, .sf-title-c {
+  font-size: 26px; font-weight: 750; letter-spacing: -.03em; line-height: 1.15;
+}
+.sf-head h2 { text-align: left; }
+.sf-linkbtn { color: var(--ink); font-weight: 600; }
+.sf-err { color: var(--bad); }
+.sf .lang { background: var(--card); border: 1px solid var(--line); color: var(--ink); padding: 5px 12px; }
+
+.sf-pill, .sf-day {
+  background: var(--card); color: var(--ink);
+  border: 1px solid var(--line);
+}
+.sf-pill { padding: 13px 16px; font-size: 16px; }
+.sf-pill[aria-pressed="true"], .sf-day[aria-pressed="true"] {
+  background: var(--accent); color: var(--accent-ink); border-color: var(--accent);
+}
+.sf .sf-field { padding: 11px 14px; }
+.sf .sf-field::placeholder { color: var(--dim); }
+
+/* ---------- icons in place of emoji ----------
+   Every glyph in the chrome is now a line icon from Icon.jsx. These set
+   their size and colour where they sit. */
+.coin-pill, .part-price {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--body); font-variant-numeric: tabular-nums;
+}
+.coin-pill { color: var(--ink); font-weight: 650; }
+.coin-pill .ico, .part-price .ico { color: var(--ico-amber); }
+.part-price { color: var(--muted); font-size: 11.5px; font-weight: 600; }
+.safe-note > span:first-child { display: inline-flex; color: var(--muted); padding-top: 1px; }
+.dying-ico { display: inline-flex; color: var(--ico-amber); animation: none; }
+.trash-ico, .voice-ico { display: inline-flex; color: var(--muted); }
+.sync-chip { display: inline-grid; place-items: center; color: var(--muted); }
+.avatar-edit-badge { display: grid; place-items: center; color: var(--accent-ink); }
+.year-close { display: grid; place-items: center; }
+.topbar .icon { display: inline-grid; place-items: center; color: var(--ink); }
+.post-min { flex: none; font-family: var(--body); }
+.sf-box .ico { display: block; }
+
+/* The small grab handle every iPhone sheet has, so a sheet reads as
+   something that slides away rather than a panel stuck to the bottom. */
+.sheet { position: relative; padding-top: 26px; }
+.sheet::before {
+  content: ""; position: absolute; top: 9px; left: 50%; transform: translateX(-50%);
+  width: 36px; height: 5px; border-radius: 999px; background: var(--line);
+}
+
+/* ---------- grouped lists (Me) ----------
+   One white card per group, rows split by a hairline that starts after the
+   icon — the reference's "Up next" list, and how iOS Settings does it. */
+.list-group {
+  flex: none;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r-card); overflow: hidden;
+}
+.list-row {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 0 14px 0 16px; min-height: 50px;
+  background: none; border: none; text-align: left; cursor: pointer;
+  font-family: var(--body); font-size: 15px; font-weight: 500; letter-spacing: -.01em;
+  color: var(--ink);
+}
+.list-row + .list-row { position: relative; }
+.list-row + .list-row::before {
+  content: ""; position: absolute; top: 0; left: 46px; right: 0;
+  height: 1px; background: var(--line);
+}
+.list-row:hover { background: var(--card-2); }
+.list-row:disabled { cursor: default; }
+.list-row:disabled:hover { background: none; }
+.list-row .list-ico { flex: none; color: var(--muted); }
+.list-row .list-label { flex: 1; padding: 14px 0; line-height: 1.35; }
+.list-row .list-chev { flex: none; color: var(--dim); }
+.list-row > .ico:last-child:not(.list-ico):not(.list-chev) { color: var(--ico-green); }
+.list-row.danger, .list-row.danger .list-ico { color: var(--bad); }
+
+/* Three themes, three across — no tile left alone on a second row. */
+.themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.theme-btn .band { height: 36px; }
+.theme-btn .nm { font-size: 13px; }
