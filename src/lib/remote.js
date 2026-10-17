@@ -146,6 +146,7 @@ export function photoToRow(rec) {
     visibility: rec.visibility || "private",
     is_pinned: !!rec.isPinned,
     created_at: toIso(rec.createdAt),
+    updated_at: toIso(rec.updatedAt || rec.createdAt),
     deleted_at: rec.deletedAt ? toIso(rec.deletedAt) : null,
   };
 }
@@ -164,6 +165,7 @@ export function rowToPhoto(row) {
     isPinned: row.is_pinned,
     deletedAt: row.deleted_at ? toMs(row.deleted_at) : undefined,
     createdAt: toMs(row.created_at),
+    updatedAt: row.updated_at ? toMs(row.updated_at) : toMs(row.created_at),
   };
 }
 
@@ -179,7 +181,7 @@ export function rowToPhoto(row) {
 // have a newer one applied but not an older one).
 const INTEREST_OPTIONAL_COLUMNS = ["deleted_at", "days", "species", "leaf_color", "revived_at"];
 const ENTRY_OPTIONAL_COLUMNS = ["deleted_at", "shared_to_feed", "audio_path", "audio_ms"];
-const PHOTO_OPTIONAL_COLUMNS = ["deleted_at"];
+const PHOTO_OPTIONAL_COLUMNS = ["deleted_at", "updated_at"];
 
 // PGRST204 means PostgREST doesn't recognize one of the columns in the
 // payload, and names exactly which one in its message — so this drops
