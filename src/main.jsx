@@ -14,6 +14,32 @@ import { Capacitor } from "@capacitor/core";
 const native = Capacitor.isNativePlatform();
 if (native) document.documentElement.classList.add("native");
 
+// The iPhone's own text size (Settings › Accessibility › Larger Text).
+// A web view does not pass it to pixel-sized CSS, but it does resolve the
+// system "body" font to the size the person chose, 17px at the default.
+// The whole app is scaled by how far that is from 17, never smaller than
+// as designed and at most a third larger, so the layout still holds.
+// native.css divides full-screen heights by the same factor.
+function followSystemTextSize() {
+  const probe = document.createElement("span");
+  probe.style.font = "-apple-system-body";
+  probe.style.position = "absolute";
+  probe.style.visibility = "hidden";
+  document.body.appendChild(probe);
+  const size = parseFloat(getComputedStyle(probe).fontSize) || 17;
+  probe.remove();
+  const scale = Math.min(1.35, Math.max(1, size / 17));
+  document.documentElement.style.setProperty("--text-scale", String(scale));
+  document.body.style.zoom = scale === 1 ? "" : String(scale);
+}
+if (native) {
+  followSystemTextSize();
+  // Changed in Settings while the app was in the background.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") followSystemTextSize();
+  });
+}
+
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <ErrorBoundary>

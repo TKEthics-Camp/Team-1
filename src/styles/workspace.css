@@ -30,7 +30,7 @@
   --ink:      #1D1E21;
   --body-ink: #313335;
   --muted:    #67696C;
-  --dim:      #9A9CA0;
+  --dim:      #6D6F72;
   --accent:   #2C2C2E;
   --accent-ink: #FFFFFF;
   --candy:    #E5484D;
@@ -45,14 +45,21 @@
   /* Tags and icons: the only colour besides the trees. A saturated word
      on a pale wash of the same hue, as on the reference's Design /
      Engineering / Brand tags. */
-  --tag-green:     #0FA05C;
+  --tag-green:     #007E3D;
   --tag-green-bg:  #DCF9E5;
-  --tag-blue:      #2389E2;
+  --tag-blue:      #006DC3;
   --tag-blue-bg:   #E4F2FF;
-  --tag-purple:    #8A63DE;
+  --tag-purple:    #7A52CC;
   --tag-purple-bg: #F1EDFF;
-  --tag-amber:     #DF911A;
+  --tag-amber:     #A45900;
   --tag-amber-bg:  #FEEFCF;
+  /* Tag text is the hue darkened just enough to read at 12px (4.5:1 on its
+     wash). Icons standing on their own only need 3:1, so they keep the
+     reference's brighter tones. */
+  --ico-green:     #0FA05C;
+  --ico-blue:      #2389E2;
+  --ico-purple:    #8A63DE;
+  --ico-amber:     #DF911A;
   --tag-grey:      #67696C;
   --tag-grey-bg:   #EEEFF1;
 
@@ -91,7 +98,7 @@
   --ink:      #EDEEF0;
   --body-ink: #C9CACD;
   --muted:    #8E9095;
-  --dim:      #63656A;
+  --dim:      #898B8E;
   --accent:   #EDEEF0;
   --accent-ink: #141517;
   --candy:    #FF6B70;
@@ -110,6 +117,10 @@
   --tag-purple-bg: rgba(183,160,251,.14);
   --tag-amber:     #F0BA59;
   --tag-amber-bg:  rgba(240,186,89,.13);
+  --ico-green:     #63D18F;
+  --ico-blue:      #73B6FA;
+  --ico-purple:    #B7A0FB;
+  --ico-amber:     #F0BA59;
   --tag-grey:      #8E9095;
   --tag-grey-bg:   rgba(255,255,255,.06);
 
@@ -347,10 +358,10 @@ input:focus-visible, textarea:focus-visible, .sf .sf-field:focus {
 .tag-purple { color: var(--tag-purple); background: var(--tag-purple-bg); }
 .tag-blue   { color: var(--tag-blue);   background: var(--tag-blue-bg); }
 .tag-grey   { color: var(--tag-grey);   background: var(--tag-grey-bg); }
-.stat-ico.tag-amber  { color: var(--tag-amber); }
-.stat-ico.tag-green  { color: var(--tag-green); }
-.stat-ico.tag-purple { color: var(--tag-purple); }
-.stat-ico.tag-blue   { color: var(--tag-blue); }
+.stat-ico.tag-amber  { color: var(--ico-amber); }
+.stat-ico.tag-green  { color: var(--ico-green); }
+.stat-ico.tag-purple { color: var(--ico-purple); }
+.stat-ico.tag-blue   { color: var(--ico-blue); }
 .stat-ico.tag-grey   { color: var(--tag-grey); }
 
 /* "Planted today" / "24 days since planted" */
@@ -431,7 +442,7 @@ input:focus-visible, textarea:focus-visible, .sf .sf-field:focus {
 .brand-name { font-size: 18px; font-weight: 800; letter-spacing: -.03em; color: var(--ink); }
 
 .nudge { align-items: flex-start; padding: 16px 16px 15px; }
-.nudge .bell { width: 20px; height: 20px; flex: none; color: var(--tag-blue); margin-top: 2px; }
+.nudge .bell { width: 20px; height: 20px; flex: none; color: var(--ico-blue); margin-top: 2px; }
 .nudge .head { font-size: 16px; font-weight: 650; letter-spacing: -.015em; color: var(--ink); }
 .nudge .sub { font-size: 14px; }
 .nudge-actions { display: flex; gap: 8px; margin-top: 12px; }
@@ -481,3 +492,21 @@ input:focus-visible, textarea:focus-visible, .sf .sf-field:focus {
 
 /* A button with a leading line icon, e.g. "Watch it grow". */
 .btn-with-ico { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+
+/* ---------- accessibility ----------
+   One clear focus ring for keyboard and switch-control users, in the
+   interface's blue, offset so it never sits on top of the thing it marks. */
+button:focus-visible, a:focus-visible, [role="button"]:focus-visible,
+select:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--ico-blue); outline-offset: 2px;
+}
+
+/* Small controls keep their look but get a full-size target: Apple asks
+   for 44 points, and these were nearer 30. The extra area is invisible. */
+.chip, .lang, .icon, .idea-add, .nudge-later, .sf-back, .sf-x {
+  position: relative;
+}
+.chip::after, .lang::after, .icon::after, .idea-add::after,
+.nudge-later::after, .sf-back::after, .sf-x::after {
+  content: ""; position: absolute; inset: -7px;
+}

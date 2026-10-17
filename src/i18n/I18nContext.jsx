@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { STR } from "./strings";
 
 const I18nCtx = createContext(null);
@@ -8,6 +8,12 @@ const SINGULARS = { entries: "entry1", photos: "photo1", orbsCount: "orb1", publ
 
 export function I18nProvider({ children }) {
   const [lang, setLang] = useState("en");
+
+  // The page's own language follows the app's, so VoiceOver reads Chinese
+  // with a Chinese voice instead of spelling it out in English.
+  useEffect(() => {
+    document.documentElement.lang = lang === "zh" ? "zh-Hans" : "en";
+  }, [lang]);
 
   const value = useMemo(() => {
     function t(k) {

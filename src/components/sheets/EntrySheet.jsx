@@ -107,6 +107,7 @@ export default function EntrySheet({ interestId, entryId }) {
       </Field>
       <textarea
         ref={textRef}
+        aria-label={t("entryPh")}
         placeholder={t("entryPh")}
         maxLength={600}
         value={text}

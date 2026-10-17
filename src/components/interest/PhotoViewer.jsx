@@ -31,6 +31,7 @@ export default function PhotoViewer() {
         <input
           autoFocus
           type="text"
+          aria-label={t("caption")}
           maxLength={80}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}

@@ -21,17 +21,20 @@ html.native body {
   overscroll-behavior: none;
 }
 
+/* --text-scale is the zoom main.jsx applies for the phone's Larger Text
+   setting; a zoomed full-screen height has to be divided back down or it
+   runs off the bottom of the screen. */
 html.native .stage {
   padding: 0;
   min-height: 100vh;
-  min-height: 100dvh;
+  min-height: calc(100dvh / var(--text-scale, 1));
   align-items: stretch;
 }
 
 html.native .app {
   max-width: none;
   height: 100vh;
-  height: 100dvh;
+  height: calc(100dvh / var(--text-scale, 1));
   border: 0;
   border-radius: 0;
   box-shadow: none;
