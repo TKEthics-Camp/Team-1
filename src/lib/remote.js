@@ -146,6 +146,7 @@ export function photoToRow(rec) {
     visibility: rec.visibility || "private",
     is_pinned: !!rec.isPinned,
     created_at: toIso(rec.createdAt),
+    updated_at: toIso(rec.updatedAt || rec.createdAt),
     deleted_at: rec.deletedAt ? toIso(rec.deletedAt) : null,
   };
 }
@@ -164,6 +165,7 @@ export function rowToPhoto(row) {
     isPinned: row.is_pinned,
     deletedAt: row.deleted_at ? toMs(row.deleted_at) : undefined,
     createdAt: toMs(row.created_at),
+    updatedAt: row.updated_at ? toMs(row.updated_at) : toMs(row.created_at),
   };
 }
 
@@ -179,7 +181,7 @@ export function rowToPhoto(row) {
 // have a newer one applied but not an older one).
 const INTEREST_OPTIONAL_COLUMNS = ["deleted_at", "days", "species", "leaf_color", "revived_at"];
 const ENTRY_OPTIONAL_COLUMNS = ["deleted_at", "shared_to_feed", "audio_path", "audio_ms"];
-const PHOTO_OPTIONAL_COLUMNS = ["deleted_at"];
+const PHOTO_OPTIONAL_COLUMNS = ["deleted_at", "updated_at"];
 
 // PGRST204 means PostgREST doesn't recognize one of the columns in the
 // payload, and names exactly which one in its message — so this drops
@@ -329,21 +331,34 @@ export async function downloadAudioBlob(storagePath) {
 // Storage has no cascade. Deleting a photos row leaves its file sitting in
 // the bucket, so every path that erases a user's content has to sweep the
 // buckets explicitly. Both bucket layouts are flat — `${userId}/${id}` — so
-// one non-recursive list per bucket is the whole set.
+// a non-recursive list is the whole set.
+//
+// A list returns at most 1,000 names, so this goes round until a list comes
+// back empty. Each pass deletes what it listed, which is why it always asks
+// for the first page rather than paging forward. A pass that lists files and
+// then fails to remove them stops the loop: going round again would only see
+// the same files.
+const CLEAR_BATCH = 1000;
+
 async function clearBucket(bucket, userId) {
-  const { data, error } = await supabase.storage.from(bucket).list(userId, { limit: 1000 });
-  if (error) {
-    console.error(`Sync (list ${bucket}) failed:`, error);
-    return false;
+  for (;;) {
+    const { data, error } = await supabase.storage.from(bucket).list(userId, { limit: CLEAR_BATCH });
+    if (error) {
+      console.error(`Sync (list ${bucket}) failed:`, error);
+      return false;
+    }
+    const paths = (data || []).map((f) => `${userId}/${f.name}`);
+    if (!paths.length) return true;
+    const { data: removed, error: removeError } = await supabase.storage.from(bucket).remove(paths);
+    if (removeError) {
+      console.error(`Sync (clear ${bucket}) failed:`, removeError);
+      return false;
+    }
+    if (!removed || removed.length === 0) {
+      console.error(`Sync (clear ${bucket}) removed nothing; stopping.`);
+      return false;
+    }
   }
-  const paths = (data || []).map((f) => `${userId}/${f.name}`);
-  if (!paths.length) return true;
-  const { error: removeError } = await supabase.storage.from(bucket).remove(paths);
-  if (removeError) {
-    console.error(`Sync (clear ${bucket}) failed:`, removeError);
-    return false;
-  }
-  return true;
 }
 
 // Erases everything this user planted, on the server. Reports whether it
@@ -601,12 +616,20 @@ export async function joinClass(code) {
 // of, and "that didn't work" tells them nothing and tells us less — the
 // real error names the exact table and privilege involved, and it was
 // going to a console nobody opens.
+//
+// If the files could not all be removed, the account is left in place and
+// this says so. Deleting the account anyway would strand whatever files were
+// left with no owner and no way for anyone to ask for them to go; leaving it
+// means trying again finishes the job.
 export async function deleteMyAccount(userId) {
   if (userId) {
-    await Promise.all([
+    const swept = await Promise.all([
       clearBucket("photos", userId),
       clearBucket("voice-notes", userId),
     ]);
+    if (!swept.every(Boolean)) {
+      return { ok: false, reason: "files" };
+    }
   }
   const { error } = await supabase.rpc("delete_my_account");
   if (error) {
@@ -857,18 +880,9 @@ export async function applyAgeGate(birthdate, classCode) {
     p_class_code: classCode || null,
   });
   if (error) {
-    // PGRST202 is PostgREST saying the function is not in its schema cache,
-    // which here means 20260918000000 has not been applied to this project.
-    // That is a deployment state, not a failure: the age gate is simply not
-    // live yet, and signup must go through exactly as it did before it
-    // existed. Treating it as an error is what broke account creation
-    // outright — see the comment at the call site.
-    const missing = error.code === "PGRST202"
-      || /could not find the function/i.test(error.message || "");
-    if (missing) {
-      console.warn("Age gate not deployed; signup proceeding ungated.");
-      return { ok: false, reason: "missing" };
-    }
+    // Every failure is a failure, including the function not existing
+    // (PGRST202). A database without the gate is not a reason to let an
+    // account through without one — see the call site in AuthFlow.
     console.error("Age gate failed:", error.message);
     return { ok: false, reason: "error", message: error.message || String(error) };
   }

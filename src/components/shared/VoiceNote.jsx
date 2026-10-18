@@ -1,5 +1,6 @@
 import { useI18n } from "../../i18n/I18nContext";
 import { fmtClock } from "../../lib/useRecorder";
+import Icon from "./Icon";
 
 // Playback for a recorded note. The caller resolves the URL — useObjectURL
 // for a blob already in hand (mid-recording, mid-edit), useAudioURL for a
@@ -11,7 +12,7 @@ export default function VoiceNote({ url, ms, onRemove }) {
 
   return (
     <div className="voice-note">
-      <span className="voice-ico" aria-hidden="true">🎙️</span>
+      <span className="voice-ico" aria-hidden="true"><Icon name="mic" size={16} /></span>
       {/* the browser's own control: real scrubbing and duration for free,
           and it stays accessible without reimplementing a player */}
       <audio className="voice-audio" src={url} controls preload="metadata" />

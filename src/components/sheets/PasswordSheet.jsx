@@ -5,6 +5,7 @@ import { useUI } from "../../ui/UIContext";
 import Sheet from "../shared/Sheet";
 import Field from "../shared/Field";
 import { errorSound } from "../../lib/feedback";
+import Icon from "../shared/Icon";
 
 const MIN_LENGTH = 6;
 
@@ -84,7 +85,7 @@ export default function PasswordSheet() {
       </Field>
 
       <div className="safe-note">
-        <span aria-hidden="true">🔑</span>
+        <span aria-hidden="true"><Icon name="key" size={16} /></span>
         <span>{t("pwWarning")}</span>
       </div>
 

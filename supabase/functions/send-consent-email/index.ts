@@ -1,4 +1,5 @@
-// Drains public.consent_outbox and sends each queued message.
+// Drains public.consent_outbox and sends each queued message, then removes
+// the files of any deleted account (public.storage_sweeps).
 //
 // This exists because nothing else can. The browser must never hold a
 // service-role key or a mail provider's API key, and Postgres has no
@@ -25,6 +26,46 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const BATCH = 25;
+const SWEEP_BATCH = 10;
+const BUCKETS = ["photos", "voice-notes"];
+
+// Removes everything in one user's folder of one bucket, 1,000 names at a
+// time until a list comes back empty. Throws on the first failure so the
+// note stays open and records why.
+// deno-lint-ignore no-explicit-any
+async function clearFolder(db: any, bucket: string, uid: string) {
+  for (;;) {
+    const { data, error } = await db.storage.from(bucket).list(uid, { limit: 1000 });
+    if (error) throw new Error(`list ${bucket}: ${error.message}`);
+    const paths = (data ?? []).map((f: { name: string }) => `${uid}/${f.name}`);
+    if (!paths.length) return;
+    const { error: removeError } = await db.storage.from(bucket).remove(paths);
+    if (removeError) throw new Error(`remove ${bucket}: ${removeError.message}`);
+  }
+}
+
+// The files of deleted accounts, removed through the Storage API — the
+// path the database itself may not be allowed to take. See 20261017000000.
+// deno-lint-ignore no-explicit-any
+async function sweepDeletedAccounts(db: any) {
+  const { data: notes, error } = await db.rpc("claim_storage_sweeps", { p_limit: SWEEP_BATCH });
+  if (error) return { swept: 0, sweepFailed: 0, sweepError: error.message };
+  let swept = 0;
+  let sweepFailed = 0;
+  for (const note of notes ?? []) {
+    try {
+      for (const bucket of BUCKETS) await clearFolder(db, bucket, note.user_id);
+      await db.from("storage_sweeps").delete().eq("user_id", note.user_id);
+      swept += 1;
+    } catch (e) {
+      await db.from("storage_sweeps")
+        .update({ last_error: String(e).slice(0, 500) })
+        .eq("user_id", note.user_id);
+      sweepFailed += 1;
+    }
+  }
+  return { swept, sweepFailed };
+}
 
 Deno.serve(async () => {
   const url = Deno.env.get("SUPABASE_URL");
@@ -113,7 +154,9 @@ Deno.serve(async () => {
     }
   }
 
-  return new Response(JSON.stringify({ sent, failed, considered: due?.length ?? 0 }), {
+  const sweep = await sweepDeletedAccounts(db);
+
+  return new Response(JSON.stringify({ sent, failed, considered: due?.length ?? 0, ...sweep }), {
     headers: { "content-type": "application/json" },
   });
 });

@@ -23,8 +23,17 @@ function greetingKey() {
   return h < 12 ? "goodMorning" : h < 18 ? "goodAfternoon" : "goodEvening";
 }
 
+// "FRIDAY, OCTOBER 16" / "10月16日星期五" — the small line above the
+// greeting, as on the reference.
+function todayLabel(lang) {
+  const now = new Date();
+  return lang === "zh"
+    ? now.toLocaleDateString("zh-CN", { month: "long", day: "numeric", weekday: "long" })
+    : now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+}
+
 export default function HomeScreen() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { profile, interests, photos, entries } = useStore();
   const { dismissed } = useUI();
   // "Zoom out": one tree at a time, or the whole forest at once. Local state
@@ -80,8 +89,9 @@ export default function HomeScreen() {
       </TopBar>
       <div className="view home-view">
         <header className="page-head">
+          <p className="page-kicker">{todayLabel(lang)}</p>
           <h1>{t(greetingKey()) + profile.name}</h1>
-          <p className="page-sub">{t("homeSub")}</p>
+          <span className="page-rule" aria-hidden="true" />
         </header>
         {dying && <DyingBanner interest={dying} entries={entries} photos={photos} />}
         {due.length > 0 && <NudgeBanner interests={due} />}

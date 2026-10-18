@@ -4,6 +4,7 @@ import { useUI } from "../../ui/UIContext";
 import { PALETTE, SKIN_TONES, HAIR_COLORS, HAIR_STYLES, OUTFIT_STYLES, OUTFIT_COLORS, DEFAULT_AVATAR } from "../../lib/constants";
 import Sheet from "../shared/Sheet";
 import PersonAvatar from "../shared/PersonAvatar";
+import Icon from "../shared/Icon";
 
 // Build-a-person: skin tone and every colour are free, hair/outfit *styles*
 // beyond the basics cost coins — the same currency the hobby decorations in
@@ -43,7 +44,7 @@ export default function AvatarSheet() {
         <PersonAvatar avatar={avatar} size={92} />
       </div>
       <h2>{t("customizeTitle")}</h2>
-      {!isOrg && <span className="chip coin-pill">{"🪙 " + coins}</span>}
+      {!isOrg && <span className="chip coin-pill"><Icon name="coin" size={15} />{coins}</span>}
 
       <div className="label">{t("bgColorLabel")}</div>
       <div className="swatches">
@@ -73,7 +74,7 @@ export default function AvatarSheet() {
               onClick={() => pickStyle("hair", h.id, HAIR_STYLES, ownedHair)}
             >
               <span>{h.name[lang === "en" ? 0 : 1]}</span>
-              {!owned && <span className="part-price">{"🪙 " + h.price}</span>}
+              {!owned && <span className="part-price"><Icon name="coin" size={12} />{h.price}</span>}
             </button>
           );
         })}
@@ -100,7 +101,7 @@ export default function AvatarSheet() {
               onClick={() => pickStyle("outfit", o.id, OUTFIT_STYLES, ownedOutfits)}
             >
               <span>{o.name[lang === "en" ? 0 : 1]}</span>
-              {!owned && <span className="part-price">{"🪙 " + o.price}</span>}
+              {!owned && <span className="part-price"><Icon name="coin" size={12} />{o.price}</span>}
             </button>
           );
         })}

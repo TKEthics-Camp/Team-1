@@ -3,6 +3,7 @@ import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
 import { usePhotoURL } from "../../lib/image";
+import Icon from "../shared/Icon";
 
 export default function PhotoViewer() {
   const { t } = useI18n();
@@ -31,6 +32,7 @@ export default function PhotoViewer() {
         <input
           autoFocus
           type="text"
+          aria-label={t("caption")}
           maxLength={80}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -44,12 +46,13 @@ export default function PhotoViewer() {
       )}
       {!editing && (
         <button
-          className="btn2 cover-pin"
+          className="btn2 cover-pin btn-with-ico"
           style={{ maxWidth: 220 }}
           aria-pressed={photo.isPinned ? "true" : "false"}
           onClick={() => setCoverPhoto(photo.interestId, photo.id)}
         >
-          {(photo.isPinned ? "★ " : "☆ ") + t(photo.isPinned ? "coverIsSet" : "useAsCover")}
+          <Icon name={photo.isPinned ? "check" : "image"} size={15} />
+          {t(photo.isPinned ? "coverIsSet" : "useAsCover")}
         </button>
       )}
       {editing ? (

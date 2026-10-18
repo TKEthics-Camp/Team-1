@@ -3,10 +3,12 @@ import { useI18n } from "../../i18n/I18nContext";
 import { useAuth } from "../../store/AuthContext";
 import { supabase } from "../../lib/supabase";
 import { applyAgeGate } from "../../lib/remote";
+import { holdConsentUntil } from "../../lib/useConsentStatus";
 import { usernameToEmail } from "../../lib/syntheticEmail";
 import LangToggle from "../shared/LangToggle";
 import SfHead from "../onboarding/SfHead";
 import RecoverFlow from "./RecoverFlow";
+import BirthdateFields, { joinBirthdate } from "./BirthdateFields";
 import AccountTypeStep from "../onboarding/AccountTypeStep";
 import Mascot from "../shared/Mascot";
 
@@ -47,11 +49,7 @@ export default function AuthFlow() {
   const [bdM, setBdM] = useState("");
   const [bdD, setBdD] = useState("");
   const [classCode, setClassCode] = useState("");
-  // What the server wants, assembled from the three dropdowns. Zero-padded
-  // because the column is a date and "2015-4-9" is not one.
-  const birthdate = bdY && bdM && bdD
-    ? `${bdY}-${String(bdM).padStart(2, "0")}-${String(bdD).padStart(2, "0")}`
-    : "";
+  const birthdate = joinBirthdate(bdY, bdM, bdD);
 
   const [loginId, setLoginId] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -74,9 +72,23 @@ export default function AuthFlow() {
     if (isOrg && !email.trim()) return;
 
     setBusy(true);
+    // Registered before the account exists, because the session (and App's
+    // question about consent state) arrives the moment signUp resolves —
+    // before the age gate below has run. Settled on every path out.
+    let settle;
+    holdConsentUntil(new Promise((resolve) => { settle = resolve; }));
+    try {
+      await createAccount(trimmedUsername);
+    } finally {
+      settle();
+      setBusy(false);
+    }
+  }
+
+  async function createAccount(trimmedUsername) {
     const signupEmail = isOrg ? email.trim() : usernameToEmail(trimmedUsername);
     const result = await signUp(signupEmail, password, { username: trimmedUsername, accountType });
-    if (!result.ok) { setBusy(false); return; }
+    if (!result.ok) return;
 
     // The `users` row already exists (the on_auth_user_created trigger made
     // it the moment signUp() above succeeded) — this fills in the display
@@ -93,7 +105,6 @@ export default function AuthFlow() {
       .update({ display_name: trimmedUsername })
       .eq("id", result.userId);
     if (error) {
-      setBusy(false);
       console.error("Failed to reserve username:", error);
       await supabase.auth.signOut();
       setLocalError(error.code === "23505" ? "usernameTaken" : "usernameError");
@@ -105,21 +116,15 @@ export default function AuthFlow() {
     // the three paths this is — an under-14 signup with no class lands in
     // 'pending' and App shows the guardian screen instead of the app.
     //
-    // Two failures, and they are nothing alike.
-    //
-    // reason "missing" means the migration is not applied on this project,
-    // so there is no gate to fail: signup has to complete exactly as it did
-    // before the gate was written. The first version of this treated that
-    // as an error and signed the new account out, which unmounted the whole
-    // flow and dropped the student back on the welcome screen with no
-    // message — signup was broken outright for everybody.
-    //
-    // Anything else means the gate IS live and did not run, which is the
-    // one outcome that must not leave an account behind. That rolls back.
+    // Any failure signs out, including the gate function being missing.
+    // That used to be waved through so signup kept working on a project
+    // without the migration, which meant a database without the gate made
+    // accounts with no age check at all. The account itself survives the
+    // sign-out, but it was created in 'age_required' (20261011000000), so
+    // signing back in asks for the birthday again rather than letting it in.
     if (!isOrg) {
       const gate = await applyAgeGate(birthdate, classCode.trim() || null);
-      if (!gate.ok && gate.reason !== "missing") {
-        setBusy(false);
+      if (!gate.ok) {
         await supabase.auth.signOut();
         // Signing out unmounts this component, so an error in local state
         // would be thrown away with it. Module scope survives the remount
@@ -129,7 +134,6 @@ export default function AuthFlow() {
         return;
       }
     }
-    setBusy(false);
   }
 
   async function submitLogIn(e) {
@@ -179,24 +183,7 @@ export default function AuthFlow() {
   // retro-fitted with an age. The class code is optional and is what
   // separates the two under-14 paths: with one, the school's consent covers
   // the account; without one, a guardian has to be asked directly.
-  //
-  // Three dropdowns rather than <input type="date">. A native date picker
-  // opens on today, so a twelve-year-old pages back through a hundred and
-  // fifty months to reach their own birth year, and it renders in the
-  // browser's locale order — mm/dd/yyyy for a Chinese reader who expects
-  // year first. Year/month/day reads correctly in both languages and puts
-  // the birth year one tap away.
   if (screen === "signup" && signupStep === "age") {
-    const thisYear = new Date().getFullYear();
-    // Most recent first: almost everyone signing up is a child, so their
-    // year is at the top of the list rather than ninety scrolls down.
-    const years = Array.from({ length: 100 }, (_, i) => thisYear - i);
-    const months = Array.from({ length: 12 }, (_, i) => i + 1);
-    // Real length of the chosen month, so 31 February is never offered.
-    const daysInMonth = (bdY && bdM)
-      ? new Date(Number(bdY), Number(bdM), 0).getDate()
-      : 31;
-    const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
     const complete = bdY && bdM && bdD;
 
     return (
@@ -217,55 +204,12 @@ export default function AuthFlow() {
               <SfHead>{t("agTitle")}</SfHead>
               <p className="sf-hint sf-hint-lead">{t("agSub")}</p>
 
-              <div className="sf-stack">
-                {/* No label above these: the heading already asks the
-                    question, and repeating it as "Date of birth" was just
-                    another line between the question and the answer. */}
-                <div className="sf-date">
-                  <select
-                    className="sf-field"
-                    aria-label={t("agYear")}
-                    value={bdY}
-                    onChange={(e) => setBdY(e.target.value)}
-                  >
-                    <option value="">{t("agYear")}</option>
-                    {years.map((y) => <option key={y} value={y}>{y}</option>)}
-                  </select>
-                  <select
-                    className="sf-field"
-                    aria-label={t("agMonth")}
-                    value={bdM}
-                    onChange={(e) => setBdM(e.target.value)}
-                  >
-                    <option value="">{t("agMonth")}</option>
-                    {months.map((m) => <option key={m} value={m}>{m}</option>)}
-                  </select>
-                  <select
-                    className="sf-field"
-                    aria-label={t("agDay")}
-                    value={bdD}
-                    onChange={(e) => setBdD(e.target.value)}
-                  >
-                    <option value="">{t("agDay")}</option>
-                    {days.map((d) => <option key={d} value={d}>{d}</option>)}
-                  </select>
-                </div>
-
-                <div className="sf-optional">
-                  <label className="sf-label" htmlFor="ag-cc">{t("agClassLabel")}</label>
-                  <input
-                    id="ag-cc"
-                    className="sf-field"
-                    type="text"
-                    autoCapitalize="characters"
-                    autoComplete="off"
-                    spellCheck="false"
-                    value={classCode}
-                    onChange={(e) => setClassCode(e.target.value)}
-                  />
-                  <p className="sf-hint">{t("agClassHint")}</p>
-                </div>
-              </div>
+              <BirthdateFields
+                bdY={bdY} setBdY={setBdY}
+                bdM={bdM} setBdM={setBdM}
+                bdD={bdD} setBdD={setBdD}
+                classCode={classCode} setClassCode={setClassCode}
+              />
 
               <div className="sf-grow" />
               <div className="sf-foot">

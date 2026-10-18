@@ -7,9 +7,9 @@ import Mascot from "../shared/Mascot";
 // with no context is far more likely to get reflexively denied, and denial
 // can't be undone from inside the app (only from browser/OS settings), so
 // this is the one shot worth spending an explanation on. "Not Now" just
-// moves on without ever calling Notification.requestPermission() — asking
-// again later (e.g. from Me) still finds permission at its untouched
-// "default" state.
+// moves on without asking at all — asking again later (from Me) still
+// finds the question unanswered. Same on iPhone, where iOS asks instead of
+// the browser (see lib/notifications).
 export default function NotificationsStep({ onEnter }) {
   const { t } = useI18n();
 

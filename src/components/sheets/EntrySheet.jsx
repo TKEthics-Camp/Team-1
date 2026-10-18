@@ -15,6 +15,7 @@ import VisRow from "../shared/VisRow";
 import VoiceNote from "../shared/VoiceNote";
 import { useAudioURL } from "../../lib/image";
 import { useRecorder, canRecord, fmtClock } from "../../lib/useRecorder";
+import Icon from "../shared/Icon";
 
 const DURATIONS = [15, 30, 45, 60, 90, 120];
 
@@ -107,6 +108,7 @@ export default function EntrySheet({ interestId, entryId }) {
       </Field>
       <textarea
         ref={textRef}
+        aria-label={t("entryPh")}
         placeholder={t("entryPh")}
         maxLength={600}
         value={text}
@@ -120,10 +122,11 @@ export default function EntrySheet({ interestId, entryId }) {
             <div className="row" style={{ gap: 10 }}>
               <button
                 type="button"
-                className={"btn2 rec-btn" + (rec.recording ? " on" : "")}
+                className={"btn2 rec-btn btn-with-ico" + (rec.recording ? " on" : "")}
                 onClick={toggleRecord}
               >
-                {rec.recording ? "■ " + t("recStop") + " · " + fmtClock(rec.ms) : "● " + t("recStart")}
+                <Icon name={rec.recording ? "square" : "mic"} size={16} />
+                {rec.recording ? t("recStop") + " · " + fmtClock(rec.ms) : t("recStart")}
               </button>
               {rec.recording && (
                 <button type="button" className="chip" onClick={rec.cancel}>{t("cancel")}</button>
@@ -145,17 +148,19 @@ export default function EntrySheet({ interestId, entryId }) {
       {visibility === "public" && (
         <button
           type="button"
-          className="btn2 share-toggle"
+          className="btn2 share-toggle btn-with-ico"
           aria-pressed={shared ? "true" : "false"}
           onClick={() => setShared((v) => !v)}
         >
-          {(shared ? "✓ " : "＋ ") + t("shareToExplore")}
+          <Icon name={shared ? "check" : "plus"} size={16} />
+          {t("shareToExplore")}
         </button>
       )}
       <span className="sub">{t("shareToExploreNote")}</span>
       <div className="chips">
-        <Chip pressed={pinned} onClick={() => setPinned((p) => !p)}>
-          {(pinned ? "★ " : "☆ ") + t("pin")}
+        <Chip pressed={pinned} onClick={() => setPinned((p) => !p)} className="btn-with-ico">
+          <Icon name="pin" size={14} />
+          {t("pin")}
         </Chip>
       </div>
       <button className="btn" onClick={save}>{t("save")}</button>

@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "../../i18n/I18nContext";
 import { daysUntilDeath } from "../../lib/tree";
+import Icon from "../shared/Icon";
 
 // The last honest warning before a tree is gone. The app's decay is
 // deliberately unforgiving — no grace periods, no freezes — so the one thing
@@ -18,7 +19,7 @@ export default function DyingBanner({ interest, entries, photos }) {
       className="nudge dying"
       onClick={() => navigate(`/interest/${interest.id}?tab=journal`)}
     >
-      <span className="dying-ico" aria-hidden="true">🥀</span>
+      <span className="dying-ico" aria-hidden="true"><Icon name="alert" size={20} /></span>
       <span className="dying-txt">
         <span className="t">{t("dyingTitle").replace("{name}", nameOf(interest))}</span>
         <span className="sub">

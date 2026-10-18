@@ -3,6 +3,7 @@ import { useI18n } from "../../i18n/I18nContext";
 import { fmtDate } from "../../lib/dates";
 import { STAGE_KEY } from "../../lib/tree";
 import Tree from "../shared/Tree";
+import Icon from "../shared/Icon";
 
 // Whole replay, seed to full tree, lands in this window regardless of how
 // many logs the tree actually has — a tree with 30 logs and one with 6
@@ -35,7 +36,7 @@ export default function GrowthReplay({ interest, frames, health, nameOf, onClose
 
   return (
     <div className="year-full" onClick={done ? onClose : undefined} role="button" tabIndex={0}>
-      <button className="year-close" aria-label={t("close")} onClick={(e) => { e.stopPropagation(); onClose(); }}>✕</button>
+      <button className="year-close" aria-label={t("close")} onClick={(e) => { e.stopPropagation(); onClose(); }}><Icon name="x" size={18} /></button>
       <div className="year-progress">
         {frames.map((_, idx) => (
           <span key={idx} className={"seg" + (idx < i ? " done" : idx === i ? " on" : "")} />

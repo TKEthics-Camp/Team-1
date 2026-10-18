@@ -12,6 +12,7 @@ import Sheet from "../shared/Sheet";
 import Field from "../shared/Field";
 import Chip from "../shared/Chip";
 import VisRow from "../shared/VisRow";
+import Icon from "../shared/Icon";
 
 export default function PhotoSheet({ interestId }) {
   const { t, nameOf } = useI18n();
@@ -81,8 +82,9 @@ export default function PhotoSheet({ interestId }) {
       <VisRow value={visibility} onChange={(v) => { setVisibility(v); setBlocked(false); }} />
       {blocked && <div className="field-error">{t("filterBlockedPublic")}</div>}
       <div className="chips">
-        <Chip pressed={pinned} onClick={() => setPinned((p) => !p)}>
-          {(pinned ? "★ " : "☆ ") + t("pin")}
+        <Chip pressed={pinned} onClick={() => setPinned((p) => !p)} className="btn-with-ico">
+          <Icon name="pin" size={14} />
+          {t("pin")}
         </Chip>
       </div>
       <button className="btn" disabled={!blob} onClick={save}>{t("save")}</button>

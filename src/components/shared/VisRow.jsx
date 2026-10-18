@@ -1,4 +1,5 @@
 import { useI18n } from "../../i18n/I18nContext";
+import Icon from "./Icon";
 
 // Private / Public choice, shared by journal entries and photos — what it
 // actually does differs by caller. A journal entry's flag really is synced
@@ -9,20 +10,22 @@ import { useI18n } from "../../i18n/I18nContext";
 export default function VisRow({ value, onChange }) {
   const { t } = useI18n();
   const options = [
-    ["private", "🔒 " + t("visPrivate")],
-    ["public", "🌐 " + t("visPublic")],
+    ["private", "lock", t("visPrivate")],
+    ["public", "globe", t("visPublic")],
   ];
   return (
     <div className="field">
       <span className="label">{t("visLabel")}</span>
       <div className="seg">
-        {options.map(([key, label]) => (
+        {options.map(([key, icon, label]) => (
           <button
             key={key}
             type="button"
             aria-pressed={value === key ? "true" : "false"}
             onClick={() => onChange(key)}
+            className="btn-with-ico"
           >
+            <Icon name={icon} size={15} />
             {label}
           </button>
         ))}

@@ -122,7 +122,36 @@
   display: flex; align-items: center; justify-content: center; gap: 8px;
   border-radius: 12px; padding: 14px 16px;
 }
-.sf-look-ico { font-size: 15px; line-height: 1; }
+.sf-look-ico { display: inline-flex; line-height: 1; }
+
+/* ---------- the drawn look icons (LookIcon.jsx) ---------- */
+.look-ico { width: 30px; height: 30px; display: block; overflow: visible; }
+
+/* sun: rays turn slowly, the core breathes */
+.look-sun-rays { transform-origin: 16px 16px; animation: look-spin 14s linear infinite; }
+.look-sun-core { transform-origin: 16px 16px; animation: look-breathe 3.2s ease-in-out infinite; }
+@keyframes look-spin { to { transform: rotate(360deg); } }
+@keyframes look-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+
+/* moon: rocks a little, the stars twinkle out of step */
+.look-moon-body { transform-origin: 14.5px 17px; animation: look-rock 5s ease-in-out infinite; }
+.look-star { transform-box: fill-box; transform-origin: center; animation: look-twinkle 2.4s ease-in-out infinite; }
+.look-star-b { animation-delay: -1.2s; }
+@keyframes look-rock { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+@keyframes look-twinkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: .25; transform: scale(.6); }
+}
+
+/* system: the dark half slides across and back, and the sun dims as night
+   covers it */
+.look-sys-dark { animation: look-slide 5s ease-in-out infinite; }
+.look-sys-sun  { animation: look-dim 5s ease-in-out infinite; }
+@keyframes look-slide { 0%, 100% { transform: translateX(6px); } 50% { transform: translateX(-6px); } }
+@keyframes look-dim   { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+
+/* A chosen button turns dark; the screen's frame follows its text. */
+.sf-pill.sf-look .look-system { color: inherit; }
 
 /* ---------- checkbox list (hobbies) ---------- */
 
@@ -141,7 +170,14 @@
   font-size: 14px; font-weight: 700; line-height: 1;
   transition: background .15s ease;
 }
-.sf-check[aria-pressed="true"] .sf-box { background: var(--sf-blue); }
+/* The tick has to be the opposite colour of the filled circle: it was the
+   ink colour on an ink-coloured circle, so a chosen hobby looked like a
+   plain dark dot. An empty circle gets an outline, since its pale fill
+   alone all but vanished against the page. */
+.sf-box { border: 1.5px solid color-mix(in srgb, var(--dim) 55%, var(--sf-line)); background: var(--card); }
+.sf-check[aria-pressed="true"] .sf-box {
+  background: var(--sf-blue); border-color: var(--sf-blue); color: var(--accent-ink);
+}
 .sf-check-label { font-size: 17px; letter-spacing: -.015em; }
 
 /* ---------- fields ---------- */
@@ -294,3 +330,16 @@
 .pc-code-row { display: flex; gap: 8px; }
 .pc-code-row .sf-field { flex: 1; min-width: 0; }
 .pc-code-row .btn2 { width: auto; flex: none; padding-inline: 18px; }
+
+/* The waiting-for-a-grown-up screen. Its pieces sat directly on top of each
+   other — the explanation ran into the email label, the class-code section
+   started on the send button's edge, and the three buttons at the foot
+   touched. Spaced here, on this screen only. */
+.pc-screen .sf-inner { gap: 18px; }
+.pc-screen .consent-h { margin: 0; line-height: 1.2; }
+.pc-screen .sf-hint { margin: 0; font-size: 14px; line-height: 1.6; }
+.pc-screen .consent-fine { margin: 0; }
+.pc-screen .sf-optional { padding-top: 4px; }
+.pc-screen .sf-optional .sf-hint { margin-top: 8px; }
+.pc-screen .sf-grow { min-height: 4px; }
+.pc-screen .sf-foot { display: flex; flex-direction: column; gap: 10px; padding: 4px 0 12px; }

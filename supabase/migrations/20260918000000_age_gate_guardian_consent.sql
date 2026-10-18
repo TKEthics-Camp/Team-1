@@ -162,14 +162,17 @@ set search_path = public, pg_temp
 as $$
 declare
   v_locked boolean;
-  v_owner  uuid;
 begin
-  -- users rows carry the flag; everything else reaches it through user_id.
+  -- users rows carry the flag directly; entries/photos have no user_id
+  -- column of their own — ownership only exists via interest_id, so the
+  -- owner's flag has to be reached through interests.
   if tg_table_name = 'users' then
     v_locked := new.disclosure_locked;
   else
-    v_owner := new.user_id;
-    select u.disclosure_locked into v_locked from public.users u where u.id = v_owner;
+    select u.disclosure_locked into v_locked
+    from public.interests i
+    join public.users u on u.id = i.user_id
+    where i.id = new.interest_id;
   end if;
 
   if not coalesce(v_locked, false) then
@@ -360,10 +363,19 @@ $$;
 
 alter policy "interests_insert_own" on public.interests
   with check (user_id = auth.uid() and public.consent_allows_writing());
+-- entries/photos have no user_id column of their own — ownership is only
+-- reachable via interest_id, same join every select policy on these two
+-- tables already uses.
 alter policy "entries_insert_own" on public.entries
-  with check (user_id = auth.uid() and public.consent_allows_writing());
+  with check (
+    exists (select 1 from public.interests i where i.id = interest_id and i.user_id = auth.uid())
+    and public.consent_allows_writing()
+  );
 alter policy "photos_insert_own" on public.photos
-  with check (user_id = auth.uid() and public.consent_allows_writing());
+  with check (
+    exists (select 1 from public.interests i where i.id = interest_id and i.user_id = auth.uid())
+    and public.consent_allows_writing()
+  );
 
 -- ========================================== consent columns are not the client's
 -- birthdate, consent_state and disclosure_locked decide what the account is

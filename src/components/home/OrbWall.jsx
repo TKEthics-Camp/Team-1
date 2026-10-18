@@ -5,6 +5,7 @@ import { useUI } from "../../ui/UIContext";
 import { minutesOf, fmtHours } from "../../lib/derived";
 import { treeStage, treeHealth, daysPlanted } from "../../lib/tree";
 import Tree from "../shared/Tree";
+import Icon from "../shared/Icon";
 
 // The home grove: one hobby fills the screen at a time, swipe sideways to
 // walk between trees. Each still grows with use and wilts when ignored —
@@ -40,11 +41,11 @@ export default function OrbWall({ interests, photos, entries }) {
               aria-label={`${nameOf(it)}, ${health === "dead" ? t("hlDead") : fmtHours(minutes)}`}
               onClick={() => navigate(`/interest/${it.id}?tab=album`)}
             >
-              <div className="planted-label">{planted === 0 ? t("plantedToday") : t("plantedDays").replace("{n}", planted)}</div>
+              <div className="planted-label"><Icon name="sprout" size={14} />{planted === 0 ? t("plantedToday") : t("plantedDays").replace("{n}", planted)}</div>
               <Tree interest={it} size={280} stage={stage} health={health} className={alive && health === "healthy" ? "alive" : ""} />
               <div className="tree-name">{nameOf(it)}</div>
               <div className="tree-meta">
-                {health === "dead" ? <span className="dead">🥀 {t("hlDead")}</span> : fmtHours(minutes)}
+                {health === "dead" ? <span className="dead">{t("hlDead")}</span> : fmtHours(minutes)}
               </div>
             </button>
           );
