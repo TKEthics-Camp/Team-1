@@ -81,8 +81,8 @@ export const PRIVACY = {
           "不收集位置信息。照片在添加时会被重新编码，这会移除手机通常存储在图片文件中的隐藏位置和相机信息。",
         ],
         [
-          "No advertising identifiers, no analytics, and no tracking of any kind.",
-          "没有广告标识符，没有分析工具，也没有任何形式的追踪。",
+          "No advertising identifiers, no analytics and no tracking. The outside services Forest does use, and what each one handles, are listed under \"Services that handle your data\" below.",
+          "没有广告标识符，没有分析工具，也没有追踪。Forest 确实使用的外部服务，以及每项服务处理的内容，列在下方「处理你数据的服务」中。",
         ],
       ],
     },
@@ -122,9 +122,30 @@ export const PRIVACY = {
           "If you sign out on a shared computer, the copy on that device is erased.",
           "如果你在共用电脑上退出登录，该设备上的副本会被清除。",
         ],
+      ],
+    },
+    {
+      h: ["Services that handle your data", "处理你数据的服务"],
+      p: [
         [
-          "If your account needs a parent or guardian's permission, the email asking for it is sent through Resend, a third-party email delivery service. It only ever sees the guardian's email address and the message itself — nothing else in your account.",
-          "如果你的账号需要父母或监护人同意，征求同意的邮件会通过第三方邮件发送服务 Resend 发出。它只会接触到监护人的邮箱地址和邮件内容，看不到你账号里的其他任何信息。",
+          "Forest is built on a small number of outside services. Each one handles only what it needs to do its job for Forest, and none of them is an advertising or analytics company.",
+          "Forest 依靠少数几项外部服务运行。每项服务只处理为 Forest 完成其工作所需的内容，而且都不是广告或数据分析公司。",
+        ],
+        [
+          "Supabase runs the database, sign-in and file storage. Everything listed under \"What is collected\" is stored with Supabase.",
+          "Supabase 负责数据库、登录和文件存储。「收集哪些信息」中列出的所有内容都存储在 Supabase。",
+        ],
+        [
+          "Resend sends the permission emails to a parent or guardian. It receives the guardian's email address and the text of the email, and nothing about the child's journal, photos or voice notes.",
+          "Resend 负责向父母或监护人发送许可邮件。它会收到监护人的电子邮箱和邮件内容，但不会收到孩子的日记、照片或语音。",
+        ],
+        [
+          "GitHub Pages hosts the Forest website. Like any website host, it sees the address of a device that loads the site, but none of your account or content, which goes straight to Supabase.",
+          "GitHub Pages 托管 Forest 网站。和所有网站托管服务一样，它能看到访问网站的设备地址，但看不到你的账号或内容 —— 这些会直接发送到 Supabase。",
+        ],
+        [
+          "The iPhone app is built with Capacitor, open-source software that runs entirely on your phone and sends nothing anywhere. Reminders on iPhone are scheduled by iOS on your phone.",
+          "iPhone 应用使用 Capacitor 构建。它是完全在你手机上运行的开源软件，不会向任何地方发送数据。iPhone 上的提醒由 iOS 在你的手机上安排。",
         ],
       ],
     },

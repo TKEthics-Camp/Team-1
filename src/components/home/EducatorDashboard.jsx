@@ -64,7 +64,7 @@ export default function EducatorDashboard() {
         </div>
         <div className="sub">{t("classCodeShareNote")}</div>
 
-        <Stats items={[{ n: students.length, k: t("studentsCount") }]} />
+        <Stats items={[{ n: students.length, k: t("studentsCount"), icon: "users", tone: "blue" }]} />
 
         <div className="label">{t("yourStudents")}</div>
         <div className="sub">{loading ? t("profileLoading") : students.length === 0 ? t("dashboardRosterEmpty") : t("dashboardRosterNote")}</div>

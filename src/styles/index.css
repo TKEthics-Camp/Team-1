@@ -9,6 +9,8 @@
 @import "./apple.css";
 /* the current visual direction — see the file for why it is separate */
 @import "./workspace.css";
+/* last of all, and only inside the iPhone app — see the file */
+@import "./native.css";
 
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }

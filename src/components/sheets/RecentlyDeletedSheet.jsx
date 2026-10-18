@@ -6,6 +6,7 @@ import { TRASH_DAYS } from "../../lib/constants";
 import { fmtDate, dateKey } from "../../lib/dates";
 import Sheet from "../shared/Sheet";
 import EmptyState from "../shared/EmptyState";
+import Icon from "../shared/Icon";
 
 export default function RecentlyDeletedSheet() {
   const { t, lang, nameOf } = useI18n();
@@ -56,7 +57,7 @@ export default function RecentlyDeletedSheet() {
           {items.map((item) => (
             <div key={item.kind + item.rec.id} className="trash-row">
               <span className="trash-ico" aria-hidden="true">
-                {item.kind === "interest" ? "🌳" : item.kind === "photo" ? "🖼️" : "📓"}
+                <Icon name={item.kind === "interest" ? "tree" : item.kind === "photo" ? "image" : "book"} size={18} />
               </span>
               <span className="trash-txt">
                 <span className="t">{label(item)}</span>

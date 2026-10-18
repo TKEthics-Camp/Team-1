@@ -7,6 +7,7 @@ import { haveHobby, ideaColor } from "../../lib/explore";
 import { relTime } from "../../lib/community";
 import PersonAvatar from "../shared/PersonAvatar";
 import ReportMenu from "../shared/ReportMenu";
+import { Tag } from "../shared/Icon";
 
 // One real shared moment. The author's name opens their profile — which is
 // where their public trees and entries live; the feed itself only ever shows
@@ -53,7 +54,7 @@ export default function PostCard({ post, onHide, onBlocked }) {
         {post.text && <div className="post-cap">{post.text}</div>}
 
         <div className="post-foot">
-          <span className="post-min">{"⏱ " + fmtHours(post.minutes)}</span>
+          <Tag tone="green" icon="clock" className="post-min">{fmtHours(post.minutes)}</Tag>
           {!isOrg && <button className="idea-add" onClick={act}>{has ? t("logYours") : t("startThis")}</button>}
         </div>
       </div>

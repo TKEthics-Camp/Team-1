@@ -11,6 +11,8 @@ import {
   updateLang, updateTheme, uploadAudioBlob,
 } from "../lib/remote";
 import { earnedIds } from "../lib/badges";
+import { loadPendingSync, savePendingSync, forgetPendingSync } from "../lib/pendingSync";
+import { newerSide, mergePulled } from "../lib/newestEdit";
 
 const StoreCtx = createContext(null);
 
@@ -41,20 +43,46 @@ export function StoreProvider({ children }) {
   // "retry" just means "call the same push again later with whatever the
   // record looks like now" — no need to remember what specifically
   // changed, only which records still owe the server a successful push.
-  // Persisted to Dexie (the `meta` store, key "pendingSync") so a failed
-  // *update* to something that already exists remotely is still retried
-  // after the app is fully closed and reopened, not just while it stays
-  // running. Hydrated from that row below once the initial Dexie read
-  // completes, and written back below that on every change — but not
-  // before hydration finishes, or the default empty Set would race the
-  // read and clobber whatever was persisted from last time.
+  //
+  // What this adds over reconciliation is retrying failed *updates* to
+  // something that already exists remotely: reconciliation only compares
+  // IDs, so an edit to a record the server already has never goes up on its
+  // own. The list is saved per account (see lib/pendingSync), so closing the
+  // app before a retry lands no longer loses the edit — the next open loads
+  // the list back and retries it once reconciliation has run.
   const [pendingSyncIds, setPendingSyncIds] = useState(() => new Set());
   const pendingSyncRef = useRef(pendingSyncIds);
   useEffect(() => { pendingSyncRef.current = pendingSyncIds; }, [pendingSyncIds]);
+
+  // Which account's saved list is loaded. Writing is held off until the
+  // load has happened, or the empty set every session starts with would
+  // overwrite the list it was about to read.
+  const pendingLoadedForRef = useRef(null);
   useEffect(() => {
-    if (loading) return;
-    put("meta", { key: "pendingSync", ids: Array.from(pendingSyncIds) });
-  }, [pendingSyncIds, loading]);
+    if (!user || user.isDebug) {
+      // Signing out wipes the local records these keys point at, so the
+      // list means nothing any more — for this device or the next person.
+      if (pendingLoadedForRef.current) forgetPendingSync(pendingLoadedForRef.current);
+      pendingLoadedForRef.current = null;
+      setPendingSyncIds((prev) => (prev.size ? new Set() : prev));
+      return;
+    }
+    if (pendingLoadedForRef.current === user.id) return;
+    const saved = loadPendingSync(user.id);
+    pendingLoadedForRef.current = user.id;
+    if (saved.length) setPendingSyncIds((prev) => new Set([...prev, ...saved]));
+  }, [user]);
+  useEffect(() => {
+    const id = pendingLoadedForRef.current;
+    if (id) savePendingSync(id, pendingSyncIds);
+  }, [pendingSyncIds]);
+
+  // Every user edit is stamped at the moment it is made, not when it is
+  // pushed: the server keeps whichever copy of a record carries the newest
+  // stamp (20261017010000), and reconciliation pulls a newer copy down.
+  function touched(rec) {
+    return { ...rec, updatedAt: Math.max(Date.now(), (rec.updatedAt || 0) + 1) };
+  }
 
   function markSyncResult(store, id, ok) {
     const key = store + ":" + id;
@@ -173,8 +201,6 @@ export function StoreProvider({ children }) {
         en = sweep(en, "entries", (r) => deleteRemoteEntry(r.id, r.audioPath));
 
         setProfileState(meta.find((m) => m.key === "profile") || null);
-        const pendingSyncRow = meta.find((m) => m.key === "pendingSync");
-        if (pendingSyncRow) setPendingSyncIds(new Set(pendingSyncRow.ids || []));
         setInterests(ints.sort((a, b) => a.createdAt - b.createdAt));
         setPhotos(ph);
         // Entries written before durations existed get a nominal half hour,
@@ -233,7 +259,6 @@ export function StoreProvider({ children }) {
         setInterests([]);
         setPhotos([]);
         setEntries([]);
-        setPendingSyncIds(new Set());
         hasLocalProfile = false;
       }
 
@@ -480,6 +505,48 @@ export function StoreProvider({ children }) {
       const photosToAdopt = remote.photos.filter((p) => !localPhotoIds.has(p.id));
       await Promise.all(photosToAdopt.map((rec) => put("photos", rec)));
 
+      // Records both sides already have: the newer edit wins. Reconciling
+      // used to compare IDs only, so a record on both sides was left alone
+      // even when one copy was days newer (PRD §14.6). The server refuses a
+      // stale push on its own (20261017010000); this is the other half —
+      // pulling the newer copy down, and pushing a newer local one up.
+      async function settle(store, localRows, remoteRows, push) {
+        const remoteById = new Map(remoteRows.map((r) => [r.id, r]));
+        const adopted = [];
+        for (const local of localRows) {
+          const remote = remoteById.get(local.id);
+          if (!remote) continue;
+          const side = newerSide(local, remote);
+          if (side === "pull") {
+            const merged = mergePulled(store, local, remote);
+            await put(store, merged);
+            adopted.push(merged);
+          } else if (side === "push") {
+            await push(local);
+          }
+        }
+        return adopted;
+      }
+      const [newerInterests, newerEntries, newerPhotos] = await Promise.all([
+        settle("interests", allLocalInterests, remote.interests, (r) => pushInterest(r, user.id)),
+        settle("entries", allLocalEntries, remote.entries, pushEntry),
+        settle("photos", allLocalPhotos, remote.photos, pushPhotoRow),
+      ]);
+      // Into what's on screen: replaced in place, dropped if the newer copy
+      // is in the bin, brought back if it was restored on the other device.
+      const applyNewer = (list, newer) => {
+        if (!newer.length) return list;
+        const byId = new Map(newer.map((r) => [r.id, r]));
+        const kept = list
+          .filter((r) => !(byId.has(r.id) && byId.get(r.id).deletedAt))
+          .map((r) => (byId.has(r.id) ? byId.get(r.id) : r));
+        const ids = new Set(kept.map((r) => r.id));
+        return [...kept, ...newer.filter((r) => !r.deletedAt && !ids.has(r.id))];
+      };
+      if (newerInterests.length) setInterests((l) => applyNewer(l, newerInterests).sort((a, b) => a.createdAt - b.createdAt));
+      if (newerEntries.length) setEntries((l) => applyNewer(l, newerEntries));
+      if (newerPhotos.length) setPhotos((l) => applyNewer(l, newerPhotos));
+
       // Every adopted row above already landed in Dexie, trashed or not —
       // same as any row loaded from local cache. Only non-trashed ones join
       // this live state, though: interests/entries/photos here are read
@@ -508,6 +575,11 @@ export function StoreProvider({ children }) {
           return [...list, ...adoptedPhotos.filter((p) => !ids.has(p.id))];
         });
       }
+
+      // Edits that failed last time the app was open. Run after the
+      // reconcile rather than waiting 45 seconds for the timer, so a student
+      // who opens the app, glances and closes it again still gets them up.
+      retryPendingRef.current();
     })();
   }, [user, loading]);
 
@@ -612,6 +684,7 @@ export function StoreProvider({ children }) {
       if (userRef.current) pushInterest(rec, userRef.current.id);
     },
     updateInterest(rec) {
+      rec = touched(rec);
       setInterests((list) => list.map((x) => (x.id === rec.id ? rec : x)));
       put("interests", rec);
       if (userRef.current) pushInterest(rec, userRef.current.id);
@@ -662,17 +735,17 @@ export function StoreProvider({ children }) {
           // effect and purgeTrashed for where they're actually destroyed.
           const at = Date.now();
           if (removedInterest) {
-            const trashed = { ...removedInterest, deletedAt: at };
+            const trashed = { ...removedInterest, deletedAt: at, updatedAt: at };
             put("interests", trashed);
             if (userRef.current) pushInterest(trashed, userRef.current.id);
           }
           removedEntries.forEach((e) => {
-            const trashed = { ...e, deletedAt: at };
+            const trashed = { ...e, deletedAt: at, updatedAt: at };
             put("entries", trashed);
             if (userRef.current) pushEntry(trashed);
           });
           removedPhotos.forEach((p) => {
-            const trashed = { ...p, deletedAt: at };
+            const trashed = { ...p, deletedAt: at, updatedAt: at };
             put("photos", trashed);
             if (userRef.current) pushPhotoRow(trashed);
           });
@@ -710,7 +783,7 @@ export function StoreProvider({ children }) {
     setCoverPhoto(interestId, photoId) {
       setPhotos((list) => list.map((p) => {
         if (p.interestId !== interestId) return p;
-        const next = { ...p, isPinned: p.id === photoId && !p.isPinned };
+        const next = touched({ ...p, isPinned: p.id === photoId && !p.isPinned });
         if (next.isPinned !== p.isPinned) {
           put("photos", next);
           if (userRef.current) pushPhotoRow(next);
@@ -721,7 +794,7 @@ export function StoreProvider({ children }) {
     updatePhotoCaption(id, caption) {
       setPhotos((list) => list.map((p) => {
         if (p.id !== id) return p;
-        const next = { ...p, caption };
+        const next = touched({ ...p, caption });
         put("photos", next);
         if (userRef.current) pushPhotoRow(next);
         return next;
@@ -762,7 +835,7 @@ export function StoreProvider({ children }) {
         // for real, locally and remotely.
         commit() {
           if (removed) {
-            const trashed = { ...removed, deletedAt: Date.now() };
+            const trashed = touched({ ...removed, deletedAt: Date.now() });
             put("photos", trashed);
             if (userRef.current) pushPhotoRow(trashed);
           }
@@ -796,6 +869,7 @@ export function StoreProvider({ children }) {
     // Edits an existing entry in place — no coin bump, this isn't new
     // activity, just a correction to something already logged.
     updateEntry(rec) {
+      rec = touched(rec);
       setEntries((list) => list.map((x) => (x.id === rec.id ? rec : x)));
       put("entries", rec);
       if (userRef.current) {
@@ -825,7 +899,7 @@ export function StoreProvider({ children }) {
         record: removed,
         commit() {
           if (removed) {
-            const trashed = { ...removed, deletedAt: Date.now() };
+            const trashed = touched({ ...removed, deletedAt: Date.now() });
             put("entries", trashed);
             if (userRef.current) pushEntry(trashed);
           }
@@ -859,7 +933,10 @@ export function StoreProvider({ children }) {
       ].sort((a, b) => b.deletedAt - a.deletedAt);
     },
     async restoreTrashed(kind, id) {
-      const strip = (r) => { const { deletedAt, ...rest } = r; return rest; };
+      // Stamped as a fresh edit: the trashed copy on the server carries the
+      // time it was deleted, and an older stamp would be refused there
+      // (keep_newest_edit, 20261017010000) — the restore would never land.
+      const strip = (r) => { const { deletedAt, ...rest } = r; return touched(rest); };
       if (kind === "interest") {
         const [ints, ph, en] = await Promise.all([getAll("interests"), getAll("photos"), getAll("entries")]);
         const it = ints.find((x) => x.id === id);
@@ -991,7 +1068,6 @@ export function StoreProvider({ children }) {
       setInterests([]);
       setPhotos([]);
       setEntries([]);
-      setPendingSyncIds(new Set());
     },
     // "Clear all data" from Me: empties the garden, local and remote, but
     // keeps the profile. The account is still signed in and still onboarded

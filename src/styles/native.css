@@ -1,0 +1,56 @@
+/* ---------- inside the iPhone app ----------
+   On the web, Forest is drawn as a phone-shaped card in the middle of the
+   page. Inside the iPhone app that card would be a phone drawn inside a
+   phone — margins, rounded corners and a shadow around the real screen —
+   which is the first thing that makes a wrapped website look like one
+   (Apple guideline 4.2). Here the app is the screen.
+
+   Only applies under html.native, which main.jsx sets inside the iPhone
+   app, so the website's look is untouched.
+
+   The notch and the home bar: .app is padded down by the status bar's
+   height, so headers start below it. The bottom bar already pads itself by
+   the home-indicator inset (.nav in workspace.css); sheets and the photo
+   viewer, which sit on top of everything, get the same here. */
+
+html.native,
+html.native body {
+  height: 100%;
+  margin: 0;
+  /* No rubber-band bounce of the whole page: only the content scrolls. */
+  overscroll-behavior: none;
+}
+
+/* --text-scale is the zoom main.jsx applies for the phone's Larger Text
+   setting; a zoomed full-screen height has to be divided back down or it
+   runs off the bottom of the screen. */
+html.native .stage {
+  padding: 0;
+  min-height: 100vh;
+  min-height: calc(100dvh / var(--text-scale, 1));
+  align-items: stretch;
+}
+
+html.native .app {
+  max-width: none;
+  height: 100vh;
+  height: calc(100dvh / var(--text-scale, 1));
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+html.native .sheet {
+  padding-bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+}
+
+html.native .viewer {
+  padding-top: calc(20px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+}
+
+html.native .app > .sf-screen,
+html.native .sf-view {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}

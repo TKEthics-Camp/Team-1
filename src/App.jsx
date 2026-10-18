@@ -4,6 +4,7 @@ import { useStore } from "./store/StoreContext";
 import { useAuth } from "./store/AuthContext";
 import { useI18n } from "./i18n/I18nContext";
 import { useReminderTimers } from "./lib/useReminderTimers";
+import { listenForReminderTaps, takeOpenPath, onOpenPath } from "./lib/notifications";
 import { UIProvider, useUI } from "./ui/UIContext";
 import { DEFAULT_THEME } from "./lib/constants";
 import { useResolvedTheme } from "./lib/useResolvedTheme";
@@ -11,11 +12,12 @@ import { useBadgeWatcher } from "./lib/useBadgeWatcher";
 import AuthFlow from "./components/auth/AuthFlow";
 import GuardianConsentPage from "./components/consent/GuardianConsentPage";
 import PendingConsentScreen from "./components/consent/PendingConsentScreen";
+import AgeRequiredScreen from "./components/consent/AgeRequiredScreen";
 import PolicyScreen from "./components/policy/PolicyScreen";
 import SupportScreen from "./components/policy/SupportScreen";
 import { guardianTokenFromLocation, policyFromLocation } from "./lib/guardianLink";
 import { myConsentStatus, refreshConsentState } from "./lib/remote";
-import { forgetConsentStatus } from "./lib/useConsentStatus";
+import { forgetConsentStatus, signupGateSettled } from "./lib/useConsentStatus";
 import HomeScreen from "./components/home/HomeScreen";
 import BottomNav from "./components/shared/BottomNav";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
@@ -48,6 +50,9 @@ export default function App() {
   const resolvedTheme = useResolvedTheme((profile && profile.theme) || DEFAULT_THEME);
 
   useReminderTimers(interests, entries, photos, lang, nameOf, t);
+  // Registered as early as possible: a reminder tapped while the app was
+  // closed is delivered once something is listening.
+  useEffect(() => listenForReminderTaps(), []);
 
   // syncedLang latches so a later manual toggle isn't stomped by the profile
   // it came from. It has to unlatch when the account changes, though: left
@@ -64,12 +69,19 @@ export default function App() {
     if (!id) setLang("en");
   }, [user, setLang]);
 
+  // Only this account's own profile may set the language. A browser can
+  // still be holding the previous person's cached profile when someone new
+  // signs up — its owner is checked and it is cleared during sign-in sync,
+  // but that comes a moment later, after this has already run. Taken at
+  // face value, a new account inherited whatever language the last person
+  // here used. A profile with no userId yet is a cache from before that
+  // field existed; sign-in sync stamps it, and this runs again when it does.
   useEffect(() => {
-    if (!syncedLang.current && profile && profile.lang) {
-      setLang(profile.lang);
-      syncedLang.current = true;
-    }
-  }, [profile, setLang]);
+    if (syncedLang.current || !profile || !profile.lang || !user) return;
+    if (profile.userId !== user.id) return;
+    setLang(profile.lang);
+    syncedLang.current = true;
+  }, [profile, user, setLang]);
 
   // A device's local cache belongs to whoever's signed in. If someone signs
   // out (shared computer, different student next), wipe the local cache so
@@ -90,6 +102,7 @@ export default function App() {
     let cancelled = false;
     if (!user) { setConsent(null); return; }
     (async () => {
+      await signupGateSettled();
       await refreshConsentState();
       const status = await myConsentStatus();
       if (!cancelled) setConsent(status);
@@ -135,6 +148,8 @@ export default function App() {
           // yanking it away is worse than a blank one, and this only lasts a
           // single round trip.
           <div className="view" />
+        ) : consent && consent.state === "age_required" ? (
+          <AgeRequiredScreen />
         ) : consent && (consent.state === "pending" || consent.state === "withdrawn") ? (
           <PendingConsentScreen withdrawn={consent.state === "withdrawn"} />
         ) : profile ? (
@@ -178,9 +193,11 @@ function RoutedShell() {
   // existing profile, or right after onboarding finishes. Whatever the
   // address bar happened to be showing (a leftover route from before the
   // page reloaded, or from onboarding running with no router underneath
-  // it to control), always land on Home instead of wherever that was.
+  // it to control), land on Home instead of wherever that was — unless a
+  // tapped reminder opened the app, in which case go where it points.
   useEffect(() => {
-    navigate("/", { replace: true });
+    navigate(takeOpenPath() || "/", { replace: true });
+    return onOpenPath((path) => navigate(path));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
+import Icon from "./Icon";
 
 // A quiet indicator for the sync-status middle ground (see StoreContext's
 // pendingSyncCount/retrySync): something failed to reach the server and is
@@ -35,7 +36,7 @@ export default function SyncStatusBadge() {
         aria-label={t("syncPendingLabel")}
         onClick={() => setOpen((o) => !o)}
       >
-        ☁️
+        <Icon name="cloud" size={16} />
       </button>
       {open && (
         <div className="sync-popover" role="status">

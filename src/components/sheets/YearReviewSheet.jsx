@@ -6,6 +6,7 @@ import { yearStats } from "../../lib/yearReview";
 import { fmtHours } from "../../lib/derived";
 import Mascot from "../shared/Mascot";
 import Tree from "../shared/Tree";
+import Icon from "../shared/Icon";
 
 // A Wrapped-style recap, full screen and story-paced (tap to advance, a
 // segmented progress bar up top) rather than a small bottom sheet. There's
@@ -43,7 +44,7 @@ export default function YearReviewSheet() {
   if (!data) {
     return (
       <div className="year-full">
-        <button className="year-close" aria-label={t("close")} onClick={closeSheet}>✕</button>
+        <button className="year-close" aria-label={t("close")} onClick={closeSheet}><Icon name="x" size={18} /></button>
         <div className="year-intro">
           <Mascot size={72} />
           <h2>{t("yearReview")}</h2>
@@ -67,7 +68,7 @@ export default function YearReviewSheet() {
 
   return (
     <div className="year-full" onClick={next} role="button" tabIndex={0}>
-      <button className="year-close" aria-label={t("close")} onClick={(e) => { e.stopPropagation(); close(); }}>✕</button>
+      <button className="year-close" aria-label={t("close")} onClick={(e) => { e.stopPropagation(); close(); }}><Icon name="x" size={18} /></button>
       <div className="year-progress">
         {Array.from({ length: stepCount }).map((_, idx) => (
           <span key={idx} className={"seg" + (idx < i ? " done" : idx === i ? " on" : "")} />

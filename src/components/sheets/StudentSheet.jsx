@@ -8,6 +8,7 @@ import { studentShared } from "../../lib/community";
 import Sheet from "../shared/Sheet";
 import Tree from "../shared/Tree";
 import Avatar from "../explore/Avatar";
+import Icon from "../shared/Icon";
 
 // Tap a classmate: their (fake) orbs and what you share. No message button —
 // the constitution's hard line is that no outside person can reach the kid.
@@ -30,7 +31,7 @@ export default function StudentSheet({ student }) {
       </div>
 
       <div className="safe-note" style={{ background: "var(--sel)" }}>
-        <span aria-hidden="true">{shared.length ? "✨" : "🌱"}</span>
+        <span aria-hidden="true"><Icon name={shared.length ? "sparkles" : "sprout"} size={16} /></span>
         <span>{shared.length ? t("sharesWith") + " " + sharedNames : t("sharesNone")}</span>
       </div>
 
@@ -46,7 +47,7 @@ export default function StudentSheet({ student }) {
               </div>
               <div className="grow">
                 <div className="idea-nm">{name}</div>
-                <div className="idea-cat">{fmtHours(o[3]) + (isShared ? "  ·  ✨" : "")}</div>
+                <div className="idea-cat">{fmtHours(o[3]) + (isShared ? "  ·  " + t("sharedHobby") : "")}</div>
               </div>
               {!haveHobby(interests, o) && (
                 <button

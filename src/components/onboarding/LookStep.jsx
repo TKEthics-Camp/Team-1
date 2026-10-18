@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import SfHead from "./SfHead";
+import LookIcon from "./LookIcon";
 
 // Last stop before the garden. Stores the choice as-is — "white", "black",
 // or literally "system" — rather than resolving System once here, so it
 // keeps following the OS after onboarding via lib/useResolvedTheme.
 const LOOKS = [
-  ["white", "☀️", "sfLookLight"],
-  ["black", "🌑", "sfLookDark"],
-  ["system", "🖥️", "sfLookSystem"],
+  ["white", "sfLookLight"],
+  ["black", "sfLookDark"],
+  ["system", "sfLookSystem"],
 ];
 
 function resolveForPreview(id) {
@@ -41,7 +42,7 @@ export default function LookStep({ value, setTheme, onEnter }) {
       <SfHead action="point">{t("sfLookTitle")}</SfHead>
 
       <div className="sf-options">
-        {LOOKS.map(([id, ico, key]) => (
+        {LOOKS.map(([id, key]) => (
           <button
             key={id}
             type="button"
@@ -49,7 +50,7 @@ export default function LookStep({ value, setTheme, onEnter }) {
             aria-pressed={look === id ? "true" : "false"}
             onClick={() => pick(id)}
           >
-            <span className="sf-look-ico" aria-hidden="true">{ico}</span>
+            <span className="sf-look-ico" aria-hidden="true"><LookIcon kind={id} /></span>
             {t(key)}
           </button>
         ))}

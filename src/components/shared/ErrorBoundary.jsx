@@ -1,4 +1,5 @@
 import { Component } from "react";
+import Icon from "./Icon";
 
 // Wraps the whole app (see main.jsx) — including every provider — so it
 // can't itself depend on any of them; a crash in a context is exactly the
@@ -28,7 +29,7 @@ export default class ErrorBoundary extends Component {
     if (this.props.inline) {
       return (
         <div className="view" style={{ alignItems: "center", justifyContent: "center", textAlign: "center", gap: 10 }}>
-          <div style={{ fontSize: 32 }} aria-hidden="true">🌧️</div>
+          <div style={{ color: "var(--muted)" }} aria-hidden="true"><Icon name="cloudRain" size={30} /></div>
           <h2 style={{ fontFamily: "var(--display)", fontSize: 17 }}>This screen ran into trouble</h2>
           <p className="sub">换个标签页再回来试试。你的数据是安全的。</p>
           <p className="sub">Try another tab and come back — your data is safe.</p>
@@ -39,7 +40,7 @@ export default class ErrorBoundary extends Component {
       <div className="stage" data-theme="white">
         <div className="app">
           <div className="view" style={{ alignItems: "center", justifyContent: "center", textAlign: "center", gap: 12 }}>
-            <div style={{ fontSize: 40 }}>🌧️</div>
+            <div style={{ color: "var(--muted)" }} aria-hidden="true"><Icon name="cloudRain" size={36} /></div>
             <h1 style={{ fontFamily: "var(--display)", fontSize: 20 }}>Something went wrong</h1>
             <p className="sub">出错了。你的花园数据是安全的 — 请重新加载。</p>
             <p className="sub">Your garden's data is safe — try reloading.</p>

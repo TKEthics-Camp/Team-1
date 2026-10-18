@@ -1,0 +1,5 @@
+# Minimal Supabase CLI configuration. The live project is linked with
+#   supabase link --project-ref <project ref>
+# (the ref is the part of the project URL before .supabase.co). See
+# supabase/README.md for the one-time setup and how migrations are applied.
+project_id = "forest"

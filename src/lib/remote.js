@@ -146,6 +146,7 @@ export function photoToRow(rec) {
     visibility: rec.visibility || "private",
     is_pinned: !!rec.isPinned,
     created_at: toIso(rec.createdAt),
+    updated_at: toIso(rec.updatedAt || rec.createdAt),
     deleted_at: rec.deletedAt ? toIso(rec.deletedAt) : null,
   };
 }
@@ -164,6 +165,7 @@ export function rowToPhoto(row) {
     isPinned: row.is_pinned,
     deletedAt: row.deleted_at ? toMs(row.deleted_at) : undefined,
     createdAt: toMs(row.created_at),
+    updatedAt: row.updated_at ? toMs(row.updated_at) : toMs(row.created_at),
   };
 }
 
@@ -179,7 +181,7 @@ export function rowToPhoto(row) {
 // have a newer one applied but not an older one).
 const INTEREST_OPTIONAL_COLUMNS = ["deleted_at", "days", "species", "leaf_color", "revived_at"];
 const ENTRY_OPTIONAL_COLUMNS = ["deleted_at", "shared_to_feed", "audio_path", "audio_ms"];
-const PHOTO_OPTIONAL_COLUMNS = ["deleted_at"];
+const PHOTO_OPTIONAL_COLUMNS = ["deleted_at", "updated_at"];
 
 // PGRST204 means PostgREST doesn't recognize one of the columns in the
 // payload, and names exactly which one in its message — so this drops
@@ -329,30 +331,33 @@ export async function downloadAudioBlob(storagePath) {
 // Storage has no cascade. Deleting a photos row leaves its file sitting in
 // the bucket, so every path that erases a user's content has to sweep the
 // buckets explicitly. Both bucket layouts are flat — `${userId}/${id}` — so
-// listing this folder is the whole set.
+// a non-recursive list is the whole set.
 //
-// list() only ever returns up to PAGE entries at a time, so an account with
-// more files than that needs more than one round — past ~1,000 photos or
-// voice notes, whatever didn't fit in the first page used to silently stay
-// behind. Removing each page before asking for the next means the next
-// list() call is still asking for "what's left", with no offset math that
-// could skip or repeat entries as the folder shrinks underneath it.
+// A list returns at most 1,000 names, so this goes round until a list comes
+// back empty. Each pass deletes what it listed, which is why it always asks
+// for the first page rather than paging forward. A pass that lists files and
+// then fails to remove them stops the loop: going round again would only see
+// the same files.
+const CLEAR_BATCH = 1000;
+
 async function clearBucket(bucket, userId) {
-  const PAGE = 1000;
   for (;;) {
-    const { data, error } = await supabase.storage.from(bucket).list(userId, { limit: PAGE });
+    const { data, error } = await supabase.storage.from(bucket).list(userId, { limit: CLEAR_BATCH });
     if (error) {
       console.error(`Sync (list ${bucket}) failed:`, error);
       return false;
     }
     const paths = (data || []).map((f) => `${userId}/${f.name}`);
     if (!paths.length) return true;
-    const { error: removeError } = await supabase.storage.from(bucket).remove(paths);
+    const { data: removed, error: removeError } = await supabase.storage.from(bucket).remove(paths);
     if (removeError) {
       console.error(`Sync (clear ${bucket}) failed:`, removeError);
       return false;
     }
-    if (data.length < PAGE) return true;
+    if (!removed || removed.length === 0) {
+      console.error(`Sync (clear ${bucket}) removed nothing; stopping.`);
+      return false;
+    }
   }
 }
 
@@ -611,12 +616,20 @@ export async function joinClass(code) {
 // of, and "that didn't work" tells them nothing and tells us less — the
 // real error names the exact table and privilege involved, and it was
 // going to a console nobody opens.
+//
+// If the files could not all be removed, the account is left in place and
+// this says so. Deleting the account anyway would strand whatever files were
+// left with no owner and no way for anyone to ask for them to go; leaving it
+// means trying again finishes the job.
 export async function deleteMyAccount(userId) {
   if (userId) {
-    await Promise.all([
+    const swept = await Promise.all([
       clearBucket("photos", userId),
       clearBucket("voice-notes", userId),
     ]);
+    if (!swept.every(Boolean)) {
+      return { ok: false, reason: "files" };
+    }
   }
   const { error } = await supabase.rpc("delete_my_account");
   if (error) {
@@ -861,40 +874,15 @@ export async function redeemRecoveryCode(username, code, newPassword) {
 // Every one of these decisions is made server side. The client passes the
 // birthdate in and is told which path it landed on; it never chooses.
 
-export async function applyAgeGate(birthdate, classCode, userId) {
+export async function applyAgeGate(birthdate, classCode) {
   const { data, error } = await supabase.rpc("apply_age_gate", {
     p_birthdate: birthdate,
     p_class_code: classCode || null,
   });
   if (error) {
-    // PGRST202 is PostgREST saying the function is not in its schema cache,
-    // which here means 20260918000000 has not been applied to this project.
-    // That is a deployment state, not a failure: the age gate is simply not
-    // live yet, and signup must go through exactly as it did before it
-    // existed. Treating it as an error is what broke account creation
-    // outright — see the comment at the call site.
-    const missing = error.code === "PGRST202"
-      || /could not find the function/i.test(error.message || "");
-    if (missing) {
-      console.warn("Age gate not deployed; signup proceeding ungated.");
-      // Best-effort: record that this account slipped through ungated, so
-      // whoever is responsible for the app has something to find instead of
-      // a console.warn nobody watches. If 20260928000000 itself isn't
-      // deployed either, this insert fails the same way apply_age_gate did
-      // above — that's fine, there's nowhere left to escalate to, and it
-      // must never block or fail the signup it's merely recording.
-      if (userId) {
-        supabase
-          .from("age_gate_bypass_log")
-          .insert({ user_id: userId })
-          .then(({ error: logError }) => {
-            if (logError && logError.code !== "PGRST205" && logError.code !== "42P01") {
-              console.error("Failed to record age gate bypass:", logError.message);
-            }
-          });
-      }
-      return { ok: false, reason: "missing" };
-    }
+    // Every failure is a failure, including the function not existing
+    // (PGRST202). A database without the gate is not a reason to let an
+    // account through without one — see the call site in AuthFlow.
     console.error("Age gate failed:", error.message);
     return { ok: false, reason: "error", message: error.message || String(error) };
   }
@@ -1017,23 +1005,6 @@ export async function moderateResolve(reportId, status) {
     return { ok: false, message: error.message };
   }
   return { ok: true };
-}
-
-// How many accounts have signed up while the age gate was undeployed (see
-// applyAgeGate's "missing" branch). Same PGRST202/42P01 tolerance as
-// amIModerator — a project without 20260928000000 simply has nothing to
-// report, which is not an error.
-export async function ageGateBypassCount() {
-  const { count, error } = await supabase
-    .from("age_gate_bypass_log")
-    .select("id", { count: "exact", head: true });
-  if (error) {
-    if (error.code !== "PGRST205" && error.code !== "42P01") {
-      console.error("Age gate bypass count failed:", error.message);
-    }
-    return 0;
-  }
-  return count || 0;
 }
 
 // What a guardian can do with their link besides agreeing. Both run as

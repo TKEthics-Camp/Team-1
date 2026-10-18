@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { SUGGESTIONS } from "../../i18n/strings";
 import SfHead from "./SfHead";
+import Icon from "../shared/Icon";
 
 // Pick-from-a-list rather than free text: tapping a row adds or removes that
 // hobby outright. "Other" reveals a field for anything not on the list — the
@@ -41,7 +42,7 @@ export default function InterestsStep({ drafts, toggleDraft, addDraft, blocked, 
                 aria-pressed={on ? "true" : "false"}
                 onClick={() => toggleDraft(label)}
               >
-                <span className="sf-box" aria-hidden="true">{on ? "✓" : ""}</span>
+                <span className="sf-box" aria-hidden="true">{on && <Icon name="check" size={15} />}</span>
                 <span className="sf-check-label">{label}</span>
               </button>
             );
@@ -53,7 +54,7 @@ export default function InterestsStep({ drafts, toggleDraft, addDraft, blocked, 
             aria-pressed={other ? "true" : "false"}
             onClick={() => setOther((o) => !o)}
           >
-            <span className="sf-box" aria-hidden="true">{other ? "✓" : ""}</span>
+            <span className="sf-box" aria-hidden="true">{other && <Icon name="check" size={15} />}</span>
             <span className="sf-check-label">{t("sfOther")}</span>
           </button>
         </div>

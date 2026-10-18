@@ -5,6 +5,7 @@ import { setRecoveryCode, hasRecoveryCode } from "../../lib/remote";
 import { generateRecoveryCode } from "../../lib/recoveryCode";
 import Sheet from "../shared/Sheet";
 import Field from "../shared/Field";
+import Icon from "../shared/Icon";
 
 // Gets the student a recovery code, which is the only way back into an
 // account whose password has been forgotten — they have no email, so there
@@ -68,7 +69,7 @@ export default function RecoveryCodeSheet() {
           <p className="sub">{t("recShownOnce")}</p>
           <div className="rec-code" aria-label={t("recTitle")}>{code}</div>
           <div className="safe-note">
-            <span aria-hidden="true">✍️</span>
+            <span aria-hidden="true"><Icon name="pencil" size={16} /></span>
             <span>{t("recWriteItDown")}</span>
           </div>
           {navigator.clipboard && (
@@ -82,7 +83,7 @@ export default function RecoveryCodeSheet() {
           {existing === true && <div className="sub">{t("recAlreadyHave")}</div>}
           {existing === false && (
             <div className="safe-note">
-              <span aria-hidden="true">⚠️</span>
+              <span aria-hidden="true"><Icon name="alert" size={16} /></span>
               <span>{t("recNoneYet")}</span>
             </div>
           )}

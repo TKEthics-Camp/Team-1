@@ -21,33 +21,38 @@ export default function NudgeBanner({ interests }) {
       <div className="body">
         <div className="head">{solo ? nameOf(solo) : t("nudgeManyTitle")}</div>
         <div className="sub">{solo ? t("nudgeSolo") : t("nudgeManySub")}</div>
-        {!solo && (
-          <div className="chips" style={{ marginTop: 8 }}>
+        {solo ? (
+          // Inside the card, not below it: "Later" belongs to this reminder,
+          // and sitting outside it read as a stray button on the page.
+          <div className="nudge-actions">
+            <button className="btn" onClick={() => navigate(`/interest/${solo.id}?tab=journal`)}>{t("goDoIt")}</button>
+            <button className="btn2" onClick={() => snoozeNudge(solo.id)}>{t("later")}</button>
+          </div>
+        ) : (
+          // Several hobbies: each one is its own "go do it", and "Later"
+          // shares their row as the quiet option rather than taking a line
+          // of its own.
+          <div className="nudge-chips">
             {interests.map((it) => (
               <button
                 key={it.id}
                 type="button"
-                className="chip"
+                className="nudge-chip"
                 onClick={() => navigate(`/interest/${it.id}?tab=journal`)}
               >
                 {nameOf(it)}
+                <span aria-hidden="true">→</span>
               </button>
             ))}
+            <button
+              type="button"
+              className="nudge-later"
+              onClick={() => interests.forEach((it) => snoozeNudge(it.id))}
+            >
+              {t("later")}
+            </button>
           </div>
         )}
-        {/* Inside the card, not below it: "Later" belongs to this reminder,
-            and sitting outside it read as a stray button on the page. */}
-        <div className="nudge-actions">
-          {solo && (
-            <button className="btn" onClick={() => navigate(`/interest/${solo.id}?tab=journal`)}>{t("goDoIt")}</button>
-          )}
-          <button
-            className="btn2"
-            onClick={() => interests.forEach((it) => snoozeNudge(it.id))}
-          >
-            {t("later")}
-          </button>
-        </div>
       </div>
     </div>
   );
