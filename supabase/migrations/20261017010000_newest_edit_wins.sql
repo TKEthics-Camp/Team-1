@@ -17,12 +17,15 @@
 -- edit — a photo's storage path arriving after its upload, a moderator
 -- hiding something — reuses the same stamp.
 --
--- photos had no updated_at; it gets one, filled from created_at for every
--- existing row so nothing looks newer or older than it is.
+-- photos had no updated_at; it gets one. Existing rows are left empty
+-- rather than back-filled: rewriting every photo row fires the other photo
+-- triggers (the content filter, the disclosure lock) against old data, and
+-- one refusal aborts the whole migration — which is what the first version
+-- of this file did on the live project. An empty stamp is already handled:
+-- this trigger lets it through, and the app reads it as created_at.
 
 alter table public.photos
   add column if not exists updated_at timestamptz;
-update public.photos set updated_at = created_at where updated_at is null;
 alter table public.photos alter column updated_at set default now();
 
 create or replace function public.keep_newest_edit()
