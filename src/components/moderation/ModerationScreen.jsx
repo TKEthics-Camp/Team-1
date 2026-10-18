@@ -117,7 +117,7 @@ export default function ModerationScreen() {
                 )}
                 {(row.content || !row.media_path) && (
                   <div className="mod-content">
-                    {row.content ? row.content : <em>(no text)</em>}
+                    {row.content ? row.content : <em>(nothing left to show — it may have since been deleted)</em>}
                   </div>
                 )}
 

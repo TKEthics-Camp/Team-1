@@ -58,7 +58,8 @@ insert into supabase_migrations.schema_migrations (version, name) values
   ('20261011010000', 'moderator_media'),
   ('20261017000000', 'storage_sweeps'),
   ('20261017010000', 'newest_edit_wins'),
-  ('20261017020000', 'drop_users_bio')
+  ('20261017020000', 'drop_users_bio'),
+  ('20261018000000', 'moderator_storage_narrow')
 on conflict (version) do nothing;
 
 select count(*) as recorded from supabase_migrations.schema_migrations;
