@@ -81,8 +81,8 @@ export const PRIVACY = {
           "不收集位置信息。照片在添加时会被重新编码，这会移除手机通常存储在图片文件中的隐藏位置和相机信息。",
         ],
         [
-          "No advertising identifiers, no analytics, no third-party software development kits of any kind.",
-          "没有广告标识符，没有分析工具，也没有任何第三方软件开发工具包。",
+          "No advertising identifiers, no analytics, and no tracking of any kind.",
+          "没有广告标识符，没有分析工具，也没有任何形式的追踪。",
         ],
       ],
     },
@@ -121,6 +121,10 @@ export const PRIVACY = {
         [
           "If you sign out on a shared computer, the copy on that device is erased.",
           "如果你在共用电脑上退出登录，该设备上的副本会被清除。",
+        ],
+        [
+          "If your account needs a parent or guardian's permission, the email asking for it is sent through Resend, a third-party email delivery service. It only ever sees the guardian's email address and the message itself — nothing else in your account.",
+          "如果你的账号需要父母或监护人同意，征求同意的邮件会通过第三方邮件发送服务 Resend 发出。它只会接触到监护人的邮箱地址和邮件内容，看不到你账号里的其他任何信息。",
         ],
       ],
     },

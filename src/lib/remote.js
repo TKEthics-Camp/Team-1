@@ -329,21 +329,31 @@ export async function downloadAudioBlob(storagePath) {
 // Storage has no cascade. Deleting a photos row leaves its file sitting in
 // the bucket, so every path that erases a user's content has to sweep the
 // buckets explicitly. Both bucket layouts are flat — `${userId}/${id}` — so
-// one non-recursive list per bucket is the whole set.
+// listing this folder is the whole set.
+//
+// list() only ever returns up to PAGE entries at a time, so an account with
+// more files than that needs more than one round — past ~1,000 photos or
+// voice notes, whatever didn't fit in the first page used to silently stay
+// behind. Removing each page before asking for the next means the next
+// list() call is still asking for "what's left", with no offset math that
+// could skip or repeat entries as the folder shrinks underneath it.
 async function clearBucket(bucket, userId) {
-  const { data, error } = await supabase.storage.from(bucket).list(userId, { limit: 1000 });
-  if (error) {
-    console.error(`Sync (list ${bucket}) failed:`, error);
-    return false;
+  const PAGE = 1000;
+  for (;;) {
+    const { data, error } = await supabase.storage.from(bucket).list(userId, { limit: PAGE });
+    if (error) {
+      console.error(`Sync (list ${bucket}) failed:`, error);
+      return false;
+    }
+    const paths = (data || []).map((f) => `${userId}/${f.name}`);
+    if (!paths.length) return true;
+    const { error: removeError } = await supabase.storage.from(bucket).remove(paths);
+    if (removeError) {
+      console.error(`Sync (clear ${bucket}) failed:`, removeError);
+      return false;
+    }
+    if (data.length < PAGE) return true;
   }
-  const paths = (data || []).map((f) => `${userId}/${f.name}`);
-  if (!paths.length) return true;
-  const { error: removeError } = await supabase.storage.from(bucket).remove(paths);
-  if (removeError) {
-    console.error(`Sync (clear ${bucket}) failed:`, removeError);
-    return false;
-  }
-  return true;
 }
 
 // Erases everything this user planted, on the server. Reports whether it
@@ -851,7 +861,7 @@ export async function redeemRecoveryCode(username, code, newPassword) {
 // Every one of these decisions is made server side. The client passes the
 // birthdate in and is told which path it landed on; it never chooses.
 
-export async function applyAgeGate(birthdate, classCode) {
+export async function applyAgeGate(birthdate, classCode, userId) {
   const { data, error } = await supabase.rpc("apply_age_gate", {
     p_birthdate: birthdate,
     p_class_code: classCode || null,
@@ -867,6 +877,22 @@ export async function applyAgeGate(birthdate, classCode) {
       || /could not find the function/i.test(error.message || "");
     if (missing) {
       console.warn("Age gate not deployed; signup proceeding ungated.");
+      // Best-effort: record that this account slipped through ungated, so
+      // whoever is responsible for the app has something to find instead of
+      // a console.warn nobody watches. If 20260928000000 itself isn't
+      // deployed either, this insert fails the same way apply_age_gate did
+      // above — that's fine, there's nowhere left to escalate to, and it
+      // must never block or fail the signup it's merely recording.
+      if (userId) {
+        supabase
+          .from("age_gate_bypass_log")
+          .insert({ user_id: userId })
+          .then(({ error: logError }) => {
+            if (logError && logError.code !== "PGRST205" && logError.code !== "42P01") {
+              console.error("Failed to record age gate bypass:", logError.message);
+            }
+          });
+      }
       return { ok: false, reason: "missing" };
     }
     console.error("Age gate failed:", error.message);
@@ -991,6 +1017,23 @@ export async function moderateResolve(reportId, status) {
     return { ok: false, message: error.message };
   }
   return { ok: true };
+}
+
+// How many accounts have signed up while the age gate was undeployed (see
+// applyAgeGate's "missing" branch). Same PGRST202/42P01 tolerance as
+// amIModerator — a project without 20260928000000 simply has nothing to
+// report, which is not an error.
+export async function ageGateBypassCount() {
+  const { count, error } = await supabase
+    .from("age_gate_bypass_log")
+    .select("id", { count: "exact", head: true });
+  if (error) {
+    if (error.code !== "PGRST205" && error.code !== "42P01") {
+      console.error("Age gate bypass count failed:", error.message);
+    }
+    return 0;
+  }
+  return count || 0;
 }
 
 // What a guardian can do with their link besides agreeing. Both run as

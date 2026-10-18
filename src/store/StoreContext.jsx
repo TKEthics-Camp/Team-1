@@ -41,15 +41,20 @@ export function StoreProvider({ children }) {
   // "retry" just means "call the same push again later with whatever the
   // record looks like now" — no need to remember what specifically
   // changed, only which records still owe the server a successful push.
-  // Kept in memory only (not persisted to Dexie): if the app is fully
-  // closed before a retry lands, the next sign-in's reconciliation still
-  // picks up brand-new records the same way it always has, and a fresh
-  // edit re-triggers a push on its own anyway. What this adds is retrying
-  // failed *updates* to something that already exists remotely, which
-  // reconciliation alone never covered.
+  // Persisted to Dexie (the `meta` store, key "pendingSync") so a failed
+  // *update* to something that already exists remotely is still retried
+  // after the app is fully closed and reopened, not just while it stays
+  // running. Hydrated from that row below once the initial Dexie read
+  // completes, and written back below that on every change — but not
+  // before hydration finishes, or the default empty Set would race the
+  // read and clobber whatever was persisted from last time.
   const [pendingSyncIds, setPendingSyncIds] = useState(() => new Set());
   const pendingSyncRef = useRef(pendingSyncIds);
   useEffect(() => { pendingSyncRef.current = pendingSyncIds; }, [pendingSyncIds]);
+  useEffect(() => {
+    if (loading) return;
+    put("meta", { key: "pendingSync", ids: Array.from(pendingSyncIds) });
+  }, [pendingSyncIds, loading]);
 
   function markSyncResult(store, id, ok) {
     const key = store + ":" + id;
@@ -168,6 +173,8 @@ export function StoreProvider({ children }) {
         en = sweep(en, "entries", (r) => deleteRemoteEntry(r.id, r.audioPath));
 
         setProfileState(meta.find((m) => m.key === "profile") || null);
+        const pendingSyncRow = meta.find((m) => m.key === "pendingSync");
+        if (pendingSyncRow) setPendingSyncIds(new Set(pendingSyncRow.ids || []));
         setInterests(ints.sort((a, b) => a.createdAt - b.createdAt));
         setPhotos(ph);
         // Entries written before durations existed get a nominal half hour,
@@ -226,6 +233,7 @@ export function StoreProvider({ children }) {
         setInterests([]);
         setPhotos([]);
         setEntries([]);
+        setPendingSyncIds(new Set());
         hasLocalProfile = false;
       }
 
@@ -983,6 +991,7 @@ export function StoreProvider({ children }) {
       setInterests([]);
       setPhotos([]);
       setEntries([]);
+      setPendingSyncIds(new Set());
     },
     // "Clear all data" from Me: empties the garden, local and remote, but
     // keeps the profile. The account is still signed in and still onboarded
