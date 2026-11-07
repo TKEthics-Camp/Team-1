@@ -483,6 +483,8 @@ export const STR = {
   lastToday:    ["Logged today", "今天记录过"],
   lastYesterday: ["Logged yesterday", "昨天记录过"],
   lastDays:     ["{n} days ago", "{n} 天前"],
+  dayToday:     ["Today", "今天"],
+  dayYesterday: ["Yesterday", "昨天"],
   lastNone:     ["Not logged yet", "还没有记录"],
   logsOf:       ["{a} / {b} logs", "{a} / {b} 次"],
   logsAll:      ["{a} logs", "{a} 次"],

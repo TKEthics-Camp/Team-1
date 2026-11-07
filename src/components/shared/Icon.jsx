@@ -2,6 +2,8 @@
 // of whatever they sit in and need no icon font or image request. The
 // shapes follow the open-source Lucide set (ISC licence), which is the
 // style the owner picked: rounded ends, 2px lines on a 24px grid.
+import { ideaOf } from "../../lib/explore";
+
 const PATHS = {
   clock: (
     <>
@@ -221,6 +223,124 @@ const PATHS = {
       <path d="M16 17h4M4 13h4" />
     </>
   ),
+
+  // ---- one per hobby idea (see HOBBY_ICON below) ----
+  basketball: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 3v18M3 12h18M6 5.3c2.6 2.2 2.6 11.2 0 13.4M18 5.3c-2.6 2.2-2.6 11.2 0 13.4" />
+    </>
+  ),
+  football: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m12 8 3.8 2.8-1.5 4.4H9.7l-1.5-4.4zM12 8V3M15.8 10.8l4.7-1.6M14.3 15.2l2.9 4.1M9.7 15.2l-2.9 4.1M8.2 10.8 3.5 9.2" />
+    </>
+  ),
+  racket: (
+    <>
+      <ellipse cx="9.5" cy="9.5" rx="5.5" ry="6.5" transform="rotate(-45 9.5 9.5)" />
+      <path d="M6.5 8.5 10.5 4.5M7 12l5-5M9.5 14.5l4-4M8 6l6 6M6 9l5 5" strokeWidth="1.2" />
+      <path d="m14 14 6 6" />
+    </>
+  ),
+  paddle: (
+    <>
+      <circle cx="10" cy="10" r="6.5" />
+      <path d="m14.6 14.6 4.9 4.9" strokeWidth="3" />
+      <circle cx="19.5" cy="5" r="1.6" fill="currentColor" stroke="none" />
+    </>
+  ),
+  bike: (
+    <>
+      <circle cx="5.5" cy="17" r="3.5" />
+      <circle cx="18.5" cy="17" r="3.5" />
+      <path d="M5.5 17 9 9.5h6.5L18.5 17M9 9.5l3.5 7.5H5.5M14.5 6h2.5l-1.5 3.5" />
+    </>
+  ),
+  waves: <path d="M2 7c1.7 1.3 3.3 1.3 5 0s3.3-1.3 5 0 3.3 1.3 5 0 3.3-1.3 5 0M2 12c1.7 1.3 3.3 1.3 5 0s3.3-1.3 5 0 3.3 1.3 5 0 3.3-1.3 5 0M2 17c1.7 1.3 3.3 1.3 5 0s3.3-1.3 5 0 3.3 1.3 5 0 3.3-1.3 5 0" />,
+  rope: (
+    <>
+      <rect x="3.5" y="2.5" width="3" height="7" rx="1.5" />
+      <rect x="17.5" y="2.5" width="3" height="7" rx="1.5" />
+      <path d="M5 9.5c0 11 14 11 14 0" />
+    </>
+  ),
+  brush: (
+    <>
+      <path d="m9.5 14.5 8.6-8.6a2.1 2.1 0 0 1 3 3l-8.6 8.6" />
+      <path d="M9.5 14.5c-2.5 0-4 1.6-4 3.8 0 1.4-.8 2.2-2.5 2.7 4.6 1 9-.6 9-4.5z" />
+    </>
+  ),
+  scissors: (
+    <>
+      <circle cx="6" cy="6" r="3" />
+      <circle cx="6" cy="18" r="3" />
+      <path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12" />
+    </>
+  ),
+  camera: (
+    <>
+      <path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" />
+      <circle cx="12" cy="13" r="3.5" />
+    </>
+  ),
+  plane: <path d="M22 2 11 13M22 2l-7 20-4-9-9-4z" />,
+  vase: <path d="M9 3h6M10 3v3.5C7 8 6 10.5 6 13.5 6 17.5 8.5 21 12 21s6-3.5 6-7.5c0-3-1-5.5-4-7V3" />,
+  bubble: <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.8A8 8 0 1 1 21 12z" />,
+  piano: (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M7.5 4v9h2V4M14.5 4v9h2V4M12 13v7M8.5 13v7M15.5 13v7" />
+    </>
+  ),
+  guitar: (
+    <>
+      <path d="m15 9 6-6M18 4l2 2" />
+      <path d="M10.6 8.6a3.5 3.5 0 0 1 4.9 4.9l-.6.6a2 2 0 0 0-.5 1.6 4.5 4.5 0 1 1-6.6-6.6 2 2 0 0 0 1.6-.5z" />
+      <circle cx="10" cy="14" r="1.5" />
+    </>
+  ),
+  drum: (
+    <>
+      <ellipse cx="12" cy="10" rx="8" ry="3" />
+      <path d="M4 10v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7M7 3l3.5 5M17 3l-3.5 5" />
+    </>
+  ),
+  pawn: (
+    <>
+      <circle cx="12" cy="6" r="2.5" />
+      <path d="M9.5 10h5l-1 4h-3zM6.5 20h11l-1.5-6h-8z" />
+    </>
+  ),
+  go: (
+    <>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M3 9h18M3 15h18M9 3v18M15 3v18" />
+      <circle cx="9" cy="9" r="2" fill="currentColor" />
+      <circle cx="15" cy="15" r="2" />
+    </>
+  ),
+  notebook: <path d="M6 3h12a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6zM6 3v18M10 8h5M10 12h5" />,
+  puzzle: <path d="M5 5h4.5a2.5 2.5 0 0 1 5 0H19v4.5a2.5 2.5 0 0 1 0 5V19h-4.5a2.5 2.5 0 0 0-5 0H5v-4.5a2.5 2.5 0 0 0 0-5z" />,
+  star: <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z" />,
+  cake: <path d="M4 21h16M5 21v-7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v7M5 16c1.5 1 3 1 4.5 0s3-1 4.5 0 3 1 5 0M12 12V8M12 5v.5" />,
+  cup: <path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM16 10h1.5a2.5 2.5 0 0 1 0 5H16M8 3v3M12 3v3" />,
+  fish: (
+    <>
+      <path d="M2.5 12C6 7 12 6.5 17 12c-5 5.5-11 5-14.5 0zM17 12l4.5-3.5v7z" />
+      <circle cx="7" cy="11" r=".6" fill="currentColor" />
+    </>
+  ),
+  bird: <path d="M16 7h.01M3.5 18H11a7 7 0 0 0 7-7V8a3 3 0 0 0-5.5-1.7L3.5 18M18 8l3 1-3 1M9 18l1 3" />,
+  kite: <path d="m12 2 6 8-6 8-6-8zM12 2v16M6 10h12M12 18c-1.2 1.5 1.2 2.5 0 4" />,
+  skate: (
+    <>
+      <path d="M3 13h18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM2 11l1 2M22 11l-1 2" />
+      <circle cx="7" cy="18" r="1.5" />
+      <circle cx="17" cy="18" r="1.5" />
+    </>
+  ),
 };
 
 export default function Icon({ name, size = 16, className = "" }) {
@@ -266,3 +386,30 @@ export const CATEGORY_LOOK = {
   outdoor: { icon: "mountain",   tone: "green" },
   dance:   { icon: "footprints", tone: "purple" },
 };
+
+// Each hobby idea's own icon, so Basketball and Swimming stop sharing their
+// category's trophy. Keyed by the idea's English name (IDEAS in constants).
+const HOBBY_ICON = {
+  "Basketball": "basketball", "Football": "football", "Badminton": "racket",
+  "Table tennis": "paddle", "Running": "footprints", "Cycling": "bike",
+  "Swimming": "waves", "Rope skipping": "rope",
+  "Drawing": "pencil", "Watercolor": "palette", "Calligraphy": "brush",
+  "Paper cutting": "scissors", "Photography": "camera", "Origami": "plane",
+  "Clay modeling": "vase", "Comics": "bubble",
+  "Piano": "piano", "Guitar": "guitar", "Singing": "mic", "Erhu": "music",
+  "Flute": "music", "Drums": "drum",
+  "Reading": "book", "Chess": "pawn", "Go": "go", "Journaling": "notebook",
+  "Puzzles": "puzzle", "Star gazing": "star",
+  "Cooking": "utensils", "Baking": "cake", "Gardening": "sprout", "Tea making": "cup",
+  "Hiking": "mountain", "Fishing": "fish", "Bird watching": "bird", "Kite flying": "kite",
+  "Dancing": "music", "Jump rope tricks": "rope", "Skateboarding": "skate",
+};
+
+// The icon and colour for any hobby: its own icon when it is one of the
+// ideas, matched by English or Chinese name, coloured by its category; a
+// sprout for anything typed in that isn't.
+export function hobbyLook(name) {
+  const idea = ideaOf(name);
+  if (!idea) return { icon: "sprout", tone: "green" };
+  return { icon: HOBBY_ICON[idea[0]] || CATEGORY_LOOK[idea[3]].icon, tone: CATEGORY_LOOK[idea[3]].tone };
+}

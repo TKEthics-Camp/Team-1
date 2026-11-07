@@ -175,7 +175,7 @@
   -webkit-backdrop-filter: none; backdrop-filter: none;
 }
 .topbar h1 {
-  font-size: 22px; font-weight: 800; letter-spacing: -.03em; color: var(--ink);
+  font-size: 22px; font-weight: 700; letter-spacing: -.02em; color: var(--ink);
 }
 .page-sub { margin: -2px 0 2px; font-size: 15px; color: var(--muted); }
 
@@ -188,8 +188,8 @@
   text-transform: uppercase; color: var(--body-ink);
 }
 .page-head h1 {
-  margin: 0; font-size: 36px; font-weight: 800; letter-spacing: -.03em;
-  line-height: 1.05; color: var(--ink); text-wrap: balance;
+  margin: 0; font-size: 34px; font-weight: 700; letter-spacing: -.025em;
+  line-height: 1.08; color: var(--ink); text-wrap: balance;
 }
 .page-rule {
   display: block; width: 48px; height: 4px; border-radius: 999px;
@@ -633,77 +633,77 @@ select:focus-visible, summary:focus-visible {
 .theme-btn .nm { font-size: 13px; }
 
 /* ---------- Home: tree cards ----------
-   The reference's tree card: the tree on a soft grey panel with its stage
-   in a chip, then the hobby's line icon and name, when it was last tended,
-   a thin green bar to the next stage, and one outlined action. */
+   The reference's tree card, pared back and set the way iOS sets a list
+   row: the tree on a soft grey panel with its stage in a capsule, then a
+   tinted icon bubble, the name in semibold with one secondary line under
+   it, a grey capsule action, and a thin bar with a single caption. */
 .trees-head {
   display: flex; align-items: center; justify-content: space-between;
-  margin-top: 8px;
+  margin-top: 10px;
 }
 .trees-head h2 {
-  margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.03em; color: var(--ink);
+  margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -.02em; color: var(--ink);
 }
 .plant-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 6px 4px; background: none; border: none; cursor: pointer;
-  font-family: var(--body); font-size: 15px; font-weight: 650; letter-spacing: -.01em;
-  color: var(--ink);
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 2px; background: none; border: none; cursor: pointer;
+  font-family: var(--body); font-size: 16px; font-weight: 600; letter-spacing: -.01em;
+  color: var(--ico-green);
 }
 .plant-btn:hover { opacity: .7; }
 
-.tree-cards { display: flex; flex-direction: column; gap: 14px; }
+.tree-cards { display: flex; flex-direction: column; gap: 16px; }
 .tree-card {
   position: relative; flex: none;
   background: var(--card); border: 1px solid var(--line); border-radius: 22px;
   overflow: hidden;
 }
 .tree-card-art {
-  position: relative; height: 184px; overflow: hidden;
+  position: relative; height: 168px; overflow: hidden;
   display: flex; align-items: flex-end; justify-content: center;
   background: var(--panel);
 }
-.tree-card-tags { position: absolute; top: 14px; left: 14px; display: flex; gap: 6px; }
-.tree-card-tags .tag { padding: 4px 11px; font-size: 13px; }
-.tree-card-age {
-  position: absolute; top: 18px; right: 16px;
-  font-size: 12px; color: var(--dim);
+.tree-card-tags { position: absolute; top: 12px; left: 12px; display: flex; gap: 6px; }
+.tree-card-tags .tag { padding: 4px 10px; font-size: 12.5px; font-weight: 600; }
+.tree-card-tags .tag-grey { background: var(--card); color: var(--muted); }
+.tree-card-body { padding: 14px 16px 16px; display: flex; flex-direction: column; }
+.tree-card-head { display: flex; align-items: center; gap: 12px; }
+.tree-card-ico, .idea-ico {
+  flex: none; width: 38px; height: 38px; border-radius: 50%;
+  display: grid; place-items: center; margin: 0;
+  background: color-mix(in srgb, currentColor 12%, transparent) !important;
 }
-.tree-card-body { padding: 16px 18px 16px; display: flex; flex-direction: column; }
-.tree-card-head { display: flex; align-items: center; gap: 10px; }
-.tree-card-ico { flex: none; color: var(--muted); }
+.tree-card-title { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .tree-card-name {
-  flex: 1; min-width: 0; padding: 0; text-align: left;
+  padding: 0; text-align: left;
   background: none; border: none; cursor: pointer;
-  font-family: var(--body); font-size: 20px; font-weight: 750; letter-spacing: -.025em;
+  font-family: var(--body); font-size: 17px; font-weight: 600; letter-spacing: -.02em;
   color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 /* The name's hit area covers the card; the Log button sits above it. */
 .tree-card-name::after { content: ""; position: absolute; inset: 0; z-index: 0; }
 .tree-card-name:focus-visible { outline: none; }
 .tree-card:has(.tree-card-name:focus-visible) { outline: 2px solid var(--ico-blue); outline-offset: 2px; }
-.tree-card-last { flex: none; font-size: 13px; color: var(--muted); }
-.tree-card-last.dead { color: var(--bad); }
-.tree-card-progress {
-  display: flex; align-items: baseline; justify-content: space-between;
-  margin-top: 16px; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums;
+.tree-card-sub {
+  font-size: 13.5px; color: var(--muted); letter-spacing: -.005em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.tree-card-count { color: var(--body-ink); font-weight: 600; }
-.tree-card-pct { font-size: 13px; }
+.tree-card-sub.dead { color: var(--bad); }
+/* iOS's grey capsule button: filled, borderless, the label in ink. */
+.tree-card-log {
+  position: relative; z-index: 1; flex: none;
+  padding: 7px 16px; border: none; border-radius: 999px; cursor: pointer;
+  background: var(--track); color: var(--ink);
+  font-family: var(--body); font-size: 15px; font-weight: 600; letter-spacing: -.01em;
+}
+.tree-card-log:hover { background: var(--card-2); filter: brightness(.97); }
 .bar {
-  height: 5px; margin-top: 9px; border-radius: 999px;
-  background: var(--card-2); overflow: hidden;
+  height: 4px; margin-top: 14px; border-radius: 999px;
+  background: var(--track); overflow: hidden;
 }
 .bar > span { display: block; height: 100%; border-radius: inherit; background: var(--rule); }
 .tree-card.is-dead .bar > span { background: var(--dim); }
-.tree-card-foot {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  margin-top: 14px;
-}
-.tree-card-next { font-size: 13.5px; color: var(--muted); min-width: 0; }
-.tree-card-log, .tree-view .tree-card-log {
-  position: relative; z-index: 1;
-  width: auto; flex: none; padding: 8px 16px; font-size: 14px; font-weight: 600;
-}
+.tree-card-next { margin-top: 8px; font-size: 13px; color: var(--muted); }
 
 /* Nothing planted yet: the empty panel is the way in. */
 .tree-card-add {
@@ -735,3 +735,7 @@ select:focus-visible, summary:focus-visible {
   display: grid; place-items: center; background: var(--card); box-shadow: var(--lift);
 }
 .cover-ico .ico { width: 26px; height: 26px; }
+
+/* Explore's idea rows lead with the hobby's own icon, as an iOS list does. */
+.ideas .idea { align-items: center; gap: 12px; }
+.idea-ico { width: 40px; height: 40px; }

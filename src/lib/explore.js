@@ -1,12 +1,16 @@
 import { IDEAS, ADJACENT, CATS } from "./constants";
 
+// The idea a hobby name is, matched by English or Chinese name, or null for
+// a hobby the student typed in themselves.
+export function ideaOf(name) {
+  const low = String(name).toLowerCase();
+  return IDEAS.find((idea) => idea[0].toLowerCase() === low || idea[1] === name) || null;
+}
+
 // Which category an interest belongs to, matched by English or Chinese name.
 export function ideaCat(name) {
-  const low = String(name).toLowerCase();
-  for (let i = 0; i < IDEAS.length; i++) {
-    if (IDEAS[i][0].toLowerCase() === low || IDEAS[i][1] === name) return IDEAS[i][3];
-  }
-  return null;
+  const idea = ideaOf(name);
+  return idea ? idea[3] : null;
 }
 
 // The palette index a hobby name maps to (0 when unknown).
@@ -70,5 +74,21 @@ export function recommendations(interests, nameOf, lang) {
   const recognized = interests.filter((it) => ideaCat(it.name));
   const reason = recognized.slice(0, 2).map(nameOf).join(lang === "en" ? " & " : "、");
 
-  return { list: scored.slice(0, 6).map((x) => x.idea), reason };
+  // At most two from any one category. Taking the top six straight off the
+  // scores meant one sport planted got six more sports and nothing else —
+  // a list that only ever showed you more of what you already do.
+  const perCat = {};
+  const picked = [];
+  scored.forEach((x) => {
+    const c = x.idea[3];
+    if (picked.length < RECS && (perCat[c] || 0) < PER_CATEGORY) {
+      picked.push(x.idea);
+      perCat[c] = (perCat[c] || 0) + 1;
+    }
+  });
+
+  return { list: picked, reason };
 }
+
+const RECS = 6;
+const PER_CATEGORY = 2;

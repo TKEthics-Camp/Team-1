@@ -146,7 +146,7 @@ Open Explore → "For you", a short personalised set of hobby ideas from categor
 ### 6.1 Home — garden (individual accounts)
 
 - A greeting by time of day and name, under a small line with today's date.
-- A "Trees" heading with "+ Plant", then one card per interest: the tree drawn at its computed stage and health on a grey panel, a stage chip (and a health chip when it isn't healthy), days since planted, the hobby's category icon and name, when it was last logged, total hours, logs against the next stage's threshold with a thin progress bar, how many more logs the next stage needs, and a Log button (Revive on a dead tree, which opens the tree). The zoom button switches to a compact two-across grid. With nothing planted, an empty card plants the first tree.
+- A "Trees" heading with "+ Plant", then one card per interest: the tree drawn at its computed stage and health on a grey panel with a stage chip (and a health chip when it isn't healthy); the hobby's own icon in a tinted bubble, its name, and one line saying when it was last logged and its total hours; a grey Log button (Revive on a dead tree, which opens the tree); and a thin bar with how many more logs the next stage needs. Days planted, log counts and percentages stay on the tree's own page. The zoom button switches to a compact two-across grid. With nothing planted, an empty card plants the first tree.
 - A zoomed-out grid of the whole forest, toggled from the top bar, for gardens too large to swipe.
 - **Streak chip:** days logged across all hobbies combined. Logging any one tree keeps the whole streak alive. Shows an animated flame, or a leaf while a rest day is bridging the gap.
 - **Three banners,** independently triggered:
@@ -186,7 +186,7 @@ Route `/user/:userId/interest/:interestId`. Read-only with respect to the owner'
 
 ### 6.5 Explore
 
-- **Ideas tab** (individual accounts only). 39 curated hobby ideas across 7 categories: sport, art, music, mind, food & grow, outdoors, movement. Each has a name and description in both languages, and its category shown as a coloured tag with its own icon.
+- **Ideas tab** (individual accounts only). 39 curated hobby ideas across 7 categories: sport, art, music, mind, food & grow, outdoors, movement. Each has a name and description in both languages, its own line icon, and its category shown as a coloured tag. "For you" suggests at most two from any one category, so one sport planted doesn't fill it with sports.
 - **User search** above the tabs for all signed-in accounts. Results are restricted by `users_select` to accounts with `discovery_enabled = true` and no block in either direction — enforced in the database.
 - **Community tab.** A live feed of entries whose authors set `shared_to_feed`. Limit 40, newest first, excluding the viewer's own entries, anyone they blocked, anything a moderator hid, and anything the viewer reported. No comments, reactions or pagination.
 - **School tab** (once the account has a class code). Live classmates and which hobbies they share with the viewer.

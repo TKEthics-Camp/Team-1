@@ -2,16 +2,16 @@ import { useI18n } from "../../i18n/I18nContext";
 import { useUI } from "../../ui/UIContext";
 import { PALETTE } from "../../lib/constants";
 import { catLabel } from "../../lib/explore";
-import Tree from "../shared/Tree";
-import { Tag, CATEGORY_LOOK } from "../shared/Icon";
+import Icon, { Tag, hobbyLook } from "../shared/Icon";
 
-// One hobby idea: an orb, its name + category, and a button that opens the
-// new-orb sheet prefilled from it — the offline call to action.
+// One hobby idea: its icon, its name + category, and a button that opens
+// the new-orb sheet prefilled from it — the offline call to action.
 export default function IdeaCard({ idea }) {
   const { t, lang } = useI18n();
   const { openSheet } = useUI();
   const color = PALETTE[idea[2]];
   const name = idea[lang === "en" ? 0 : 1];
+  const look = hobbyLook(idea[0]);
 
   return (
     <div
@@ -21,18 +21,15 @@ export default function IdeaCard({ idea }) {
       onClick={() => openSheet("idea", { idea })}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openSheet("idea", { idea }); }}
     >
-      <div style={{ flex: "none" }}>
-        <Tree interest={{ color, name }} size={52} stage={2} health="healthy" />
-      </div>
+      {/* The hobby's own icon, as iOS lists lead with one. The category
+          tag below stays plain text: with an icon of its own every sport
+          wore the same trophy, which said "sport" twice and nothing else. */}
+      <span className={"idea-ico stat-ico tag-" + look.tone} aria-hidden="true">
+        <Icon name={look.icon} size={20} />
+      </span>
       <div className="grow">
         <div className="idea-nm">{name}</div>
-        <Tag
-          tone={(CATEGORY_LOOK[idea[3]] || {}).tone}
-          icon={(CATEGORY_LOOK[idea[3]] || {}).icon}
-          className="idea-cat-tag"
-        >
-          {catLabel(idea[3], lang)}
-        </Tag>
+        <Tag tone={look.tone} className="idea-cat-tag">{catLabel(idea[3], lang)}</Tag>
       </div>
       <button
         className="idea-add"
