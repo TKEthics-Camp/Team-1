@@ -15,11 +15,22 @@ export function newerSide(local, remote) {
   return "same";
 }
 
+// Unset and null are the same thing here: a row from the server says null, a
+// record that never finished uploading has no such field at all.
+function differs(a, b) {
+  return (a || null) !== (b || null);
+}
+
 // The server's newer copy, keeping what only this device holds (the photo
 // or recording bytes) unless the newer copy points at a different file.
+//
+// A recording that was re-made keeps the same path (an entry has one file),
+// so its length is what shows these bytes are the old take.
 export function mergePulled(store, local, remote) {
   const merged = { ...local, ...remote };
-  if (store === "photos" && local.storagePath !== remote.storagePath) delete merged.blob;
-  if (store === "entries" && local.audioPath !== remote.audioPath) delete merged.audio;
+  if (store === "photos" && differs(local.storagePath, remote.storagePath)) delete merged.blob;
+  if (store === "entries" && (differs(local.audioPath, remote.audioPath) || differs(local.audioMs, remote.audioMs))) {
+    delete merged.audio;
+  }
   return merged;
 }

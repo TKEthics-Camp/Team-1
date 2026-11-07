@@ -31,13 +31,21 @@ export function AuthProvider({ children }) {
     async signUp(email, password, metadata) {
       setAuthError(null);
       const { data, error } = await supabase.auth.signUp({ email, password, options: { data: metadata } });
-      if (error) { setAuthError(error.message); return { ok: false }; }
+      if (error) {
+        setAuthError(error.message);
+        return { ok: false, alreadyRegistered: error.code === "user_already_exists" };
+      }
       // With email confirmation on, signUp succeeds but returns no session yet.
       return { ok: true, needsConfirmation: !data.session, userId: data.user ? data.user.id : null };
     },
-    async signIn(email, password) {
+    // fallbackEmail is the older derived address for a username that has one
+    // (see lib/syntheticEmail): the account may have been created under it.
+    async signIn(email, password, fallbackEmail) {
       setAuthError(null);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      let { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error && error.status === 400 && fallbackEmail && fallbackEmail !== email) {
+        ({ error } = await supabase.auth.signInWithPassword({ email: fallbackEmail, password }));
+      }
       if (error) { setAuthError(error.message); return { ok: false }; }
       return { ok: true };
     },

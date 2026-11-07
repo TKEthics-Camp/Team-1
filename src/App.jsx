@@ -41,11 +41,11 @@ import Toast from "./components/shared/Toast";
 import SyncStatusBadge from "./components/shared/SyncStatusBadge";
 
 export default function App() {
-  const { loading, profile, interests, entries, photos, clearAllData } = useStore();
+  const { loading, profile, profileCheck, interests, entries, photos, clearAllData } = useStore();
   const { session, loading: authLoading, user } = useAuth();
   const [consent, setConsent] = useState(undefined); // undefined = not asked yet
   const { lang, setLang, nameOf, t } = useI18n();
-  const syncedLang = useRef(false);
+  const appliedLang = useRef(null);
   const lastUserId = useRef(null);
   const resolvedTheme = useResolvedTheme((profile && profile.theme) || DEFAULT_THEME);
 
@@ -54,18 +54,24 @@ export default function App() {
   // closed is delivered once something is listening.
   useEffect(() => listenForReminderTaps(), []);
 
-  // syncedLang latches so a later manual toggle isn't stomped by the profile
-  // it came from. It has to unlatch when the account changes, though: left
-  // set, the previous user's language stayed on screen through sign-out and
-  // the next sign-in, and the incoming profile could never correct it — which
-  // is how logging in landed you in Chinese. Signing out goes back to the
-  // default rather than keeping whoever-was-here-last's choice.
+  // appliedLang is the profile language last put on screen, so this only
+  // acts when the profile's language actually changes — on load, or when
+  // sign-in sync brings one chosen on another device. It used to latch after
+  // the first one, which left that second case showing the old language
+  // while the profile said the new one. A manual toggle changes both at once
+  // (see LangToggle), so it is never stomped.
+  //
+  // It has to reset when the account changes, though: left set, the previous
+  // user's language stayed on screen through sign-out and the next sign-in,
+  // and the incoming profile could never correct it — which is how logging in
+  // landed you in Chinese. Signing out goes back to the default rather than
+  // keeping whoever-was-here-last's choice.
   const langUser = useRef(null);
   useEffect(() => {
     const id = user ? user.id : null;
     if (langUser.current === id) return;
     langUser.current = id;
-    syncedLang.current = false;
+    appliedLang.current = null;
     if (!id) setLang("en");
   }, [user, setLang]);
 
@@ -77,10 +83,10 @@ export default function App() {
   // here used. A profile with no userId yet is a cache from before that
   // field existed; sign-in sync stamps it, and this runs again when it does.
   useEffect(() => {
-    if (syncedLang.current || !profile || !profile.lang || !user) return;
-    if (profile.userId !== user.id) return;
+    if (!profile || !profile.lang || !user) return;
+    if (profile.userId !== user.id || appliedLang.current === profile.lang) return;
+    appliedLang.current = profile.lang;
     setLang(profile.lang);
-    syncedLang.current = true;
   }, [profile, user, setLang]);
 
   // A device's local cache belongs to whoever's signed in. If someone signs
@@ -158,10 +164,40 @@ export default function App() {
               <RoutedShell />
             </UIProvider>
           </BrowserRouter>
+        ) : profileCheck === "failed" ? (
+          <ProfileCheckFailed />
+        ) : profileCheck !== "done" ? (
+          // A device with no profile on it may belong to a returning
+          // student — sign-in sync is still asking the server. Showing
+          // Onboarding meanwhile flashed the start flow at them, and on a
+          // slow answer let them start it over the top of their account.
+          <div className="view" />
         ) : (
           <Suspense fallback={<div className="view" />}><Onboarding /></Suspense>
         )}
       </div>
+    </div>
+  );
+}
+
+// Signed in, nothing on this device, and the server couldn't be asked
+// whether this account has been set up. Neither guess is safe, so it asks
+// to try again — on its own as soon as the connection comes back.
+function ProfileCheckFailed() {
+  const { t } = useI18n();
+  const { retryProfileCheck } = useStore();
+  const { signOut } = useAuth();
+
+  useEffect(() => {
+    window.addEventListener("online", retryProfileCheck);
+    return () => window.removeEventListener("online", retryProfileCheck);
+  }, [retryProfileCheck]);
+
+  return (
+    <div className="view" style={{ alignItems: "center", justifyContent: "center", textAlign: "center", gap: 12 }}>
+      <p className="sub">{t("profileLoadFailed")}</p>
+      <button className="btn" onClick={retryProfileCheck}>{t("syncRetry")}</button>
+      <button className="btn2" onClick={() => signOut()}>{t("logOut")}</button>
     </div>
   );
 }

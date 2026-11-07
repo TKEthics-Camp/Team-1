@@ -48,7 +48,16 @@ export default function PendingConsentScreen({ withdrawn = false }) {
   const [codeError, setCodeError] = useState(null);
 
   async function load() {
-    setStatus(await myConsentStatus());
+    const next = await myConsentStatus();
+    setStatus(next);
+    // The guardian finished while this screen was open. App chose it from
+    // the state it fetched at sign-in and won't ask again by itself, so
+    // without this, Refresh just redrew the "ask a parent" form at a child
+    // who had already been let in.
+    if (next && next.state && !["pending", "withdrawn", "age_required"].includes(next.state)) {
+      forgetConsentStatus();
+      window.location.reload();
+    }
   }
 
   useEffect(() => { load(); }, []);

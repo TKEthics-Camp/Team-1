@@ -40,7 +40,7 @@ function avatarForGender(gender) {
 
 export default function Onboarding() {
   const { t, lang } = useI18n();
-  const { saveProfile, addInterest, pushProfileField } = useStore();
+  const { saveProfile, updateProfile, addInterest, pushProfileField } = useStore();
   const { user, signOut } = useAuth();
   const meta = (user && user.user_metadata) || {};
   const accountType = meta.accountType || "individual";
@@ -66,6 +66,16 @@ export default function Onboarding() {
   function updateDraft(i, patch) {
     setDrafts((d) => d.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
   }
+  // The confirm step lets names be edited in place, which addDraft never
+  // sees — so a name could be blanked out or swapped for a blocked one on
+  // the way past. Settled here before moving on.
+  function settleDrafts() {
+    const kept = drafts.map((d) => ({ ...d, name: d.name.trim() })).filter((d) => d.name);
+    if (kept.some((d) => isBlockedHobby(d.name))) { setHobbyBlocked(true); return false; }
+    setHobbyBlocked(false);
+    setDrafts(kept);
+    return kept.length > 0;
+  }
   // Tapping a row on the hobby list is add-or-remove, keyed by name.
   function toggleDraft(nm) {
     const at = drafts.findIndex((d) => d.name === nm);
@@ -79,9 +89,11 @@ export default function Onboarding() {
   // still works while this settles in the background; a student joining a
   // code that isn't live yet just gets "not found" for the few seconds it
   // takes.
-  async function mintClassCode(userId, rec) {
+  // Patched onto the profile as it is by then, not the one finish() built:
+  // that copy predates anything changed in the seconds the mint took.
+  async function mintClassCode(userId) {
     const code = await mintOrFetchClassCode(userId);
-    if (code) saveProfile({ ...rec, classCode: code });
+    if (code) updateProfile({ classCode: code });
     else console.error("Could not mint a class code after 5 attempts");
   }
 
@@ -101,7 +113,7 @@ export default function Onboarding() {
         createdAt: Date.now(), updatedAt: Date.now(),
       });
     });
-    if (accountType === "org" && user && !user.isDebug) mintClassCode(user.id, rec);
+    if (accountType === "org" && user && !user.isDebug) mintClassCode(user.id);
     if (user && !user.isDebug) {
       markOnboardingComplete(user.id);
       pushProfileField("lang", lang);
@@ -146,7 +158,7 @@ export default function Onboarding() {
             removeDraft={removeDraft}
             addDraft={addDraft}
             blocked={hobbyBlocked}
-            onNext={() => setStep(step + 1)}
+            onNext={() => { if (settleDrafts()) setStep(step + 1); }}
           />
         )}
         {current === "schedule" && (

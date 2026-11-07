@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { getAll, put, del, clearAll as dbClearAll, clearGarden as dbClearGarden } from "../db/db";
+import { getAll, get, put, del, clearAll as dbClearAll, clearGarden as dbClearGarden } from "../db/db";
 import { COINS_PER_LOG, DECORATIONS, REVIVE_COST, PALETTE, DEFAULT_THEME, TRASH_DAYS, HAIR_STYLES, OUTFIT_STYLES } from "../lib/constants";
 import { useAuth } from "./AuthContext";
 import {
@@ -8,7 +8,7 @@ import {
   joinClass as joinClassRemote, setMyClassCode, updateAvatar,
   parseAvatar, pushPhotoRow as remotePushPhotoRow, uploadPhotoBlob, updateCoins, deleteRemotePhoto,
   updateSoundOn, updateOwnedDecorations, updateEquippedDecoration, updateOwnedHair, updateOwnedOutfits,
-  updateLang, updateTheme, uploadAudioBlob,
+  updateLang, updateTheme, uploadAudioBlob, syncLoginToUsername, removeVoiceNoteFile,
 } from "../lib/remote";
 import { earnedIds } from "../lib/badges";
 import { loadPendingSync, savePendingSync, forgetPendingSync } from "../lib/pendingSync";
@@ -23,6 +23,13 @@ export function StoreProvider({ children }) {
   const [interests, setInterests] = useState([]);
   const [photos, setPhotos] = useState([]);
   const [entries, setEntries] = useState([]);
+  // Whether this sign-in has settled what to do about a device with no
+  // profile on it: "checking" until the server has answered, "done" once
+  // profile is either rebuilt or known not to exist, "failed" if it could
+  // not be asked. App holds Onboarding back until "done" — see the reconcile
+  // effect for why.
+  const [profileCheck, setProfileCheck] = useState("checking");
+  const [profileCheckTick, setProfileCheckTick] = useState(0);
 
   // buyDecoration/equipDecoration need to read+validate the *current* profile
   // synchronously (to report success/failure back to the caller), which the
@@ -99,15 +106,46 @@ export function StoreProvider({ children }) {
     markSyncResult("interests", rec.id, ok);
     return ok;
   }
+  // A row whose bytes haven't reached Storage still owes the server
+  // something, even when the row itself landed: signing out wipes the only
+  // copy of those bytes. Counting it as pending is what gets the upload
+  // retried, and what makes logging out warn about it.
   async function pushEntry(rec) {
     const ok = await remotePushEntry(rec);
-    markSyncResult("entries", rec.id, ok);
+    markSyncResult("entries", rec.id, ok && !(rec.audio && !rec.audioPath));
     return ok;
   }
   async function pushPhotoRow(rec) {
     const ok = await remotePushPhotoRow(rec);
-    markSyncResult("photos", rec.id, ok);
+    markSyncResult("photos", rec.id, ok && !(rec.blob && !rec.storagePath));
     return ok;
+  }
+
+  // Upload the bytes, then push the row with the path filled in. Whatever
+  // happened to the record during the upload wins over the copy this started
+  // from: it may have been edited, trashed, or (no copy left) erased, and
+  // writing the original back would undo that.
+  async function uploadPhotoFile(rec, userId) {
+    const storagePath = await uploadPhotoBlob(userId, rec.id, rec.blob);
+    const cur = await get("photos", rec.id);
+    if (!cur) return;
+    if (!storagePath) { await pushPhotoRow(cur); return; }
+    const next = { ...cur, storagePath };
+    await put("photos", next);
+    setPhotos((list) => list.map((p) => (p.id === rec.id ? { ...p, storagePath } : p)));
+    await pushPhotoRow(next);
+  }
+  // Same for a voice note, which unlike a photo can also have been taken off
+  // the entry while it was uploading.
+  async function uploadEntryAudio(rec, userId) {
+    const audioPath = await uploadAudioBlob(userId, rec.id, rec.audio);
+    const cur = await get("entries", rec.id);
+    if (!cur) return;
+    if (!audioPath || !cur.audio) { await pushEntry(cur); return; }
+    const next = { ...cur, audioPath };
+    await put("entries", next);
+    setEntries((list) => list.map((e) => (e.id === rec.id ? { ...e, audioPath } : e)));
+    await pushEntry(next);
   }
 
   // A handful of profile settings (discoverable, sound, language, theme,
@@ -161,7 +199,10 @@ export function StoreProvider({ children }) {
         // erased) — nothing left to retry, so stop tracking it.
         if (!rec) { markSyncResult(store, id, true); continue; }
         if (store === "interests") await pushInterest(rec, userRef.current.id);
-        else if (store === "entries") await pushEntry(rec);
+        else if (store === "entries") {
+          if (rec.audio && !rec.audioPath) await uploadEntryAudio(rec, userRef.current.id);
+          else await pushEntry(rec);
+        } else if (rec.blob && !rec.storagePath) await uploadPhotoFile(rec, userRef.current.id);
         else await pushPhotoRow(rec);
       }
     }
@@ -228,7 +269,12 @@ export function StoreProvider({ children }) {
     // in between — the component never remounts) would see the guard below
     // still pointing at that user's id from before sign-out, and skip
     // reconciling entirely on the way back in.
-    if (!user) reconciledForRef.current = null;
+    if (!user) {
+      reconciledForRef.current = null;
+      setProfileCheck("checking");
+    } else if (user.isDebug) {
+      setProfileCheck("done");
+    }
   }, [user]);
   useEffect(() => {
     if (loading || !user || user.isDebug || reconciledForRef.current === user.id) return;
@@ -244,6 +290,10 @@ export function StoreProvider({ children }) {
       // straight from that row instead.
       const [userRow, remote] = await Promise.all([pullUserRow(user.id), pullMine(user.id)]);
 
+      // Signed out while that was on its way: this device's copy has been
+      // wiped, and nothing below may write the account back into it.
+      if (reconciledForRef.current !== user.id) return;
+
       // A cached local profile only ever belongs to whoever was signed in on
       // this device last — nothing here is scoped per-account. If a *different*
       // account signs in on top of it (no explicit sign-out in between — e.g.
@@ -255,12 +305,39 @@ export function StoreProvider({ children }) {
       let hasLocalProfile = !!profileRef.current;
       if (hasLocalProfile && profileRef.current.userId && profileRef.current.userId !== user.id) {
         await dbClearAll();
+        profileRef.current = null;
         setProfileState(null);
         setInterests([]);
         setPhotos([]);
         setEntries([]);
         hasLocalProfile = false;
       }
+
+      // Nothing on this device and no answer from the server says nothing
+      // about whether this account is new. Treating it as new sent a
+      // returning student through Onboarding on any network blip, and
+      // finishing that overwrote their real settings and coins with the
+      // defaults. So: stop, say so, and let App offer another try.
+      if (!hasLocalProfile && !userRow) {
+        reconciledForRef.current = null;
+        setProfileCheck("failed");
+        return;
+      }
+
+      // Several of the settings below can differ at once, and they all run
+      // in one go with no render between them. profileRef only catches up on
+      // a render, so each one has to move it along itself — building from a
+      // stale ref kept only the last change, on screen and in Dexie both.
+      const applyToProfile = (patch) => {
+        const next = { ...profileRef.current, ...patch };
+        profileRef.current = next;
+        setProfileState(next);
+        put("meta", next);
+      };
+      // A setting still waiting to be pushed is a newer choice than whatever
+      // the server has. Pulling over it would lose the edit the pending list
+      // exists to protect, then "retry" by pushing the old value back.
+      const stillPending = (field) => pendingSyncRef.current.has("profile:" + field);
 
       if (!hasLocalProfile) {
         // onboarding_completed, not display_name — AuthFlow sets display_name
@@ -278,8 +355,12 @@ export function StoreProvider({ children }) {
         // educator's class code. display_name can't serve, for the reason
         // above.
         const hasFlag = !!userRow && Object.prototype.hasOwnProperty.call(userRow, "onboarding_completed");
+        //
+        // The flag is written by a single unretried call at the end of
+        // onboarding, so a planted tree still counts when it says false. A
+        // class code doesn't here: signup can set one before onboarding runs.
         const onboarded = !userRow ? false
-          : hasFlag ? !!userRow.onboarding_completed
+          : hasFlag ? (!!userRow.onboarding_completed || remote.interests.length > 0)
           : (remote.interests.length > 0 || !!userRow.class_code);
         if (onboarded) {
           // Interests/entries/photos only land in local state further down
@@ -320,33 +401,25 @@ export function StoreProvider({ children }) {
         // Picks up a discoverable change made from another device/session —
         // the local profile cache doesn't otherwise learn about remote-only
         // updates.
-        if (!!profileRef.current.discoverable !== !!userRow.discovery_enabled) {
-          const next = { ...profileRef.current, discoverable: !!userRow.discovery_enabled };
-          setProfileState(next);
-          put("meta", next);
+        if (!stillPending("discoverable") && !!profileRef.current.discoverable !== !!userRow.discovery_enabled) {
+          applyToProfile({ discoverable: !!userRow.discovery_enabled });
         }
         // Same for sound — it used to be local-only and silently reset to
         // on after any sign-out; now it's remembered remotely too.
         {
           const localSoundOn = profileRef.current.soundOn !== false;
           const remoteSoundOn = userRow.sound_on !== false;
-          if (localSoundOn !== remoteSoundOn) {
-            const next = { ...profileRef.current, soundOn: remoteSoundOn };
-            setProfileState(next);
-            put("meta", next);
+          if (!stillPending("soundOn") && localSoundOn !== remoteSoundOn) {
+            applyToProfile({ soundOn: remoteSoundOn });
           }
         }
         // Same idea for language and theme — both used to be local-only
         // and silently reset to their defaults after any sign-out.
-        if (userRow.lang && profileRef.current.lang !== userRow.lang) {
-          const next = { ...profileRef.current, lang: userRow.lang };
-          setProfileState(next);
-          put("meta", next);
+        if (!stillPending("lang") && userRow.lang && profileRef.current.lang !== userRow.lang) {
+          applyToProfile({ lang: userRow.lang });
         }
-        if (userRow.theme && profileRef.current.theme !== userRow.theme) {
-          const next = { ...profileRef.current, theme: userRow.theme };
-          setProfileState(next);
-          put("meta", next);
+        if (!stillPending("theme") && userRow.theme && profileRef.current.theme !== userRow.theme) {
+          applyToProfile({ theme: userRow.theme });
         }
         // Owned decorations/hair/outfits are new fields being synced for
         // the first time — a purchase made under the old, unsynced code
@@ -364,14 +437,11 @@ export function StoreProvider({ children }) {
             grew(nextOwnedHair, profileRef.current.ownedHair) ||
             grew(nextOwnedOutfits, profileRef.current.ownedOutfits)
           ) {
-            const next = {
-              ...profileRef.current,
+            applyToProfile({
               ownedDecorations: nextOwnedDecorations,
               ownedHair: nextOwnedHair,
               ownedOutfits: nextOwnedOutfits,
-            };
-            setProfileState(next);
-            put("meta", next);
+            });
           }
           if (userRef.current) {
             if (grew(nextOwnedDecorations, userRow.owned_decorations)) updateOwnedDecorations(user.id, nextOwnedDecorations);
@@ -381,19 +451,15 @@ export function StoreProvider({ children }) {
         }
         // Equipping is an explicit, low-stakes choice (not something
         // earned that could be lost) — remote just wins, same as avatar.
-        if ((profileRef.current.equippedDecoration || null) !== (userRow.equipped_decoration || null)) {
-          const next = { ...profileRef.current, equippedDecoration: userRow.equipped_decoration || null };
-          setProfileState(next);
-          put("meta", next);
+        if (!stillPending("equippedDecoration") && (profileRef.current.equippedDecoration || null) !== (userRow.equipped_decoration || null)) {
+          applyToProfile({ equippedDecoration: userRow.equipped_decoration || null });
         }
         // Same idea for the avatar — it's edited from Me → customize on
         // whichever device you're on, so the remote copy is always the
         // most recent one across every device, and always wins here.
         const remoteAvatar = parseAvatar(userRow.avatar);
-        if (remoteAvatar && JSON.stringify(remoteAvatar) !== JSON.stringify(profileRef.current.avatar || {})) {
-          const next = { ...profileRef.current, avatar: remoteAvatar };
-          setProfileState(next);
-          put("meta", next);
+        if (!stillPending("avatar") && remoteAvatar && JSON.stringify(remoteAvatar) !== JSON.stringify(profileRef.current.avatar || {})) {
+          applyToProfile({ avatar: remoteAvatar });
         }
         // Coins only ever sync as a plain "here's my current total" push
         // (see updateCoins), so two devices earning/spending at the same
@@ -405,9 +471,7 @@ export function StoreProvider({ children }) {
           const localCoins = profileRef.current.coins || 0;
           const remoteCoins = userRow.coins || 0;
           if (remoteCoins > localCoins) {
-            const next = { ...profileRef.current, coins: remoteCoins };
-            setProfileState(next);
-            put("meta", next);
+            applyToProfile({ coins: remoteCoins });
           } else if (localCoins > remoteCoins) {
             updateCoins(user.id, localCoins);
           }
@@ -426,30 +490,32 @@ export function StoreProvider({ children }) {
             // pulling the gap back down.
             setMyClassCode(profileRef.current.classCode);
           } else {
-            const next = { ...profileRef.current, classCode: userRow.class_code || null };
-            setProfileState(next);
-            put("meta", next);
+            applyToProfile({ classCode: userRow.class_code || null });
           }
         }
         // A local profile that predates this sign-in (built while offline,
         // or from a device that used the app before creating an account)
         // never went through Onboarding's own push of display_name — that
-        // only fires once, at the end of onboarding. Local `name` is the
-        // only place it's ever edited, so it's always the source of truth
-        // here; push it across whenever the two disagree.
+        // only fires once, at the end of onboarding — so an unclaimed one
+        // (no userId yet, see below) pushes its name across.
+        //
+        // A claimed one can't have a name the server hasn't seen, because
+        // changeUsername only commits locally after the server agreed. If
+        // they disagree, it was renamed on another device, and pushing here
+        // would quietly undo that rename from whichever phone opened next.
         if (profileRef.current.name && userRow.display_name !== profileRef.current.name) {
-          updateDisplayName(user.id, profileRef.current.name);
+          if (!profileRef.current.userId) updateDisplayName(user.id, profileRef.current.name);
+          else if (userRow.display_name) applyToProfile({ name: userRow.display_name });
         }
         // Backfills userId on profiles that predate this field (created
         // before this fix shipped) — from this point on, this cache is
         // considered claimed by this account, so a future switch to a
         // genuinely different one is detected instead of silently inherited.
         if (!profileRef.current.userId) {
-          const next = { ...profileRef.current, userId: user.id };
-          setProfileState(next);
-          put("meta", next);
+          applyToProfile({ userId: user.id });
         }
       }
+      setProfileCheck("done");
 
       // `remote` was already fetched above (pullUserRow/pullMine ran
       // together to decide onboarded-vs-not) — reusing it here instead of
@@ -474,14 +540,9 @@ export function StoreProvider({ children }) {
       // photosToPush does for photo blobs just above.
       const remoteEntryIds = new Set(remote.entries.map((e) => e.id));
       const entriesToPush = allLocalEntries.filter((e) => !remoteEntryIds.has(e.id));
-      await Promise.all(entriesToPush.map(async (rec) => {
-        let audioPath = rec.audioPath;
-        if (!audioPath && rec.audio) {
-          audioPath = await uploadAudioBlob(user.id, rec.id, rec.audio);
-          if (audioPath) put("entries", { ...rec, audioPath });
-        }
-        await pushEntry({ ...rec, audioPath });
-      }));
+      await Promise.all(entriesToPush.map((rec) => (
+        !rec.audioPath && rec.audio ? uploadEntryAudio(rec, user.id) : pushEntry(rec)
+      )));
 
       const localEntryIds = new Set(allLocalEntries.map((e) => e.id));
       const entriesToAdopt = remote.entries.filter((e) => !localEntryIds.has(e.id));
@@ -492,14 +553,9 @@ export function StoreProvider({ children }) {
       // somewhere real to point storage_path at.
       const remotePhotoIds = new Set(remote.photos.map((p) => p.id));
       const photosToPush = allLocalPhotos.filter((p) => !remotePhotoIds.has(p.id));
-      await Promise.all(photosToPush.map(async (rec) => {
-        let storagePath = rec.storagePath;
-        if (!storagePath && rec.blob) {
-          storagePath = await uploadPhotoBlob(user.id, rec.id, rec.blob);
-          if (storagePath) put("photos", { ...rec, storagePath });
-        }
-        await pushPhotoRow({ ...rec, storagePath });
-      }));
+      await Promise.all(photosToPush.map((rec) => (
+        !rec.storagePath && rec.blob ? uploadPhotoFile(rec, user.id) : pushPhotoRow(rec)
+      )));
 
       const localPhotoIds = new Set(allLocalPhotos.map((p) => p.id));
       const photosToAdopt = remote.photos.filter((p) => !localPhotoIds.has(p.id));
@@ -576,12 +632,23 @@ export function StoreProvider({ children }) {
         });
       }
 
+      // Bytes that never made it up on a row the server already has. The
+      // row's arrival made it look finished, so nothing ever went back for
+      // the file — and the next sign-out destroyed the only copy. This also
+      // rescues anything stranded that way before uploads were tracked.
+      const [latestPhotos, latestEntries] = await Promise.all([getAll("photos"), getAll("entries")]);
+      const pushing = new Set([...photosToPush, ...entriesToPush].map((r) => r.id));
+      await Promise.all([
+        ...latestPhotos.filter((p) => p.blob && !p.storagePath && !pushing.has(p.id)).map((p) => uploadPhotoFile(p, user.id)),
+        ...latestEntries.filter((e) => e.audio && !e.audioPath && !pushing.has(e.id)).map((e) => uploadEntryAudio(e, user.id)),
+      ]);
+
       // Edits that failed last time the app was open. Run after the
       // reconcile rather than waiting 45 seconds for the timer, so a student
       // who opens the app, glances and closes it again still gets them up.
       retryPendingRef.current();
     })();
-  }, [user, loading]);
+  }, [user, loading, profileCheckTick]);
 
   const actions = useMemo(() => {
     function bumpCoins(delta) {
@@ -635,8 +702,16 @@ export function StoreProvider({ children }) {
       const trimmed = (name || "").trim();
       if (!trimmed) return { ok: false, reason: "empty" };
       if (!userRef.current) return { ok: false, reason: "error" };
+      const previous = profileRef.current && profileRef.current.name;
       const result = await updateDisplayName(userRef.current.id, trimmed);
       if (!result.ok) return { ok: false, reason: result.taken ? "taken" : "error" };
+      // Takes the login with it, or the new name couldn't sign in. Both have
+      // to land: a name that half-changed is worse than one that didn't.
+      const login = await syncLoginToUsername(trimmed);
+      if (!login.ok) {
+        if (previous) await updateDisplayName(userRef.current.id, previous);
+        return { ok: false, reason: login.taken ? "taken" : "error" };
+      }
       setProfileState((p) => {
         if (!p) return p;
         const next = { ...p, name: trimmed };
@@ -759,22 +834,27 @@ export function StoreProvider({ children }) {
       };
     },
     addPhoto(rec) {
-      setPhotos((list) => [...list, rec]);
+      // Exactly one cover per tree, the same rule as setCoverPhoto below.
+      setPhotos((list) => [...(rec.isPinned ? list.map((p) => {
+        if (p.interestId !== rec.interestId || !p.isPinned) return p;
+        const next = touched({ ...p, isPinned: false });
+        put("photos", next);
+        if (userRef.current) pushPhotoRow(next);
+        return next;
+      }) : list), rec]);
       put("photos", rec);
       bumpCoins(COINS_PER_LOG);
       // The row goes up right away (caption/visibility/etc. are cheap);
       // the actual bytes upload separately and the row gets storage_path
       // filled in once that finishes, so a slow upload never blocks the
-      // rest of the photo's data from syncing.
+      // rest of the photo's data from syncing. One after the other: equal
+      // stamps are allowed through (20261017010000), so a first push landing
+      // late would blank the path the second one just set.
       if (userRef.current) {
-        pushPhotoRow(rec);
-        uploadPhotoBlob(userRef.current.id, rec.id, rec.blob).then((storagePath) => {
-          if (!storagePath) return;
-          const next = { ...rec, storagePath };
-          put("photos", next);
-          setPhotos((list) => list.map((p) => (p.id === rec.id ? next : p)));
-          pushPhotoRow(next);
-        }).catch((err) => console.error("Sync (upload photo) threw:", err));
+        const userId = userRef.current.id;
+        pushPhotoRow(rec)
+          .then(() => uploadPhotoFile(rec, userId))
+          .catch((err) => console.error("Sync (upload photo) threw:", err));
       }
     },
     // Exactly one cover per tree, so pinning a new one unpins whatever held
@@ -783,11 +863,11 @@ export function StoreProvider({ children }) {
     setCoverPhoto(interestId, photoId) {
       setPhotos((list) => list.map((p) => {
         if (p.interestId !== interestId) return p;
-        const next = touched({ ...p, isPinned: p.id === photoId && !p.isPinned });
-        if (next.isPinned !== p.isPinned) {
-          put("photos", next);
-          if (userRef.current) pushPhotoRow(next);
-        }
+        const isPinned = p.id === photoId && !p.isPinned;
+        if (isPinned === !!p.isPinned) return p;
+        const next = touched({ ...p, isPinned });
+        put("photos", next);
+        if (userRef.current) pushPhotoRow(next);
         return next;
       }));
     },
@@ -854,36 +934,32 @@ export function StoreProvider({ children }) {
       // note's bytes upload separately, patching audio_path in once that
       // finishes so a slow upload never blocks the rest of the entry.
       if (userRef.current) {
-        pushEntry(rec);
-        if (rec.audio) {
-          uploadAudioBlob(userRef.current.id, rec.id, rec.audio).then((audioPath) => {
-            if (!audioPath) return;
-            const next = { ...rec, audioPath };
-            put("entries", next);
-            setEntries((list) => list.map((e) => (e.id === rec.id ? next : e)));
-            pushEntry(next);
-          }).catch((err) => console.error("Sync (upload audio) threw:", err));
-        }
+        const userId = userRef.current.id;
+        pushEntry(rec)
+          .then(() => (rec.audio ? uploadEntryAudio(rec, userId) : null))
+          .catch((err) => console.error("Sync (upload audio) threw:", err));
       }
     },
     // Edits an existing entry in place — no coin bump, this isn't new
-    // activity, just a correction to something already logged.
-    updateEntry(rec) {
+    // activity, just a correction to something already logged. `previous` is
+    // the entry as it stood, for finding a recording that was just removed.
+    updateEntry(rec, previous) {
       rec = touched(rec);
       setEntries((list) => list.map((x) => (x.id === rec.id ? rec : x)));
       put("entries", rec);
       if (userRef.current) {
-        pushEntry(rec);
+        const userId = userRef.current.id;
         // A re-recorded (or first-time, on an entry that predates syncing)
-        // voice note needs uploading too — same path as addEntry.
-        if (rec.audio) {
-          uploadAudioBlob(userRef.current.id, rec.id, rec.audio).then((audioPath) => {
-            if (!audioPath) return;
-            const next = { ...rec, audioPath };
-            put("entries", next);
-            setEntries((list) => list.map((e) => (e.id === rec.id ? next : e)));
-            pushEntry(next);
-          }).catch((err) => console.error("Sync (upload audio) threw:", err));
+        // voice note needs uploading too — same path as addEntry. One already
+        // in Storage doesn't: removing a note is the only way to replace it,
+        // and that clears the path.
+        pushEntry(rec)
+          .then(() => (rec.audio && !rec.audioPath ? uploadEntryAudio(rec, userId) : null))
+          .catch((err) => console.error("Sync (upload audio) threw:", err));
+        // Storage has no cascade: taking the note off the entry left the
+        // recording sitting in the bucket for as long as the account lasted.
+        if (previous && previous.audioPath && !rec.audio && !rec.audioPath) {
+          removeVoiceNoteFile(previous.audioPath);
         }
       }
     },
@@ -944,8 +1020,11 @@ export function StoreProvider({ children }) {
         const back = strip(it);
         put("interests", back);
         setInterests((list) => (list.some((x) => x.id === id) ? list : [...list, back].sort((a, b) => a.createdAt - b.createdAt)));
-        // its children were trashed in the same breath, so they return too
-        const kids = (rows) => rows.filter((r) => r.interestId === id && r.deletedAt).map(strip);
+        // its children were trashed in the same breath, so they return too.
+        // Only those: deleteInterest stamps them all with one time, and an
+        // entry deleted on its own last week stays deleted (it shows in
+        // Recently Deleted again now that its tree is back).
+        const kids = (rows) => rows.filter((r) => r.interestId === id && r.deletedAt === it.deletedAt).map(strip);
         const backPh = kids(ph), backEn = kids(en);
         backPh.forEach((r) => put("photos", r));
         backEn.forEach((r) => put("entries", r));
@@ -978,12 +1057,22 @@ export function StoreProvider({ children }) {
     async purgeTrashed(kind, id) {
       if (kind === "interest") {
         const [ph, en] = await Promise.all([getAll("photos"), getAll("entries")]);
-        ph.filter((p) => p.interestId === id).forEach((p) => del("photos", p.id));
-        en.filter((e) => e.interestId === id).forEach((e) => del("entries", e.id));
+        const kidPhotos = ph.filter((p) => p.interestId === id);
+        const kidEntries = en.filter((e) => e.interestId === id);
+        kidPhotos.forEach((p) => del("photos", p.id));
+        kidEntries.forEach((e) => del("entries", e.id));
         del("interests", id);
-        // Cascades remotely too — entries/photos reference interests
-        // on delete cascade, so this alone clears all three there.
-        if (userRef.current) deleteRemoteInterest(id);
+        // Rows cascade remotely — entries/photos reference interests on
+        // delete cascade — but files don't. "Erase now" has to mean the
+        // photos and recordings too, so each child goes through the call
+        // that removes its file before the tree goes.
+        if (userRef.current) {
+          await Promise.all([
+            ...kidPhotos.map((p) => deleteRemotePhoto(p.id, p.storagePath)),
+            ...kidEntries.map((e) => deleteRemoteEntry(e.id, e.audioPath)),
+          ]);
+          deleteRemoteInterest(id);
+        }
         return;
       }
       if (kind === "photo") {
@@ -1095,12 +1184,17 @@ export function StoreProvider({ children }) {
     retrySync() {
       retryPendingRef.current();
     },
+    // Another go at the sign-in check, when it couldn't reach the server.
+    retryProfileCheck() {
+      setProfileCheck("checking");
+      setProfileCheckTick((n) => n + 1);
+    },
     };
   }, []);
 
   const value = useMemo(
-    () => ({ loading, profile, interests, photos, entries, pendingSyncCount: pendingSyncIds.size, ...actions }),
-    [loading, profile, interests, photos, entries, pendingSyncIds, actions]
+    () => ({ loading, profile, interests, photos, entries, profileCheck, pendingSyncCount: pendingSyncIds.size, ...actions }),
+    [loading, profile, interests, photos, entries, profileCheck, pendingSyncIds, actions]
   );
 
   return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>;

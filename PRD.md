@@ -146,7 +146,7 @@ Open Explore → "For you", a short personalised set of hobby ideas from categor
 ### 6.1 Home — garden (individual accounts)
 
 - A greeting by time of day and name, under a small line with today's date.
-- A horizontally swipeable wall of trees, one per interest, each drawn at its computed stage and health, with a page indicator.
+- A "Trees" heading with "+ Plant", then one card per interest: the tree drawn at its computed stage and health on a grey panel, a stage chip (and a health chip when it isn't healthy), days since planted, the hobby's category icon and name, when it was last logged, total hours, logs against the next stage's threshold with a thin progress bar, how many more logs the next stage needs, and a Log button (Revive on a dead tree, which opens the tree). The zoom button switches to a compact two-across grid. With nothing planted, an empty card plants the first tree.
 - A zoomed-out grid of the whole forest, toggled from the top bar, for gardens too large to swipe.
 - **Streak chip:** days logged across all hobbies combined. Logging any one tree keeps the whole streak alive. Shows an animated flame, or a leaf while a rest day is bridging the gap.
 - **Three banners,** independently triggered:
@@ -167,7 +167,7 @@ Open Explore → "For you", a short personalised set of hobby ideas from categor
 - **Header:** name, colour, growth stage, health, and the tree drawn at that state. "Why I love this" is editable inline.
 - **Stats:** total hours, photo count, entry count, this tree's streak.
 - **Album and Journal**, switched by a row of pills.
-- **Journal:** a timeline, newest first. Each entry shows its weekday and date on the left and a card on the right with its text, a voice note player if present, small tags for its duration, a voice note, "Pinned" and "Public", and edit and delete controls.
+- **Journal:** newest first, one card per day under a spaced-out day heading ("Today", "Yesterday", or weekday and date) with the day's total time. Each row has a grey icon bubble, the entry's text (or "Voice note"), a voice note player if present, small tags for a voice note, "Pinned" and "Public", and on the right a green duration tag above edit and delete controls.
 - **Album:** photo grid. Tap opens the full viewer. A photo can be pinned as the tree's cover; with no photo, the cover falls back to a generated illustration matched to the hobby's category, then to the first letter of the name.
 - **Growth replay:** an animation stepping through every stage the tree has reached, each frame dated to the log that crossed that threshold. At most five frames.
 - Per-tree reminder schedule (which weekdays).
@@ -261,7 +261,7 @@ Route `/user/:userId/interest/:interestId`. Read-only with respect to the owner'
 - The language toggle is in nearly every top bar.
 - A sync indicator appears only after something has been stuck for 30 seconds, and offers a manual retry.
 - **Badges:** 12 total, across four families — logs (1, 25, 100), streak (3, 7, 30, 100), trees planted (1, 5) and species variety (5), fully grown trees (1, 3).
-- **Visual language** (`src/styles/workspace.css`, loaded last so it can be replaced without touching behaviour): calm and flat, after a reference the owner chose. A cool light-grey page, white cards with a hairline outline and no shadow, one heavy heading with a small date line above it and a short green rule below it, plain sentence-case section titles, and matte grey-black for whatever is selected or primary, with every text button fully rounded. Colour appears only in thin line icons and tiny tinted tags (`src/components/shared/Icon.jsx`) in four tones — green, blue, purple, amber — for a journal entry's duration, voice note, pinned and public state, Explore's categories, the memory card, "planted", and the stat icons. Every glyph in the interface chrome is a line icon from the same set — no emoji — except where the emoji is the content: tree species, Market badges and Year in Review. Long lists of actions, as on Me, are grouped lists: one card per group, an icon per row, hairlines between.
+- **Visual language** (`src/styles/workspace.css`, loaded last so it can be replaced without touching behaviour): calm and flat, after two references the owner chose. A white page, a soft grey panel under every drawn tree and an empty cover (which shows the hobby's category line icon until there is a photo), segmented controls as a grey track with the chosen item a white pill — the Album/Journal tabs, every two-way switch and the bottom bar alike — white cards with a hairline outline and no shadow, one heavy heading with a small date line above it and a short green rule below it, plain sentence-case section titles, and matte grey-black for whatever is selected or primary, with every text button fully rounded. Colour appears only in thin line icons and tiny tinted tags (`src/components/shared/Icon.jsx`) in four tones — green, blue, purple, amber — for a journal entry's duration, voice note, pinned and public state, Explore's categories, the memory card, "planted", and the stat icons. Every glyph in the interface chrome is a line icon from the same set — no emoji — except where the emoji is the content: tree species, Market badges and Year in Review. Long lists of actions, as on Me, are grouped lists: one card per group, an icon per row, hairlines between.
 
 ---
 
@@ -371,7 +371,7 @@ No `user_id`, as for entries.
 
 ### 7.8 Derived signup address
 
-Individuals have no email. `usernameToEmail` lowercases the username, replaces every character outside `[a-z0-9._-]` with a dash, strips leading and trailing punctuation, and appends `@users.forestapp.invalid`. The `.invalid` domain is reserved, so nothing derived here can reach a real inbox.
+Individuals have no email. `usernameToEmail` lowercases the username, replaces every character outside `[a-z0-9._-]` with a dash, strips leading and trailing punctuation, and appends `@users.forestapp.invalid`. The `.invalid` domain is reserved, so nothing derived here can reach a real inbox. A username with any character outside ASCII also gets a short fingerprint of the whole name after the slug (`u-` when nothing is left of it), because those characters used to vanish and every all-Chinese username came out as the same `user@` address. Login tries that address first and the old one second, so accounts made before the change still sign in. Renaming a student moves their login address to the new name's (`syncLoginToUsername`); an educator's real email is never touched.
 
 ### 7.9 Sync model
 

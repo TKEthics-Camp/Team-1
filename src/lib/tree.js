@@ -60,6 +60,18 @@ export function actsToNextStage(interest, entries, photos) {
   return next === undefined ? 0 : next - acts;
 }
 
+// Where a tree is between two stages, for a progress bar: logs so far, the
+// count its current stage began at, and the count the next stage needs —
+// null once it is fully grown, when the bar simply stays full.
+export function stageProgress(interest, entries, photos) {
+  const acts = entriesOf(entries, interest.id).length + photosOf(photos, interest.id).length;
+  const stage = treeStage(interest, entries, photos);
+  const from = stage === 0 ? 0 : STAGE_THRESHOLDS[stage - 1];
+  const to = stage < STAGE_THRESHOLDS.length ? STAGE_THRESHOLDS[stage] : null;
+  const ratio = to === null ? 1 : (acts - from) / (to - from);
+  return { acts, stage, from, to, ratio };
+}
+
 // The stage-by-stage story of how this tree got here: one frame per stage
 // it has actually reached, each dated to the log that pushed it over that
 // stage's threshold (or, for stage 0, the day it was planted). Feeds the

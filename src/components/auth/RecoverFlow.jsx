@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useAuth } from "../../store/AuthContext";
 import { redeemRecoveryCode } from "../../lib/remote";
-import { usernameToEmail } from "../../lib/syntheticEmail";
+import { usernameToEmail, legacyUsernameToEmail } from "../../lib/syntheticEmail";
 import LangToggle from "../shared/LangToggle";
 import SfHead from "../onboarding/SfHead";
 
@@ -51,8 +51,9 @@ export default function RecoverFlow({ onBack, onDone }) {
     // derived from their username. A typed username is never an email, so
     // deriving is right here — an educator who lands on this screen will
     // have typed their email, which usernameToEmail would mangle.
-    const identifier = username.includes("@") ? username.trim() : usernameToEmail(username);
-    const signedIn = await signIn(identifier, password);
+    const signedIn = username.includes("@")
+      ? await signIn(username.trim(), password)
+      : await signIn(usernameToEmail(username), password, legacyUsernameToEmail(username));
     setBusy(false);
     if (signedIn.ok) { onDone(); return; }
     // The password was genuinely changed; only the auto sign-in failed.

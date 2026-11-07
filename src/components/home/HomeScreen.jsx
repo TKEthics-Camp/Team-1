@@ -14,6 +14,7 @@ import MemoryBanner from "./MemoryBanner";
 import DyingBanner from "./DyingBanner";
 import OrbWall from "./OrbWall";
 import ForestGrid from "./ForestGrid";
+import Icon from "../shared/Icon";
 
 // Morning, afternoon or evening by the phone's own clock — the reference's
 // "Good morning", which reads as the app noticing you rather than
@@ -35,7 +36,7 @@ function todayLabel(lang) {
 export default function HomeScreen() {
   const { t, lang } = useI18n();
   const { profile, interests, photos, entries } = useStore();
-  const { dismissed } = useUI();
+  const { dismissed, openSheet } = useUI();
   // "Zoom out": one tree at a time, or the whole forest at once. Local state
   // rather than a saved preference — it's a way of looking, not a setting.
   const [zoomedOut, setZoomedOut] = useState(false);
@@ -96,6 +97,14 @@ export default function HomeScreen() {
         {dying && <DyingBanner interest={dying} entries={entries} photos={photos} />}
         {due.length > 0 && <NudgeBanner interests={due} />}
         {memory && <MemoryBanner memory={memory} />}
+        {interests.length > 0 && (
+          <div className="trees-head">
+            <h2>{t("treesHeading")}</h2>
+            <button type="button" className="plant-btn" onClick={() => openSheet("orb")}>
+              <Icon name="plus" size={16} />{t("plantShort")}
+            </button>
+          </div>
+        )}
         {zoomedOut
           ? <ForestGrid interests={interests} photos={photos} entries={entries} />
           : <OrbWall interests={interests} photos={photos} entries={entries} />}

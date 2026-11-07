@@ -14,6 +14,10 @@ export function getAll(store) {
   return db[store].toArray();
 }
 
+export function get(store, id) {
+  return db[store].get(id);
+}
+
 export function put(store, obj) {
   return db[store].put(obj);
 }
