@@ -8,7 +8,6 @@ import { THEMES, DEFAULT_THEME, DECORATIONS } from "../../lib/constants";
 import { globalStreak } from "../../lib/derived";
 import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
-import Stats from "../shared/Stats";
 import PersonAvatar from "../shared/PersonAvatar";
 import { deleteMyAccount } from "../../lib/remote";
 import { buildExport } from "../../lib/exportData";
@@ -22,12 +21,24 @@ import Icon from "../shared/Icon";
 // whatever `trailing` says; null for actions that do not open anything).
 // The grouped list is the reference's way of holding many settings without
 // a wall of buttons.
-function ListRow({ icon, children, onClick, disabled = false, danger = false, trailing }) {
+// `checked` makes it a switch row: the whole row toggles, and the switch on
+// the right shows which way it is.
+function ListRow({ icon, children, onClick, disabled = false, danger = false, trailing, checked }) {
+  const isSwitch = checked !== undefined;
   return (
-    <button type="button" className={"list-row" + (danger ? " danger" : "")} onClick={onClick} disabled={disabled}>
+    <button
+      type="button"
+      className={"list-row" + (danger ? " danger" : "")}
+      onClick={onClick}
+      disabled={disabled}
+      role={isSwitch ? "switch" : undefined}
+      aria-checked={isSwitch ? (checked ? "true" : "false") : undefined}
+    >
       <Icon name={icon} size={18} className="list-ico" />
       <span className="list-label">{children}</span>
-      {trailing === undefined ? <Icon name="chevronRight" size={16} className="list-chev" /> : trailing}
+      {isSwitch
+        ? <span className={"switch" + (checked ? " on" : "")} aria-hidden="true" />
+        : trailing === undefined ? <Icon name="chevronRight" size={16} className="list-chev" /> : trailing}
     </button>
   );
 }
@@ -191,35 +202,40 @@ export default function ProfileScreen() {
           )}
         </div>
 
+        {/* One quiet row instead of four big cards: the numbers are worth a
+            glance, not a screen. How many are public lives in the
+            discoverability note below, where it matters. */}
         {!isOrg && (
-          <>
-            <Stats items={[
-              { n: globalStreak(entries, photos), k: t("totalStreak"), flame: true, icon: "flame", tone: "amber" },
-              { n: interests.length, k: nOf(interests.length, "orbsCount"), icon: "tree", tone: "green" },
-              { n: photos.length, k: nOf(photos.length, "photos"), icon: "image", tone: "purple" },
-              { n: entries.length, k: nOf(entries.length, "entries"), icon: "book", tone: "blue" },
-            ]} />
-            <div className="sub">{publicCount + " " + nOf(publicCount, "publicCount")}</div>
-          </>
+          <div className="me-stats">
+            {[
+              [globalStreak(entries, photos), t("totalStreak")],
+              [interests.length, nOf(interests.length, "orbsCount")],
+              [photos.length, nOf(photos.length, "photos")],
+              [entries.length, nOf(entries.length, "entries")],
+            ].map(([n, k]) => (
+              <div className="me-stat" key={k}>
+                <span className="n">{n}</span>
+                <span className="k">{k}</span>
+              </div>
+            ))}
+          </div>
         )}
 
+        {/* The same switch as every other choice in the app, rather than
+            three picture tiles. */}
         <div className="label">{t("theme")}</div>
-        <div className="themes">
+        <div className="seg">
           {THEMES.map((th) => (
             <button
               key={th.id}
-              className="theme-btn"
+              type="button"
               aria-pressed={th.id === currentTheme ? "true" : "false"}
               onClick={() => updateProfile({ theme: th.id })}
             >
-              <div className="band">
-                {th.sw.map((c, i) => <span key={i} style={{ background: c }} />)}
-              </div>
-              <div className="nm">{th.name[lang === "en" ? 0 : 1]}</div>
+              {th.name[lang === "en" ? 0 : 1]}
             </button>
           ))}
         </div>
-        <div className="sub">{t("themeNote")}</div>
 
         <div className="list-group">
           {!isOrg && (
@@ -235,31 +251,36 @@ export default function ProfileScreen() {
                 : t("turnOn")}
             </ListRow>
           )}
-          <ListRow icon={soundOn ? "volume" : "volumeOff"} onClick={() => updateProfile({ soundOn: !soundOn })} trailing={null}>
-            {soundOn ? t("soundOn") : t("soundOff")}
+          <ListRow
+            icon={soundOn ? "volume" : "volumeOff"}
+            onClick={() => updateProfile({ soundOn: !soundOn })}
+            checked={soundOn}
+          >
+            {t("soundLabel")}
           </ListRow>
+          {/* An iOS switch row, with what it means as the group's footnote
+              below — instead of a heading, an Off/On pair and a paragraph. */}
+          {!locked && (
+            <ListRow icon="eye" onClick={() => setDiscoverable(!discoverable)} checked={discoverable}>
+              {t("discoverableLabel")}
+            </ListRow>
+          )}
         </div>
+        {!locked && (
+          <div className="sub list-foot">
+            {isOrg
+              ? t("discoverableNoteOrg")
+              : t("discoverableNote") + " " + publicCount + " " + nOf(publicCount, "publicCount") + (lang === "en" ? "." : "。")}
+          </div>
+        )}
 
-        {locked ? (
+        {locked && (
           <>
             <div className="label">{t("dlTitle")}</div>
             <div className="safe-note">
               <span aria-hidden="true"><Icon name="lock" size={16} /></span>
               <span>{needsReconsent ? t("dlReconsent") : t("dlBody")}</span>
             </div>
-          </>
-        ) : (
-          <>
-            <div className="label">{t("discoverableLabel")}</div>
-            <div className="seg">
-              <button type="button" aria-pressed={!discoverable ? "true" : "false"} onClick={() => setDiscoverable(false)}>
-                {t("discoverableOff")}
-              </button>
-              <button type="button" aria-pressed={discoverable ? "true" : "false"} onClick={() => setDiscoverable(true)}>
-                {t("discoverableOn")}
-              </button>
-            </div>
-            <div className="sub">{t(isOrg ? "discoverableNoteOrg" : "discoverableNote")}</div>
           </>
         )}
 
@@ -271,7 +292,7 @@ export default function ProfileScreen() {
               <div className="list-group">
                 <ListRow icon="school" onClick={() => openSheet("joinClass")}>{t("joinClass")}</ListRow>
               </div>
-              <div className="sub">{t("joinClassNote")}</div>
+              <div className="sub list-foot">{t("joinClassNote")}</div>
             </>
           )
         )}

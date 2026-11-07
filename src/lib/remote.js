@@ -48,9 +48,9 @@ const DEBUG_ENTRY_ROWS = [
 ];
 
 // Maps between the local (Dexie/StoreContext) shape and the Supabase row
-// shape for interests + entries. Photos are deliberately left out for now —
-// they still store a local Blob, and syncing them needs a Storage bucket
-// and an upload/download path, which is a separate follow-up.
+// shape for interests, entries and photos. A photo's or voice note's bytes
+// aren't in its row: they live in a Storage bucket, and the row carries the
+// path (see uploadPhotoBlob / uploadAudioBlob).
 
 function toIso(ms) {
   return new Date(ms || Date.now()).toISOString();
@@ -717,9 +717,8 @@ export async function searchUsers(query, excludeUserId) {
 
 // Another user's public garden: only their public interests, and only the
 // entries under those interests (RLS's entries_select already enforces the
-// entry itself being public too, on top of its parent interest). Photos
-// aren't included — they're still local-only (see the note up top), so
-// there's nothing remote to fetch yet for someone else's album.
+// entry itself being public too, on top of its parent interest), and the
+// photos photos_select lets this viewer see.
 export async function pullPublicProfile(userId) {
   if (DEBUG_MOCK && userId === DEBUG_FRIEND_ID) {
     return {
@@ -783,25 +782,29 @@ export async function pullMine(userId) {
     .from("interests").select("*").eq("user_id", userId);
   if (intErr) {
     console.error("Sync (pull interests) failed:", intErr);
-    return { interests: [], entries: [], photos: [] };
+    return { interests: [], entries: [], photos: [], complete: false };
   }
   const ids = (interestRows || []).map((r) => r.id);
   let entryRows = [];
   let photoRows = [];
+  // Whether every part came back. Sign-in sync only treats "missing from
+  // the server" as "erased there" when it did (see lib/seenRemote).
+  let complete = true;
   if (ids.length) {
     const [entriesRes, photosRes] = await Promise.all([
       selectAllUnder("entries", ids),
       selectAllUnder("photos", ids),
     ]);
-    if (entriesRes.error) console.error("Sync (pull entries) failed:", entriesRes.error);
+    if (entriesRes.error) { complete = false; console.error("Sync (pull entries) failed:", entriesRes.error); }
     else entryRows = entriesRes.data || [];
-    if (photosRes.error) console.error("Sync (pull photos) failed:", photosRes.error);
+    if (photosRes.error) { complete = false; console.error("Sync (pull photos) failed:", photosRes.error); }
     else photoRows = photosRes.data || [];
   }
   return {
     interests: (interestRows || []).map(rowToInterest),
     entries: entryRows.map(rowToEntry),
     photos: photoRows.map(rowToPhoto),
+    complete,
   };
 }
 

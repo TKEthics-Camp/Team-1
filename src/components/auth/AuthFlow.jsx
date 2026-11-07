@@ -280,6 +280,7 @@ export default function AuthFlow() {
               <label className="sf-label" htmlFor="su-username">{t("sfUsername")}</label>
               <input
                 id="su-username" className="sf-field" type="text" autoComplete="username"
+                maxLength={20}
                 disabled={busy}
                 value={username}
                 onChange={(e) => { setUsername(e.target.value); setLocalError(null); clearAuthError(); }}

@@ -35,6 +35,13 @@ export default function OrbWall({ interests, photos, entries }) {
 
 const HEALTH_SHORT = { wilting: "hsWilting", bare: "hsBare", dead: "hsDead" };
 
+// How big to draw the tree on its card, by stage. The drawing is a fixed
+// square in which a young tree fills only the bottom of the frame, so at one
+// size a sprout was a speck on an empty grey panel. Young ones are drawn
+// larger, the empty sky above them falling outside the panel; growth still
+// reads, since a full tree is still the biggest thing on any card.
+const CARD_TREE_SIZE = [300, 290, 240, 205, 190];
+
 function TreeCard({ interest: it, entries, photos }) {
   const { t, nameOf } = useI18n();
   const { openSheet } = useUI();
@@ -77,7 +84,7 @@ function TreeCard({ interest: it, entries, photos }) {
             <span className={"tag " + (dead ? "tag-grey" : "tag-amber")}>{t(HEALTH_SHORT[health])}</span>
           )}
         </span>
-        <Tree interest={it} size={190} stage={stage} health={health} className={health === "healthy" ? "alive" : ""} />
+        <Tree interest={it} size={CARD_TREE_SIZE[stage]} stage={stage} health={health} className={health === "healthy" ? "alive" : ""} />
       </div>
 
       <div className="tree-card-body">

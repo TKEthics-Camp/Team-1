@@ -30,6 +30,13 @@ export function useRecorder() {
   const chunksRef = useRef([]);
   const tickRef = useRef(null);
   const resolveRef = useRef(null);
+  // Set while the microphone is being asked for. The permission prompt (or
+  // just the hardware) can take a moment, and a second tap in that moment
+  // used to open a second stream, orphaning the first: the recording dot
+  // stayed lit and the mic stayed held after everything had stopped.
+  const startingRef = useRef(false);
+  const mountedRef = useRef(true);
+  useEffect(() => () => { mountedRef.current = false; }, []);
 
   const release = useCallback(() => {
     clearInterval(tickRef.current);
@@ -44,8 +51,17 @@ export function useRecorder() {
 
   const start = useCallback(async () => {
     if (!canRecord()) { setState("unsupported"); return false; }
+    if (startingRef.current || recRef.current) return false;
+    startingRef.current = true;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      startingRef.current = false;
+      // The sheet closed while the browser was still asking: nothing will
+      // ever stop this stream, so stop it now.
+      if (!mountedRef.current) {
+        stream.getTracks().forEach((t) => t.stop());
+        return false;
+      }
       streamRef.current = stream;
       const mime = pickMime();
       const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
@@ -67,6 +83,7 @@ export function useRecorder() {
       setState("recording");
       return true;
     } catch (err) {
+      startingRef.current = false;
       release();
       // NotAllowedError is a refused permission; anything else (no mic at
       // all, hardware in use) is reported the same way — the user's next

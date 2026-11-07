@@ -42,10 +42,14 @@ export default function EducatorDashboard() {
 
   const { loading, students } = state;
 
+  // Only says "Copied" when something was: before the code has been minted
+  // there's nothing to copy, and the button waits for it.
   function copyCode() {
-    if (navigator.clipboard) navigator.clipboard.writeText(profile.classCode || "").catch(() => {});
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    if (!profile.classCode || !navigator.clipboard) return;
+    navigator.clipboard.writeText(profile.classCode).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    }).catch(() => {});
   }
 
   return (
@@ -58,7 +62,7 @@ export default function EducatorDashboard() {
         <div className="label">{t("yourClassCode")}</div>
         <div className="code-card">
           <span className="code-value">{profile.classCode}</span>
-          <button type="button" className="chip" onClick={copyCode}>
+          <button type="button" className="chip" onClick={copyCode} disabled={!profile.classCode}>
             {copied ? t("codeCopied") : t("copyCode")}
           </button>
         </div>

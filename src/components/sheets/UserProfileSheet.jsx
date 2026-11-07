@@ -11,29 +11,29 @@ import PersonAvatar from "../shared/PersonAvatar";
 import ReportMenu from "../shared/ReportMenu";
 
 // Tap a search result: their public trees only (interests_select's own RLS
-// gate) — tapping one of those trees opens a read-only journal view (no
-// photos yet, those still live local-only, see remote.js), and there's still
-// no way to message them — same hands-off rule as the fake classmate sheet.
+// gate) — tapping one of those trees opens a read-only view of its public
+// photos and journal, and there's still no way to message them — same
+// hands-off rule as the fake classmate sheet.
 export default function UserProfileSheet({ userId, displayName, accountType, avatar }) {
   const { t, nameOf } = useI18n();
   const { closeSheet } = useUI();
   const navigate = useNavigate();
   const location = useLocation();
-  const [state, setState] = useState({ loading: true, interests: [], entries: [] });
+  const [state, setState] = useState({ loading: true, interests: [], entries: [], photos: [] });
 
   useEffect(() => {
     // An org account never has hobbies of its own — skip the fetch and the
     // "no public trees" empty state that would otherwise always show for one.
-    if (accountType === "org") { setState({ loading: false, interests: [], entries: [] }); return; }
+    if (accountType === "org") { setState({ loading: false, interests: [], entries: [], photos: [] }); return; }
     let cancelled = false;
-    setState({ loading: true, interests: [], entries: [] });
-    pullPublicProfile(userId).then(({ interests, entries }) => {
-      if (!cancelled) setState({ loading: false, interests, entries });
+    setState({ loading: true, interests: [], entries: [], photos: [] });
+    pullPublicProfile(userId).then(({ interests, entries, photos }) => {
+      if (!cancelled) setState({ loading: false, interests, entries, photos });
     });
     return () => { cancelled = true; };
   }, [userId, accountType]);
 
-  const { loading, interests, entries } = state;
+  const { loading, interests, entries, photos } = state;
 
   // Carries what's needed to reopen this exact sheet if the user backs out
   // of the hobby they're about to open — see PublicInterestScreen's back
@@ -76,9 +76,11 @@ export default function UserProfileSheet({ userId, displayName, accountType, ava
         <div className="ideas">
           {interests.map((it) => {
             const minutes = minutesOf(entries, it.id);
-            // Photos never sync — health can't be judged fairly for someone
-            // else's tree, so public listings always draw it healthy.
-            const stage = treeStage(it, entries, []);
+            // Their public photos count toward the stage, the same as on the
+            // tree's own page. Health isn't judged from here — only the
+            // public part of someone's activity is visible — so it's drawn
+            // healthy.
+            const stage = treeStage(it, entries, photos);
             return (
               <div
                 className="idea"

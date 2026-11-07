@@ -193,11 +193,11 @@ Route /user/:userId/interest/:interestId. Read-only with respect to the owner's 
 
 - Avatar editor. Free always: 6 skin tones, 7 hair colours, 7 outfit colours. Purchasable: 8 hair styles and 5 outfit styles beyond the defaults. Identity does not cost coins; variety does.
 - Coin balance and a link to the Market.
-- Stats: streak, tree count, photo count, entry count, public item count — each with a small coloured icon.
-- Theme: White, Black, or System (DEFAULT_THEME = "system").
-- Language toggle. Sound effects toggle.
+- Stats: one row of four numbers — streak, trees, photos, entries. How many items are public is in the note under "Let others find me".
+- Theme: White, Black, or System (DEFAULT_THEME = "system"), as a segmented switch.
+- Language toggle. Sound effects as a switch row.
 - Reminders: asks for permission the first time; if the student said no, says where to turn it back on (browser settings, or Settings › Forest › Notifications on iPhone).
-- "Let others find me" — the account-level discovery toggle, off by default, absent on guardian-consent accounts.
+- "Let others find me" — the account-level discovery toggle, a switch row beside sound with its explanation as the group's footnote; off by default, absent on guardian-consent accounts.
 - Recovery code. Created here, while the student still knows their password, and only after re-entering it, so a borrowed unlocked phone cannot make one. Shown once, never stored readably (bcrypt), single use. Redeemed from the sign-in screen with the username to set a new password. Five wrong codes lock that account's code for fifteen minutes, and a locked account answers exactly like a wrong code, so the screen cannot reveal which usernames exist.
 - Join a class. Badges. Year in Review. Memories. Recently Deleted. Hobbies you're watching.
 - Username change, checked server-side before it commits; a taken name shows inline.
@@ -358,7 +358,7 @@ Individuals have no email. usernameToEmail lowercases the username, replaces eve
 - Local-first. Every write lands in IndexedDB first and shows immediately, then pushes to Supabase in the background.
 - Failed pushes are retried: on a 45-second timer, when the device comes back online, on demand from the sync indicator, and right after sign-in reconciliation. The list of records still owing a push is saved per account (src/lib/pendingSync.js), so a failed edit is still retried after the app is closed and reopened. The retry always reads the current local copy.
 - Schema drift is handled: a push rejected for an unknown column drops that column and retries.
-- On sign-in a one-time reconciliation pushes local records the server lacks and pulls server records the device lacks.
+- On sign-in a one-time reconciliation pushes local records the server lacks and pulls server records the device lacks. A local record the server lacks but has confirmed holding before (the per-account list in src/lib/seenRemote.js) was erased on another device — Erase now, the 30-day sweep, Clear all data — and is erased here too rather than uploaded again; this only happens when the whole garden was pulled successfully. Photos and voice notes whose bytes never reached Storage are uploaded then too, and count as unsynced until they are. Sign-in also moves a student's login address to match their current username, for accounts renamed before renames did that.
 - The newest edit wins. Every edit is stamped with updatedAt when it is made (touched in StoreContext), not when it is pushed. For a record both sides have, reconciliation pulls the server's copy if it is newer and pushes this device's if it is (src/lib/newestEdit.js). The server refuses any update carrying an older stamp than the row it already has (keep_newest_edit, 20261017010000).
 - Shared devices: if a different account signs in over a previous account's cache, the cache is wiped first. The app's language is only ever taken from the signed-in account's own profile.
 - Signing out wipes the local cache entirely.

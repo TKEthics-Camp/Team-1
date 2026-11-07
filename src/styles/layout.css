@@ -90,9 +90,7 @@
   font-family: var(--display); letter-spacing: .02em; cursor: pointer;
   display: flex; flex-direction: column; align-items: center; gap: 5px;
 }
-.nav button .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: .35; }
 .nav button[aria-current="page"] { color: var(--gold); }
-.nav button[aria-current="page"] .dot { opacity: 1; box-shadow: 0 0 8px var(--gold); }
 
 .undo-toast {
   position: absolute; left: 14px; right: 14px; bottom: 78px; z-index: 35;

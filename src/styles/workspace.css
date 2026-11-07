@@ -270,7 +270,7 @@ input:focus-visible, textarea:focus-visible, .sf .sf-field:focus {
 }
 
 /* ---------- cards: white, hairline, no shadow ---------- */
-.nudge, .memory, .stat, .theme-btn, .choice, .memory-row,
+.nudge, .memory, .stat, .choice, .memory-row,
 .consent-block, .mod-row, .post, .post-card, .user-row,
 .tree-view .stat, .tree-view .tree-status,
 .code-card, .deco-card, .acct-card {
@@ -280,11 +280,6 @@ input:focus-visible, textarea:focus-visible, .sf .sf-field:focus {
   box-shadow: none;
 }
 .consent-promise { border-color: var(--line); }
-
-/* The chosen theme: one clean dark outline, not a glowing double ring. */
-.theme-btn { overflow: hidden; }
-.theme-btn[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
-.theme-btn[aria-pressed="true"] .nm::after { color: var(--ink); }
 .tree-view .cover { border-radius: var(--r-card); border: 1px solid var(--line); box-shadow: none; }
 
 /* Stats: a coloured line icon, the label, then the number — the reference's
@@ -429,7 +424,6 @@ input:focus-visible, textarea:focus-visible, .sf .sf-field:focus {
   background: var(--app-bg); box-shadow: none;
   -webkit-backdrop-filter: none; backdrop-filter: none;
 }
-.nav-thumb { display: none; }
 /* The track is drawn behind the buttons rather than on .nav, so the bar
    itself can still run edge to edge above the home indicator. */
 .nav::before {
@@ -629,8 +623,6 @@ select:focus-visible, summary:focus-visible {
 
 /* Three themes, three across — no tile left alone on a second row. */
 .themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.theme-btn .band { height: 36px; }
-.theme-btn .nm { font-size: 13px; }
 
 /* ---------- Home: tree cards ----------
    The reference's tree card, pared back and set the way iOS sets a list
@@ -742,3 +734,70 @@ select:focus-visible, summary:focus-visible {
 
 /* Explore's idea rows lead with the hobby's own icon, as an iOS list does. */
 .ideas .idea { align-items: center; gap: 12px; }
+
+/* ---------- Me: one row of numbers ----------
+   Four columns in a single card, each a number over its label — the way
+   iOS's own profile and fitness summaries do it. */
+.me-stats {
+  flex: none; display: grid; grid-template-columns: repeat(4, 1fr);
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r-card);
+  padding: 14px 4px;
+}
+.me-stat {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  text-align: center; min-width: 0;
+}
+.me-stat + .me-stat { border-left: 1px solid var(--line); }
+.me-stat .n {
+  font-size: 22px; font-weight: 700; letter-spacing: -.02em; color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.me-stat .k {
+  font-size: 12px; color: var(--muted); padding: 0 4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+}
+.me-stat .k::first-letter { text-transform: uppercase; }
+
+/* iOS's switch, drawn: a green capsule with a white knob that slides. */
+.switch {
+  flex: none; position: relative; width: 46px; height: 28px; border-radius: 999px;
+  background: var(--track); transition: background .2s;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.switch::after {
+  content: ""; position: absolute; top: 2px; left: 2px;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: #FFFFFF; box-shadow: 0 2px 4px rgba(0,0,0,.18), 0 0 0 .5px rgba(0,0,0,.06);
+  transition: transform .2s cubic-bezier(.32, .72, 0, 1);
+}
+.switch.on { background: var(--ico-green); box-shadow: none; }
+.switch.on::after { transform: translateX(18px); }
+/* A group's footnote sits tight under it, as iOS sets them. */
+.sub.list-foot { margin-top: -6px; padding: 0 6px; font-size: 13px; line-height: 1.45; }
+
+/* ---------- Memories: one card per section ----------
+   Rows split by hairlines, like the journal, instead of a stack of cards. */
+.memory-group {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r-card);
+  overflow: hidden; margin-bottom: 14px;
+}
+.memory-group .memory-row {
+  width: 100%; display: flex; align-items: center; gap: 12px; text-align: left;
+  background: none; border: none; border-radius: 0; box-shadow: none;
+  padding: 12px 14px; cursor: pointer;
+}
+.memory-group .memory-row + .memory-row { border-top: 1px solid var(--line); }
+.memory-group .memory-row:hover { background: var(--card-2); }
+.memory-row img { width: 40px; height: 40px; border-radius: 10px; }
+.memory-row .text { font-size: 15px; line-height: 1.4; color: var(--ink); }
+.memory-row .when { font-family: var(--body); font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+/* ---------- Badges ----------
+   Earned ones are the plain white tile with a green word; the rest wait in
+   grey, their progress on the same thin green bar as a tree's. */
+.badge, .badge.earned {
+  background: var(--card); border: 1px solid var(--line); box-shadow: none;
+}
+.badge.earned .badge-sub { color: var(--ico-green); font-weight: 600; }
+.badge-bar { height: 4px; background: var(--track); }
+.badge-bar span { background: var(--rule); }

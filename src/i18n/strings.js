@@ -419,6 +419,7 @@ export const STR = {
   remindNote:   ["Reminders fire while this app is open in your browser. Nothing is sent to a server.", "只有在浏览器中打开这个应用时，提醒才会触发，不会发送到任何服务器。"],
   soundOn:      ["Sound effects on", "音效已开启"],
   soundOff:     ["Sound effects off", "音效已关闭"],
+  soundLabel:   ["Sound effects", "音效"],
   publicCount:  ["public entries", "篇公开内容"],
   publicCount1: ["public entry", "篇公开内容"],
   discoverableLabel: ["Let others find me", "允许别人找到我"],

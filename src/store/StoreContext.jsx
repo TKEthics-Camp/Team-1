@@ -12,6 +12,7 @@ import {
 } from "../lib/remote";
 import { earnedIds } from "../lib/badges";
 import { loadPendingSync, savePendingSync, forgetPendingSync } from "../lib/pendingSync";
+import { loadSeen, saveSeen, forgetSeen, splitLocalOnly } from "../lib/seenRemote";
 import { newerSide, mergePulled } from "../lib/newestEdit";
 
 const StoreCtx = createContext(null);
@@ -84,6 +85,30 @@ export function StoreProvider({ children }) {
     if (id) savePendingSync(id, pendingSyncIds);
   }, [pendingSyncIds]);
 
+  // Which records the server has confirmed it holds (see lib/seenRemote):
+  // what lets sign-in sync tell a record erased on another device from one
+  // that simply hasn't been uploaded yet. Loaded per account like the
+  // pending list, written back a moment after it changes rather than once
+  // per push, and forgotten at sign-out along with everything it describes.
+  const seenRef = useRef({ userId: null, keys: new Set() });
+  const seenSaveTimer = useRef(null);
+  useEffect(() => {
+    const prev = seenRef.current.userId;
+    if (!user || user.isDebug) {
+      if (prev) forgetSeen(prev);
+      seenRef.current = { userId: null, keys: new Set() };
+      return;
+    }
+    if (prev !== user.id) seenRef.current = { userId: user.id, keys: loadSeen(user.id) };
+  }, [user]);
+  function markSeen(store, id) {
+    const seen = seenRef.current;
+    if (!seen.userId) return;
+    seen.keys.add(store + ":" + id);
+    clearTimeout(seenSaveTimer.current);
+    seenSaveTimer.current = setTimeout(() => saveSeen(seen.userId, seen.keys), 500);
+  }
+
   // Every user edit is stamped at the moment it is made, not when it is
   // pushed: the server keeps whichever copy of a record carries the newest
   // stamp (20261017010000), and reconciliation pulls a newer copy down.
@@ -104,6 +129,7 @@ export function StoreProvider({ children }) {
   async function pushInterest(rec, userId) {
     const ok = await remotePushInterest(rec, userId);
     markSyncResult("interests", rec.id, ok);
+    if (ok) markSeen("interests", rec.id);
     return ok;
   }
   // A row whose bytes haven't reached Storage still owes the server
@@ -113,11 +139,13 @@ export function StoreProvider({ children }) {
   async function pushEntry(rec) {
     const ok = await remotePushEntry(rec);
     markSyncResult("entries", rec.id, ok && !(rec.audio && !rec.audioPath));
+    if (ok) markSeen("entries", rec.id);
     return ok;
   }
   async function pushPhotoRow(rec) {
     const ok = await remotePushPhotoRow(rec);
     markSyncResult("photos", rec.id, ok && !(rec.blob && !rec.storagePath));
+    if (ok) markSeen("photos", rec.id);
     return ok;
   }
 
@@ -517,6 +545,15 @@ export function StoreProvider({ children }) {
       }
       setProfileCheck("done");
 
+      // A student renamed before renames moved the login address can only
+      // sign in with their old username. Signing in with it lands here, and
+      // this moves the address to match the name they actually have — so
+      // from then on the new name works, and so does a recovery code (which
+      // looks people up by that name). Also moves a pre-fingerprint Chinese
+      // name off the shared user@ address. Does nothing for an address that
+      // already matches, or for an educator's real email.
+      if (userRow && userRow.display_name) syncLoginToUsername(userRow.display_name);
+
       // `remote` was already fetched above (pullUserRow/pullMine ran
       // together to decide onboarded-vs-not) — reusing it here instead of
       // calling pullMine a second time for the same user's same data.
@@ -527,8 +564,35 @@ export function StoreProvider({ children }) {
       // field — pushing one syncs the tombstone instead of resurrecting the
       // row, and counting it here (rather than excluding it) is what stops
       // it from being adopted right back as if it were new.
-      const remoteIntIds = new Set(remote.interests.map((i) => i.id));
-      const toPush = allLocalInterests.filter((i) => !remoteIntIds.has(i.id));
+      //
+      // Of what this device has and the server doesn't, the records the
+      // server had confirmed before were erased there since — Erase now, the
+      // 30-day sweep or Clear all data on another device. Those go here too,
+      // instead of being uploaded straight back (lib/seenRemote). The rest
+      // were never uploaded, and go up now.
+      const seen = seenRef.current.userId === user.id ? seenRef.current.keys : new Set();
+      const split = {
+        interests: splitLocalOnly("interests", allLocalInterests, remote.interests, seen, remote.complete),
+        entries: splitLocalOnly("entries", allLocalEntries, remote.entries, seen, remote.complete),
+        photos: splitLocalOnly("photos", allLocalPhotos, remote.photos, seen, remote.complete),
+      };
+      const erased = { interests: new Set(), entries: new Set(), photos: new Set() };
+      for (const store of ["interests", "entries", "photos"]) {
+        for (const rec of split[store].drop) {
+          erased[store].add(rec.id);
+          del(store, rec.id);
+          markSyncResult(store, rec.id, true);
+        }
+      }
+      if (erased.interests.size) setInterests((l) => l.filter((r) => !erased.interests.has(r.id)));
+      if (erased.entries.size) setEntries((l) => l.filter((r) => !erased.entries.has(r.id)));
+      if (erased.photos.size) setPhotos((l) => l.filter((r) => !erased.photos.has(r.id)));
+      // Everything the server just handed back is, by definition, on it.
+      remote.interests.forEach((r) => markSeen("interests", r.id));
+      remote.entries.forEach((r) => markSeen("entries", r.id));
+      remote.photos.forEach((r) => markSeen("photos", r.id));
+
+      const toPush = split.interests.push;
       await Promise.all(toPush.map((rec) => pushInterest(rec, user.id)));
 
       const localIntIds = new Set(allLocalInterests.map((i) => i.id));
@@ -538,8 +602,7 @@ export function StoreProvider({ children }) {
       // A local-only entry's voice note might have its blob but never made
       // it to Storage (e.g. recorded offline) — upload it first, same as
       // photosToPush does for photo blobs just above.
-      const remoteEntryIds = new Set(remote.entries.map((e) => e.id));
-      const entriesToPush = allLocalEntries.filter((e) => !remoteEntryIds.has(e.id));
+      const entriesToPush = split.entries.push;
       await Promise.all(entriesToPush.map((rec) => (
         !rec.audioPath && rec.audio ? uploadEntryAudio(rec, user.id) : pushEntry(rec)
       )));
@@ -551,8 +614,7 @@ export function StoreProvider({ children }) {
       // A local-only photo might have its blob but never made it to Storage
       // (e.g. added offline) — upload it first so the row being pushed has
       // somewhere real to point storage_path at.
-      const remotePhotoIds = new Set(remote.photos.map((p) => p.id));
-      const photosToPush = allLocalPhotos.filter((p) => !remotePhotoIds.has(p.id));
+      const photosToPush = split.photos.push;
       await Promise.all(photosToPush.map((rec) => (
         !rec.storagePath && rec.blob ? uploadPhotoFile(rec, user.id) : pushPhotoRow(rec)
       )));
@@ -766,7 +828,8 @@ export function StoreProvider({ children }) {
     },
     // Bring a dead tree back for REVIVE_COST coins. Returns false (and changes
     // nothing) if the user can't afford it. revivedAt resets the decay clock.
-    // revivedAt is a local-only game mechanic; coins does sync (see updateCoins).
+    // revivedAt syncs with the tree (revived_at), and coins sync too (see
+    // updateCoins).
     reviveInterest(id) {
       const p = profileRef.current;
       if (!p || (p.coins || 0) < REVIVE_COST) return false;
@@ -1176,6 +1239,15 @@ export function StoreProvider({ children }) {
       setInterests([]);
       setPhotos([]);
       setEntries([]);
+      // Badges are derived, so clearing takes them away — but the record of
+      // which were already announced stayed full, and earning one again
+      // afterwards passed without a word. Starting fresh, they're celebrated.
+      setProfileState((p) => {
+        if (!p) return p;
+        const next = { ...p, earnedBadges: [] };
+        put("meta", next);
+        return next;
+      });
       if (!userRef.current) return { ok: true };
       return { ok: await deleteAllMine(userRef.current.id) };
     },
@@ -1192,9 +1264,22 @@ export function StoreProvider({ children }) {
     };
   }, []);
 
+  // An entry or photo only counts while its tree does. One logged on this
+  // device under a tree that was deleted on another stays stored (it can come
+  // back with the tree from Recently Deleted), but it no longer adds to
+  // streaks, badges, totals or the year in review for a tree that's gone.
+  const liveEntries = useMemo(() => {
+    const ids = new Set(interests.map((i) => i.id));
+    return entries.every((e) => ids.has(e.interestId)) ? entries : entries.filter((e) => ids.has(e.interestId));
+  }, [interests, entries]);
+  const livePhotos = useMemo(() => {
+    const ids = new Set(interests.map((i) => i.id));
+    return photos.every((p) => ids.has(p.interestId)) ? photos : photos.filter((p) => ids.has(p.interestId));
+  }, [interests, photos]);
+
   const value = useMemo(
-    () => ({ loading, profile, interests, photos, entries, profileCheck, pendingSyncCount: pendingSyncIds.size, ...actions }),
-    [loading, profile, interests, photos, entries, profileCheck, pendingSyncIds, actions]
+    () => ({ loading, profile, interests, photos: livePhotos, entries: liveEntries, profileCheck, pendingSyncCount: pendingSyncIds.size, ...actions }),
+    [loading, profile, interests, livePhotos, liveEntries, profileCheck, pendingSyncIds, actions]
   );
 
   return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>;

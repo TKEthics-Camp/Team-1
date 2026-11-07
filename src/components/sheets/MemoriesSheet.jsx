@@ -6,7 +6,7 @@ import { usePhotoURL } from "../../lib/image";
 import { fmtDate } from "../../lib/dates";
 import { onThisDay, categoryReels, categoryLabel } from "../../lib/memories";
 import Sheet from "../shared/Sheet";
-import Tree from "../shared/Tree";
+import Icon, { hobbyLook } from "../shared/Icon";
 
 // isPhoto, not item.blob, is what makes something a photo memory — a photo
 // might only have a storagePath on this device yet (a fresh sign-in, a
@@ -20,12 +20,17 @@ function isPhotoMemory(item) {
 function MemoryRow({ item, sub, onOpen, cachePhotoBlob }) {
   const { nameOf } = useI18n();
   const url = usePhotoURL(item, cachePhotoBlob && ((blob) => cachePhotoBlob(item.id, blob)));
+  const look = hobbyLook(item.interest.name);
   return (
     <button className="memory-row" onClick={onOpen}>
+      {/* A photo shows itself; words get their hobby's icon, the same one
+          its tree card and Explore use. */}
       {isPhotoMemory(item) ? (
         <img src={url} alt="" />
       ) : (
-        <div style={{ flex: "none" }}><Tree interest={item.interest} size={40} stage={2} health="healthy" /></div>
+        <span className={"idea-ico stat-ico tag-" + look.tone} aria-hidden="true">
+          <Icon name={look.icon} size={18} />
+        </span>
       )}
       <div className="body">
         <div className="text">{item.text || nameOf(item.interest)}</div>
@@ -61,24 +66,28 @@ export default function MemoriesSheet() {
         {otd.length > 0 && (
           <>
             <div className="label">{t("onThisDay")}</div>
-            {otd.map((item, i) => (
-              <MemoryRow
-                key={"otd" + i}
-                item={item}
-                sub={item.yearsAgo === 1 ? t("yearAgo") : t("yearsAgo").replace("{n}", item.yearsAgo)}
-                onOpen={() => open(item)}
-                cachePhotoBlob={cachePhotoBlob}
-              />
-            ))}
+            <div className="memory-group">
+              {otd.map((item, i) => (
+                <MemoryRow
+                  key={"otd" + i}
+                  item={item}
+                  sub={item.yearsAgo === 1 ? t("yearAgo") : t("yearsAgo").replace("{n}", item.yearsAgo)}
+                  onOpen={() => open(item)}
+                  cachePhotoBlob={cachePhotoBlob}
+                />
+              ))}
+            </div>
           </>
         )}
 
         {reels.map((reel) => (
           <div key={reel.cat}>
             <div className="label">{categoryLabel(reel.cat, lang)}</div>
-            {reel.items.slice(0, 6).map((item, i) => (
-              <MemoryRow key={reel.cat + i} item={item} sub={fmtDate(item.date, lang)} onOpen={() => open(item)} cachePhotoBlob={cachePhotoBlob} />
-            ))}
+            <div className="memory-group">
+              {reel.items.slice(0, 6).map((item, i) => (
+                <MemoryRow key={reel.cat + i} item={item} sub={fmtDate(item.date, lang)} onOpen={() => open(item)} cachePhotoBlob={cachePhotoBlob} />
+              ))}
+            </div>
           </div>
         ))}
 

@@ -93,16 +93,3 @@
 
 /* ---------- theme picker ---------- */
 .themes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-.theme-btn {
-  position: relative; border: 1.5px solid var(--line); border-radius: 16px;
-  padding: 0; overflow: hidden; cursor: pointer; background: none;
-  display: flex; flex-direction: column; gap: 0; text-align: left;
-}
-.theme-btn .band { height: 46px; display: flex; }
-.theme-btn .band span { flex: 1; }
-.theme-btn .nm {
-  padding: 8px 12px; font-family: var(--display); font-weight: 600; font-size: 13.5px;
-  color: var(--ink); background: var(--card-2); backdrop-filter: blur(6px);
-}
-.theme-btn[aria-pressed="true"] { border-color: var(--candy); box-shadow: 0 0 0 3px color-mix(in srgb, var(--candy) 30%, transparent); }
-.theme-btn[aria-pressed="true"] .nm::after { content: " ✓"; color: var(--candy); }

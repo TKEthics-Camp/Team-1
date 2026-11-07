@@ -5,8 +5,8 @@ import Icon from "./Icon";
 // actually does differs by caller. A journal entry's flag really is synced
 // and enforced server-side (see entries_select in the migrations): once an
 // account is discoverable, its public entries are visible to others. A
-// photo's flag currently isn't — photos never leave this device yet, so
-// the choice is only ever stored locally, not enforced anywhere remote.
+// photo's flag works the same way, through photos_select and the storage
+// policy on its file.
 export default function VisRow({ value, onChange }) {
   const { t } = useI18n();
   const options = [
