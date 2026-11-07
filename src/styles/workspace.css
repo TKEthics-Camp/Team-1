@@ -667,10 +667,15 @@ select:focus-visible, summary:focus-visible {
 .tree-card-tags .tag { padding: 4px 10px; font-size: 12.5px; font-weight: 600; }
 .tree-card-tags .tag-grey { background: var(--card); color: var(--muted); }
 .tree-card-body { padding: 14px 16px 16px; display: flex; flex-direction: column; }
-.tree-card-head { display: flex; align-items: center; gap: 12px; }
+.tree-card-head { display: flex; align-items: center; gap: 10px; }
 .tree-card-ico, .idea-ico {
-  flex: none; width: 38px; height: 38px; border-radius: 50%;
-  display: grid; place-items: center; margin: 0;
+  flex: none; display: grid; place-items: center; margin: 0;
+}
+/* Explore's rows keep a soft circle behind the icon, as iOS lists do; on a
+   tree card the icon stands on its own beside the name, as in the
+   reference. */
+.idea-ico {
+  width: 40px; height: 40px; border-radius: 50%;
   background: color-mix(in srgb, currentColor 12%, transparent) !important;
 }
 .tree-card-title { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
@@ -703,7 +708,6 @@ select:focus-visible, summary:focus-visible {
 }
 .bar > span { display: block; height: 100%; border-radius: inherit; background: var(--rule); }
 .tree-card.is-dead .bar > span { background: var(--dim); }
-.tree-card-next { margin-top: 8px; font-size: 13px; color: var(--muted); }
 
 /* Nothing planted yet: the empty panel is the way in. */
 .tree-card-add {
@@ -738,4 +742,3 @@ select:focus-visible, summary:focus-visible {
 
 /* Explore's idea rows lead with the hobby's own icon, as an iOS list does. */
 .ideas .idea { align-items: center; gap: 12px; }
-.idea-ico { width: 40px; height: 40px; }

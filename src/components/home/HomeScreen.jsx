@@ -7,7 +7,6 @@ import { getResurfacedMemory } from "../../lib/resurfaced";
 import { globalStreakDetail } from "../../lib/derived";
 import { isDyingSoon, daysUntilDeath } from "../../lib/tree";
 import TopBar from "../shared/TopBar";
-import LangToggle from "../shared/LangToggle";
 import StreakFlame from "../shared/StreakFlame";
 import NudgeBanner from "./NudgeBanner";
 import MemoryBanner from "./MemoryBanner";
@@ -86,7 +85,8 @@ export default function HomeScreen() {
           {streak}
           <StreakFlame key={String(streak) + restingNow} resting={restingNow} />
         </span>
-        <LangToggle />
+        {/* No language toggle here: Home's bar is kept to the mark and the
+            streak. Explore and Me both still carry one. */}
       </TopBar>
       <div className="view home-view">
         <header className="page-head">

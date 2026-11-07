@@ -66,7 +66,8 @@ function TreeCard({ interest: it, entries, photos }) {
 
   // Kept to what a glance needs: the stage, the tree, who it is, when it
   // was last tended, and how far to the next stage. Days planted, the log
-  // count and the percentage live on the tree's own page.
+  // count, the percentage and what the next stage is called live on the
+  // tree's own page.
   return (
     <article className={"tree-card" + (dead ? " is-dead" : "")}>
       <div className="tree-card-art">
@@ -82,7 +83,7 @@ function TreeCard({ interest: it, entries, photos }) {
       <div className="tree-card-body">
         <div className="tree-card-head">
           <span className={"tree-card-ico stat-ico tag-" + look.tone} aria-hidden="true">
-            <Icon name={look.icon} size={18} />
+            <Icon name={look.icon} size={20} />
           </span>
           <div className="tree-card-title">
             {/* The name is the card's link: its hit area is stretched over
@@ -102,13 +103,20 @@ function TreeCard({ interest: it, entries, photos }) {
           </button>
         </div>
 
-        <div className="bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label={t(STAGE_KEY[stage])}>
-          <span style={{ width: pct + "%" }} />
-        </div>
-        <div className="tree-card-next">
-          {prog.to === null
+        {/* No caption under the bar: the stage chip names where the tree
+            is, the bar shows how far to the next, and the tree's own page
+            gives the count. Screen readers still get it spelled out. */}
+        <div
+          className="bar"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={pct}
+          aria-label={prog.to === null
             ? t("stgFull")
             : t("toStage").replace("{n}", prog.to - prog.acts).replace("{stage}", t(STAGE_KEY[stage + 1]))}
+        >
+          <span style={{ width: pct + "%" }} />
         </div>
       </div>
     </article>
