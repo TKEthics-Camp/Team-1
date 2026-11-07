@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   treeStage, actsToNextStage, treeHealth, daysIdle, daysUntilDeath,
-  isDyingSoon, daysPlanted, growthTimeline, speciesOf, leafColorOf, SPECIES,
+  isDyingSoon, daysPlanted, growthTimeline, speciesOf, leafColorOf, SPECIES, stageProgress,
 } from "./tree";
 import { dateKey } from "./dates";
 
@@ -138,5 +138,18 @@ describe("speciesOf / leafColorOf", () => {
   it("always lands on a real species, even with no id at all", () => {
     expect(SPECIES).toContain(speciesOf({}));
     expect(SPECIES).toContain(speciesOf(null));
+  });
+});
+
+describe("stageProgress", () => {
+  it("measures the way from the current stage to the next", () => {
+    expect(stageProgress(tree, logs(0), [])).toEqual({ acts: 0, stage: 0, from: 0, to: 5, ratio: 0 });
+    expect(stageProgress(tree, logs(8), [])).toEqual({ acts: 8, stage: 1, from: 5, to: 11, ratio: 0.5 });
+  });
+  it("starts the bar empty again on reaching a stage", () => {
+    expect(stageProgress(tree, logs(11), []).ratio).toBe(0);
+  });
+  it("stays full once the tree is fully grown", () => {
+    expect(stageProgress(tree, logs(40), [])).toMatchObject({ stage: 4, to: null, ratio: 1 });
   });
 });

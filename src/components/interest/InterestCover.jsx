@@ -3,7 +3,7 @@ import { useStore } from "../../store/StoreContext";
 import { usePhotoURL } from "../../lib/image";
 import { fmtDate, dateKey } from "../../lib/dates";
 import { ideaCat } from "../../lib/explore";
-import { scene } from "../../lib/community";
+import Icon, { CATEGORY_LOOK } from "../shared/Icon";
 
 export default function InterestCover({ interest, firstPhoto }) {
   const { t, lang, nameOf } = useI18n();
@@ -14,20 +14,20 @@ export default function InterestCover({ interest, firstPhoto }) {
   // AlbumTab/PhotoViewer) instead of a local-blob-only one.
   const url = usePhotoURL(firstPhoto, firstPhoto && ((blob) => cachePhotoBlob(firstPhoto.id, blob)));
 
-  // With no photo yet, draw an illustration that matches the hobby (paint for
-  // Drawing, a ball for Basketball…) instead of a bare initial. Falls back to
-  // the letter only when the hobby maps to no known category.
-  const cat = firstPhoto ? null : ideaCat(interest.name);
-  const hasVisual = Boolean(firstPhoto || cat);
+  // With no photo yet, a quiet grey panel carrying the hobby's own line icon
+  // (a brush for Drawing, a ball for Basketball…), the same icon and colour
+  // Explore uses for its category. A full-colour picture here was the
+  // loudest thing on the page, and it is only a placeholder.
+  const look = firstPhoto ? null : CATEGORY_LOOK[ideaCat(interest.name)];
 
   return (
-    <div className={hasVisual ? "cover" : "cover blank"} style={{ "--c": interest.color }}>
+    <div className={firstPhoto ? "cover" : "cover blank"} style={{ "--c": interest.color }}>
       {firstPhoto ? (
         <img src={url} alt={t("coverAlt")} />
-      ) : cat ? (
-        <div className="cover-scene" aria-hidden="true" dangerouslySetInnerHTML={{ __html: scene(cat, 0, interest.name) }} />
       ) : (
-        <span className="mono" aria-hidden="true">{nameOf(interest).slice(0, 1).toUpperCase()}</span>
+        <span className={"cover-ico stat-ico tag-" + (look ? look.tone : "green")} aria-hidden="true">
+          <Icon name={look ? look.icon : "tree"} size={26} />
+        </span>
       )}
       <div className="veil" />
       <div className="cap">

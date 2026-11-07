@@ -1,6 +1,15 @@
 /* ==========================================================================
    The current look: calm, flat, a little colour.
 
+   Second reference, layered on the first (a habit tracker, "Grove"): a
+   white page instead of a grey one, so the only grey is the soft panel each
+   tree stands on and the track of a segmented control — whose chosen item
+   is a white pill lifted by a hairline shadow rather than a black one.
+   Trees are cards: stage chip, the tree on its panel, the hobby's line icon
+   and name, a thin green progress bar and one outlined action. The journal
+   is one card per day under a spaced-out day heading, rows split by
+   hairlines, each with a grey icon bubble and a green duration tag.
+
    Taken from a reference the owner picked (a workspace home page, "Slab"):
    a cool light-grey page, white cards with a hairline outline and no
    shadow, one heavy heading with a short green rule under it and a small
@@ -20,18 +29,22 @@
    ========================================================================== */
 
 .stage, .stage[data-theme="white"] {
-  --stage-bg: #E9EAEC;
-  --app-bg:   #F4F5F6;
+  --stage-bg: #ECEDEF;
+  --app-bg:   #FFFFFF;
   --shelf:    #FFFFFF;
   --card:     #FFFFFF;
-  --card-2:   #EEEFF1;
-  --sel:      #E7E8EA;
-  --line:     #E0E1E3;
-  --ink:      #1D1E21;
+  --card-2:   #F4F4F5;
+  --sel:      #FFFFFF;
+  --line:     #E8E8EA;
+  /* the grey a tree stands on, and the track under a segmented control */
+  --panel:    #F7F7F8;
+  --track:    #F1F1F3;
+  --lift:     0 1px 2px rgba(16,18,24,.08), 0 0 0 1px rgba(16,18,24,.04);
+  --ink:      #1A1B1E;
   --body-ink: #313335;
   --muted:    #67696C;
   --dim:      #6D6F72;
-  --accent:   #2C2C2E;
+  --accent:   #1C1C1E;
   --accent-ink: #FFFFFF;
   --candy:    #E5484D;
   --good:     #0FA05C;
@@ -39,8 +52,9 @@
   --bad:      #E5484D;
   --bad-bg:   #FDECEC;
 
-  /* the reference's green, for the one rule under the main heading */
-  --rule:     #32B36E;
+  /* the reference's green, for the rule under the main heading and the
+     progress bars */
+  --rule:     #2FA866;
 
   /* Tags and icons: the only colour besides the trees. A saturated word
      on a pale wash of the same hue, as on the reference's Design /
@@ -93,8 +107,11 @@
   --shelf:    #202124;
   --card:     #202124;
   --card-2:   #28292D;
-  --sel:      #2D2E32;
+  --sel:      #34353A;
   --line:     #323337;
+  --panel:    #1C1D20;
+  --track:    #26272A;
+  --lift:     0 1px 2px rgba(0,0,0,.5);
   --ink:      #EDEEF0;
   --body-ink: #C9CACD;
   --muted:    #8E9095;
@@ -151,10 +168,10 @@
 /* ---------- frame and headers ---------- */
 .app { background: var(--app-bg); }
 
-/* Headers sit on the page rather than on a strip of their own. */
+/* Headers sit on the page, marked off by one hairline. */
 .topbar, .topbar.home-bar {
   background: var(--app-bg);
-  border-bottom: none;
+  border-bottom: 1px solid var(--line);
   -webkit-backdrop-filter: none; backdrop-filter: none;
 }
 .topbar h1 {
@@ -221,22 +238,25 @@
 .chip.flame-badge { color: var(--ink); font-weight: 650; }
 .home-bar .chip, .home-bar .lang { background: var(--card); border: 1px solid var(--line); color: var(--ink); }
 
-/* Album / Journal and every other two-way switch: a row of separate pills. */
+/* Album / Journal and every other switch: a grey track, the chosen item a
+   white pill sitting on it. */
 .tabs, .seg, .tree-view .tabs {
-  background: none; border: none; box-shadow: none;
-  padding: 0; gap: 8px; border-radius: 0;
+  display: inline-flex; align-self: flex-start; max-width: 100%;
+  background: var(--track); border: none; box-shadow: none;
+  padding: 4px; gap: 2px; border-radius: 999px;
 }
 .tabs button, .seg button, .tree-view .tabs button {
   flex: 0 0 auto; padding: 8px 18px;
-  background: var(--card); color: var(--muted);
-  border: 1px solid var(--line); border-radius: 999px;
+  background: none; color: var(--muted);
+  border: none; border-radius: 999px;
   font-family: var(--body); font-size: 14px; font-weight: 550; letter-spacing: -.01em;
   box-shadow: none;
 }
+.tabs button:hover, .seg button:hover { color: var(--ink); }
 .tabs button[aria-selected="true"], .seg button[aria-pressed="true"],
 .tree-view .tabs button[aria-selected="true"] {
-  background: var(--accent); color: var(--accent-ink); border-color: var(--accent);
-  font-weight: 600; box-shadow: none;
+  background: var(--sel); color: var(--ink);
+  font-weight: 650; box-shadow: var(--lift);
 }
 
 /* ---------- fields ---------- */
@@ -295,49 +315,47 @@ input:focus-visible, textarea:focus-visible, .sf .sf-field:focus {
 .tree-view .tree-status { padding: 14px 16px; }
 .tree-view .tree-status .st-stage { font-size: 16px; font-weight: 700; letter-spacing: -.02em; }
 
-/* ---------- journal: a timeline ---------- */
-.timeline { display: flex; flex-direction: column; gap: 12px; }
-.entry {
-  display: grid; grid-template-columns: 56px 1fr; gap: 12px;
-  align-items: start; padding: 0; border: none;
+/* ---------- journal: one card per day ----------
+   A spaced-out day heading with the day's total at its right, then one card
+   whose rows are split by hairlines: grey icon bubble, the words, and the
+   duration and edit controls down the right-hand side. */
+.journal { display: flex; flex-direction: column; gap: 18px; }
+.journal-day { display: flex; flex-direction: column; gap: 8px; }
+.journal-day-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  padding: 0 4px;
 }
-.entry-when {
-  position: relative;
-  display: flex; flex-direction: column; align-items: flex-end;
-  gap: 2px; padding: 17px 14px 0 0; text-align: right;
+.journal-day-k {
+  font-size: 11.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--muted);
 }
-.entry-when::after {
-  content: ""; position: absolute; right: 0; top: 21px;
-  width: 6px; height: 6px; border-radius: 50%; background: var(--line);
-}
-.entry-when .wd {
-  font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--body-ink); line-height: 1.3;
-}
-.entry-when .d {
-  font-family: var(--body); font-size: 12px; color: var(--dim); line-height: 1.3;
-  white-space: nowrap;
-}
-.entry-card {
-  position: relative; min-width: 0;
+.journal-day-total { font-size: 13px; color: var(--dim); font-variant-numeric: tabular-nums; }
+.journal-card {
   background: var(--card); border: 1px solid var(--line); border-radius: var(--r-card);
-  box-shadow: none;
-  padding: 15px 16px 12px;
-  display: flex; flex-direction: column; gap: 9px;
+  overflow: hidden;
 }
-.entry-card .t {
-  margin: 0; font-size: 15px; line-height: 1.6; color: var(--body-ink);
+.journal-row {
+  display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 12px;
+  align-items: start; padding: 14px 10px 13px 14px;
+}
+.journal-row + .journal-row { border-top: 1px solid var(--line); }
+.journal-ico {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--card-2); color: var(--body-ink);
+}
+.journal-body { min-width: 0; display: flex; flex-direction: column; gap: 8px; padding-top: 7px; }
+.journal-body .t {
+  margin: 0; font-size: 15px; line-height: 1.5; color: var(--ink);
   overflow-wrap: anywhere; white-space: pre-wrap;
 }
-.entry-card .voice-note { margin-top: 0; }
-/* The tag row always holds its height, so edit and delete can sit at its
-   right-hand end instead of taking a line of their own at the bottom. */
-.entry-tags { display: flex; flex-wrap: wrap; gap: 6px; min-height: 20px; padding-right: 64px; }
-.entry-actions {
-  position: absolute; top: 9px; right: 8px;
-  display: flex; gap: 0; margin: 0;
-}
-.entry-actions .icon { width: 32px; height: 32px; display: grid; place-items: center; }
+.journal-body .t-muted { color: var(--muted); }
+.journal-body .voice-note { margin-top: 0; }
+.journal-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; padding-top: 6px; }
+.journal-side .tag { font-variant-numeric: tabular-nums; }
+.entry-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.entry-actions { display: flex; gap: 0; margin: 0 -4px 0 0; }
+.entry-actions .icon { width: 30px; height: 30px; display: grid; place-items: center; }
 .entry-actions .icon { color: var(--dim); }
 .entry-actions .icon:hover { color: var(--ink); }
 
@@ -403,22 +421,32 @@ input:focus-visible, textarea:focus-visible, .sf .sf-field:focus {
 .idea-add:hover { background: var(--card-2); border-color: var(--line); color: var(--ink); }
 
 /* ---------- bottom navigation ----------
-   The reference's sidebar turned on its side: the current item sits on a
-   soft grey pill. */
+   The reference's Grove / Journal / Insights switch, at the foot of the
+   phone: the same grey track and white pill as every other switch here. */
 .nav {
-  margin: 0; padding: 6px 10px calc(6px + env(safe-area-inset-bottom, 0px));
+  margin: 0; padding: 8px 14px calc(8px + env(safe-area-inset-bottom, 0px));
   border: none; border-top: 1px solid var(--line); border-radius: 0;
-  background: var(--card); box-shadow: none;
+  background: var(--app-bg); box-shadow: none;
   -webkit-backdrop-filter: none; backdrop-filter: none;
 }
 .nav-thumb { display: none; }
+/* The track is drawn behind the buttons rather than on .nav, so the bar
+   itself can still run edge to edge above the home indicator. */
+.nav::before {
+  content: ""; position: absolute; z-index: 0;
+  left: 14px; right: 14px; top: 8px; bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  border-radius: 999px; background: var(--track);
+}
 .nav button {
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-  padding: 7px 4px 6px; border-radius: 14px;
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  margin: 4px 2px; padding: 6px 4px 5px; border-radius: 999px;
   font-size: 11.5px; font-weight: 550; color: var(--muted);
 }
-.nav button svg { width: 22px; height: 22px; }
-.nav button[aria-current="page"] { color: var(--ink); font-weight: 700; background: var(--sel); }
+.nav button svg { width: 21px; height: 21px; }
+.nav button[aria-current="page"] {
+  color: var(--ink); font-weight: 700; background: var(--sel); box-shadow: var(--lift);
+}
 
 /* ---------- sheets ---------- */
 .sheet {
@@ -434,7 +462,7 @@ input:focus-visible, textarea:focus-visible, .sf .sf-field:focus {
 /* ---------- Home ---------- */
 .brand { display: flex; align-items: center; gap: 9px; margin-right: auto; }
 .brand-mark {
-  width: 28px; height: 28px; border-radius: 9px; flex: none;
+  width: 30px; height: 30px; border-radius: 50%; flex: none;
   display: grid; place-items: center;
   background: var(--accent); color: var(--accent-ink);
 }
@@ -603,3 +631,107 @@ select:focus-visible, summary:focus-visible {
 .themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .theme-btn .band { height: 36px; }
 .theme-btn .nm { font-size: 13px; }
+
+/* ---------- Home: tree cards ----------
+   The reference's tree card: the tree on a soft grey panel with its stage
+   in a chip, then the hobby's line icon and name, when it was last tended,
+   a thin green bar to the next stage, and one outlined action. */
+.trees-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 8px;
+}
+.trees-head h2 {
+  margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.03em; color: var(--ink);
+}
+.plant-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 4px; background: none; border: none; cursor: pointer;
+  font-family: var(--body); font-size: 15px; font-weight: 650; letter-spacing: -.01em;
+  color: var(--ink);
+}
+.plant-btn:hover { opacity: .7; }
+
+.tree-cards { display: flex; flex-direction: column; gap: 14px; }
+.tree-card {
+  position: relative; flex: none;
+  background: var(--card); border: 1px solid var(--line); border-radius: 22px;
+  overflow: hidden;
+}
+.tree-card-art {
+  position: relative; height: 184px; overflow: hidden;
+  display: flex; align-items: flex-end; justify-content: center;
+  background: var(--panel);
+}
+.tree-card-tags { position: absolute; top: 14px; left: 14px; display: flex; gap: 6px; }
+.tree-card-tags .tag { padding: 4px 11px; font-size: 13px; }
+.tree-card-age {
+  position: absolute; top: 18px; right: 16px;
+  font-size: 12px; color: var(--dim);
+}
+.tree-card-body { padding: 16px 18px 16px; display: flex; flex-direction: column; }
+.tree-card-head { display: flex; align-items: center; gap: 10px; }
+.tree-card-ico { flex: none; color: var(--muted); }
+.tree-card-name {
+  flex: 1; min-width: 0; padding: 0; text-align: left;
+  background: none; border: none; cursor: pointer;
+  font-family: var(--body); font-size: 20px; font-weight: 750; letter-spacing: -.025em;
+  color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* The name's hit area covers the card; the Log button sits above it. */
+.tree-card-name::after { content: ""; position: absolute; inset: 0; z-index: 0; }
+.tree-card-name:focus-visible { outline: none; }
+.tree-card:has(.tree-card-name:focus-visible) { outline: 2px solid var(--ico-blue); outline-offset: 2px; }
+.tree-card-last { flex: none; font-size: 13px; color: var(--muted); }
+.tree-card-last.dead { color: var(--bad); }
+.tree-card-progress {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-top: 16px; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums;
+}
+.tree-card-count { color: var(--body-ink); font-weight: 600; }
+.tree-card-pct { font-size: 13px; }
+.bar {
+  height: 5px; margin-top: 9px; border-radius: 999px;
+  background: var(--card-2); overflow: hidden;
+}
+.bar > span { display: block; height: 100%; border-radius: inherit; background: var(--rule); }
+.tree-card.is-dead .bar > span { background: var(--dim); }
+.tree-card-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-top: 14px;
+}
+.tree-card-next { font-size: 13.5px; color: var(--muted); min-width: 0; }
+.tree-card-log, .tree-view .tree-card-log {
+  position: relative; z-index: 1;
+  width: auto; flex: none; padding: 8px 16px; font-size: 14px; font-weight: 600;
+}
+
+/* Nothing planted yet: the empty panel is the way in. */
+.tree-card-add {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  min-height: 240px; width: 100%; cursor: pointer;
+  background: var(--panel); border: 1px dashed var(--line);
+  font-family: var(--body); color: var(--muted);
+}
+.tree-card-add .plus {
+  width: 56px; height: 56px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--card); color: var(--ink);
+  box-shadow: var(--lift);
+}
+.tree-card-add-label { font-size: 15px; font-weight: 600; color: var(--ink); }
+
+/* The zoomed-out forest: the same cards, small, two to a row. */
+.tree-grid .tree-cell {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 18px;
+}
+
+/* A tree drawn anywhere else stands on the same grey. */
+.tree-view .tree-status > :first-child {
+  flex: none; border-radius: 14px; background: var(--panel);
+}
+.tree-view .cover.blank { background: var(--panel); place-items: start; }
+.cover-ico {
+  position: absolute; top: 16px; left: 16px; margin: 0;
+  width: 52px; height: 52px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--card); box-shadow: var(--lift);
+}
+.cover-ico .ico { width: 26px; height: 26px; }
