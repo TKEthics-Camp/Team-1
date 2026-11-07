@@ -4,7 +4,7 @@ import { useAuth } from "../../store/AuthContext";
 import { supabase } from "../../lib/supabase";
 import { applyAgeGate } from "../../lib/remote";
 import { holdConsentUntil } from "../../lib/useConsentStatus";
-import { usernameToEmail } from "../../lib/syntheticEmail";
+import { usernameToEmail, legacyUsernameToEmail } from "../../lib/syntheticEmail";
 import LangToggle from "../shared/LangToggle";
 import SfHead from "../onboarding/SfHead";
 import RecoverFlow from "./RecoverFlow";
@@ -88,7 +88,15 @@ export default function AuthFlow() {
   async function createAccount(trimmedUsername) {
     const signupEmail = isOrg ? email.trim() : usernameToEmail(trimmedUsername);
     const result = await signUp(signupEmail, password, { username: trimmedUsername, accountType });
-    if (!result.ok) return;
+    if (!result.ok) {
+      // A student never typed an address, so "User already registered" is
+      // about something they can't see. What they can change is the username.
+      if (result.alreadyRegistered && !isOrg) {
+        clearAuthError();
+        setLocalError("usernameTaken");
+      }
+      return;
+    }
 
     // The `users` row already exists (the on_auth_user_created trigger made
     // it the moment signUp() above succeeded) — this fills in the display
@@ -143,8 +151,8 @@ export default function AuthFlow() {
     setBusy(true);
     // A real email (educators) has an "@"; a username (everyone else)
     // never does — re-derive the same placeholder address used at signup.
-    const loginEmail = loginId.includes("@") ? loginId.trim() : usernameToEmail(loginId);
-    await signIn(loginEmail, loginPassword);
+    if (loginId.includes("@")) await signIn(loginId.trim(), loginPassword);
+    else await signIn(usernameToEmail(loginId), loginPassword, legacyUsernameToEmail(loginId));
     setBusy(false);
   }
 

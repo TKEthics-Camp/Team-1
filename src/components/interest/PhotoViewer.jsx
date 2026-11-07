@@ -3,6 +3,7 @@ import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
 import { usePhotoURL } from "../../lib/image";
+import { containsProfanity } from "../../lib/textFilter";
 import Icon from "../shared/Icon";
 
 export default function PhotoViewer() {
@@ -11,6 +12,7 @@ export default function PhotoViewer() {
   const { viewer, closeViewer, offerUndo } = useUI();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
+  const [blocked, setBlocked] = useState(false);
 
   const photo = photos.find((x) => x.id === viewer);
   const url = usePhotoURL(photo, photo && ((blob) => cachePhotoBlob(photo.id, blob)));
@@ -18,10 +20,19 @@ export default function PhotoViewer() {
 
   function startEdit() {
     setDraft(photo.caption || "");
+    setBlocked(false);
     setEditing(true);
   }
   function saveCaption() {
-    updatePhotoCaption(photo.id, draft.trim());
+    const caption = draft.trim();
+    // Same check PhotoSheet makes when the photo is added. Without it, the
+    // server refused the edit (20260920000000), the caption stayed changed
+    // on this device only, and the push failed on every retry for good.
+    if (photo.visibility === "public" && containsProfanity(caption)) {
+      setBlocked(true);
+      return;
+    }
+    updatePhotoCaption(photo.id, caption);
     setEditing(false);
   }
 
@@ -35,7 +46,7 @@ export default function PhotoViewer() {
           aria-label={t("caption")}
           maxLength={80}
           value={draft}
-          onChange={(e) => setDraft(e.target.value)}
+          onChange={(e) => { setDraft(e.target.value); setBlocked(false); }}
           onKeyDown={(e) => { if (e.key === "Enter") saveCaption(); }}
           style={{ maxWidth: 260 }}
         />
@@ -43,6 +54,9 @@ export default function PhotoViewer() {
         <button className="cap" style={{ background: "none", border: "none", cursor: "pointer" }} onClick={startEdit}>
           {photo.caption || t("captionAdd")}
         </button>
+      )}
+      {editing && blocked && (
+        <div className="field-error" style={{ maxWidth: 260, textAlign: "center" }}>{t("filterBlockedPublic")}</div>
       )}
       {!editing && (
         <button

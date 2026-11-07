@@ -374,6 +374,7 @@ export const STR = {
   syncPendingLabel: ["Some changes haven't saved yet", "有些更改还没保存"],
   syncPendingMsg:   ["Some changes haven't saved to the cloud yet. We'll keep trying.", "有些更改还没保存到云端。我们会继续尝试。"],
   syncRetry:        ["Retry now", "立即重试"],
+  profileLoadFailed: ["Couldn't load your account. Check your connection and try again.", "无法加载你的账户。请检查网络后重试。"],
   // sheets
   date:         ["Date", "日期"],
   entryPh:      ["What did you do today?", "今天做了什么？"],

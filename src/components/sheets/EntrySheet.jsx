@@ -71,15 +71,20 @@ export default function EntrySheet({ interestId, entryId }) {
     // A voice note is a whole entry on its own — the point of the feature is
     // logging without typing, so text is only required when there's no
     // recording to stand in for it.
-    if (!txt && !audio) { textRef.current?.focus(); return; }
+    // A recording made on another device is only a path here until it has
+    // been downloaded, and it is still a recording.
+    if (!txt && !audio && !audioPath) { textRef.current?.focus(); return; }
     if (rec.recording) return;   // don't save a half-finished recording
+    // A future day would count as the tree's last visit for weeks to come,
+    // so it couldn't wilt. The picker refuses one; a typed date might not.
+    const day = !date || date > today() ? today() : date;
     if (editing) {
-      updateEntry({ ...editing, date: date || today(), text: txt, minutes, visibility, isPinned: pinned, sharedToFeed: visibility === "public" && shared, audio, audioMs, audioPath, updatedAt: Date.now() });
+      updateEntry({ ...editing, date: day, text: txt, minutes, visibility, isPinned: pinned, sharedToFeed: visibility === "public" && shared, audio, audioMs, audioPath, updatedAt: Date.now() }, editing);
       celebrate(profile);
     } else {
       const leveledUp = actsToNextStage(it, entries, photos) === 1;
       addEntry({
-        id: uid(), interestId: it.id, date: date || today(), text: txt,
+        id: uid(), interestId: it.id, date: day, text: txt,
         minutes, visibility, isPinned: pinned,
         sharedToFeed: visibility === "public" && shared,
         audio, audioMs,
@@ -95,7 +100,7 @@ export default function EntrySheet({ interestId, entryId }) {
     <Sheet onClose={closeSheet}>
       <h2>{(editing ? t("editEntry") : t("addEntry")) + " · " + nameOf(it)}</h2>
       <Field label={t("date")}>
-        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        <input type="date" max={today()} value={date} onChange={(e) => setDate(e.target.value)} />
       </Field>
       <Field label={t("howLong")}>
         <div className="chips">

@@ -2,6 +2,7 @@ import { supabase } from "./supabase";
 import { randomClassCode } from "./id";
 import { canonicalRecoveryCode } from "./recoveryCode";
 import { TERMS_VERSION, PRIVACY_VERSION } from "./policyVersions";
+import { usernameToEmail, isDerivedEmail } from "./syntheticEmail";
 
 // users.avatar is '' until the first sync, and JSON.parse('') throws —
 // null here means "nothing remote yet" (render the default look), not
@@ -228,6 +229,12 @@ export async function deleteRemoteEntry(id, audioPath) {
   }
   const { error } = await supabase.from("entries").delete().eq("id", id);
   if (error) console.error("Sync (delete entry) failed:", error);
+}
+
+// The recording only: taking a voice note off an entry keeps the entry.
+export async function removeVoiceNoteFile(audioPath) {
+  const { error } = await supabase.storage.from("voice-notes").remove([audioPath]);
+  if (error) console.error("Sync (delete voice note file) failed:", error);
 }
 
 export async function pushPhotoRow(rec) {
@@ -514,6 +521,26 @@ export async function updateDisplayName(userId, name) {
   return { ok: true };
 }
 
+// A student's login address is derived from their username, and login derives
+// it again from whatever they type (lib/syntheticEmail). So a rename has to
+// move the address too: without this the new name could not sign in, the old
+// one still could, and a recovery code — looked up by the new name — reset the
+// password and then failed to sign in with it. An educator's address is a real
+// one and has nothing to do with their display name, so it is left alone.
+export async function syncLoginToUsername(username) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const email = session && session.user && session.user.email;
+  if (!isDerivedEmail(email)) return { ok: true };
+  const next = usernameToEmail(username);
+  if (next === email) return { ok: true };
+  const { error } = await supabase.auth.updateUser({ email: next, data: { username } });
+  if (error) {
+    console.error("Sync (login address) failed:", error.message);
+    return { ok: false, taken: error.code === "email_exists" };
+  }
+  return { ok: true };
+}
+
 // The classes row is what makes a code exist and lets a student validate
 // it pre-join; the educator's own users.class_code is what actually lets
 // users_select's classmate branch resolve for their account (it checks
@@ -668,6 +695,9 @@ export async function fetchClassmates(userId, classCode) {
 export async function searchUsers(query, excludeUserId) {
   const q = String(query || "").trim();
   if (!q) return [];
+  // % and _ are wildcards to ilike: searching "__" would list everybody it
+  // is allowed to, and "a_b" would find "axb".
+  const pattern = q.replace(/[\\%_]/g, "\\$&");
   if (DEBUG_MOCK) {
     const match = DEBUG_FRIEND_ID !== excludeUserId && DEBUG_FRIEND.display_name.toLowerCase().includes(q.toLowerCase());
     return match ? [DEBUG_FRIEND] : [];
@@ -675,7 +705,7 @@ export async function searchUsers(query, excludeUserId) {
   const { data, error } = await supabase
     .from("users")
     .select("id, display_name, account_type, avatar")
-    .ilike("display_name", `%${q}%`)
+    .ilike("display_name", `%${pattern}%`)
     .neq("id", excludeUserId)
     .limit(20);
   if (error) {
@@ -730,6 +760,24 @@ export async function pullPublicProfile(userId) {
   };
 }
 
+// PostgREST hands back at most 1,000 rows per request, without saying it
+// stopped early. Pulling a garden in one request meant a student past that
+// number lost the rest from view on every device that had to pull it down,
+// and which ones went missing was arbitrary. Ordered so the pages can't overlap.
+const PULL_PAGE = 1000;
+
+async function selectAllUnder(table, interestIds) {
+  let rows = [];
+  for (let from = 0; ; from += PULL_PAGE) {
+    const { data, error } = await supabase
+      .from(table).select("*").in("interest_id", interestIds)
+      .order("id").range(from, from + PULL_PAGE - 1);
+    if (error) return { data: rows, error };
+    rows = rows.concat(data || []);
+    if (!data || data.length < PULL_PAGE) return { data: rows, error: null };
+  }
+}
+
 export async function pullMine(userId) {
   const { data: interestRows, error: intErr } = await supabase
     .from("interests").select("*").eq("user_id", userId);
@@ -742,8 +790,8 @@ export async function pullMine(userId) {
   let photoRows = [];
   if (ids.length) {
     const [entriesRes, photosRes] = await Promise.all([
-      supabase.from("entries").select("*").in("interest_id", ids),
-      supabase.from("photos").select("*").in("interest_id", ids),
+      selectAllUnder("entries", ids),
+      selectAllUnder("photos", ids),
     ]);
     if (entriesRes.error) console.error("Sync (pull entries) failed:", entriesRes.error);
     else entryRows = entriesRes.data || [];

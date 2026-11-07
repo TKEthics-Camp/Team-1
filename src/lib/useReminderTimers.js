@@ -59,7 +59,8 @@ export function useReminderTimers(interests, entries, photos, lang, nameOf, t) {
       const h = treeHealth(it, entries, photos);
       // Ahead of the health tiers: a tree can be "bare" for days before it
       // dies, and the useful moment to say something is while there's still
-      // time to act, not once it's already gone.
+      // time to act, not once it's already gone. Instead of them, too — a
+      // dying tree is always bare as well, and got both notifications a day.
       if (h !== "dead" && isDyingSoon(it, entries, photos)) {
         const left = daysUntilDeath(it, entries, photos);
         once(`dying:${it.id}:${day}`, () => notify(
@@ -67,8 +68,7 @@ export function useReminderTimers(interests, entries, photos, lang, nameOf, t) {
           t("dyingTitle").replace("{name}", nameOf(it)) + " — " +
             (left === 1 ? t("dyingOneDay") : t("dyingDays").replace("{n}", left))
         ));
-      }
-      if (h === "wilting" || h === "bare") {
+      } else if (h === "wilting" || h === "bare") {
         once(`dry:${it.id}:${day}`, () => notify(t("appName"), `${nameOf(it)} — ${t("hlWilting")}`));
       } else if (h === "dead") {
         once(`dead:${it.id}:${day}`, () => notify(t("appName"), `${nameOf(it)} — ${t("hlDead")}`));

@@ -371,7 +371,7 @@ No `user_id`, as for entries.
 
 ### 7.8 Derived signup address
 
-Individuals have no email. `usernameToEmail` lowercases the username, replaces every character outside `[a-z0-9._-]` with a dash, strips leading and trailing punctuation, and appends `@users.forestapp.invalid`. The `.invalid` domain is reserved, so nothing derived here can reach a real inbox.
+Individuals have no email. `usernameToEmail` lowercases the username, replaces every character outside `[a-z0-9._-]` with a dash, strips leading and trailing punctuation, and appends `@users.forestapp.invalid`. The `.invalid` domain is reserved, so nothing derived here can reach a real inbox. A username with any character outside ASCII also gets a short fingerprint of the whole name after the slug (`u-` when nothing is left of it), because those characters used to vanish and every all-Chinese username came out as the same `user@` address. Login tries that address first and the old one second, so accounts made before the change still sign in. Renaming a student moves their login address to the new name's (`syncLoginToUsername`); an educator's real email is never touched.
 
 ### 7.9 Sync model
 

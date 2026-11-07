@@ -36,7 +36,7 @@ export default function ProfileScreen() {
   const { t, lang, nOf } = useI18n();
   const { profile, interests, photos, entries, clearGarden, updateProfile, setDiscoverable, pendingSyncCount, retrySync } = useStore();
   const { signOut, user } = useAuth();
-  const { openSheet, showToast } = useUI();
+  const { openSheet, showToast, flushUndo } = useUI();
   const navigate = useNavigate();
   const isOrg = profile && profile.accountType === "org";
   const [armed, setArmed] = useState(false);
@@ -54,6 +54,9 @@ export default function ProfileScreen() {
       retrySync();
       return;
     }
+    // A delete still in its undo window is one the student meant: commit it
+    // while there's still a session to send it with.
+    flushUndo();
     signOut();
   }
   const [exporting, setExporting] = useState(false);

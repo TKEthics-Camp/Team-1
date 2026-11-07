@@ -32,6 +32,20 @@ describe("mergePulled", () => {
     expect(mergePulled("entries", { audioPath: "u/e", audio: blob }, { audioPath: "u/e", text: "hi" }).audio).toBe(blob);
     expect(mergePulled("entries", { audioPath: "u/e", audio: blob }, { audioPath: "u/e2" }).audio).toBeUndefined();
   });
+  it("keeps bytes that never uploaded when the other device edits the row", () => {
+    // Local has no path at all, the server's row says null: same file, none
+    // yet. These bytes are the only copy, and the upload is still owed.
+    expect(mergePulled("photos", { id: "p", blob }, { id: "p", caption: "new", storagePath: null }).blob).toBe(blob);
+    expect(mergePulled("entries", { id: "e", audio: blob }, { id: "e", text: "new", audioPath: null }).audio).toBe(blob);
+  });
+  it("drops a voice note removed on the other device", () => {
+    expect(mergePulled("entries", { audioPath: "u/e", audio: blob }, { audioPath: null }).audio).toBeUndefined();
+  });
+  it("drops a voice note re-recorded on the other device, whose path stays the same", () => {
+    const local = { audioPath: "u/e", audioMs: 4000, audio: blob };
+    expect(mergePulled("entries", local, { audioPath: "u/e", audioMs: 9000 }).audio).toBeUndefined();
+    expect(mergePulled("entries", local, { audioPath: "u/e", audioMs: 4000 }).audio).toBe(blob);
+  });
   it("carries a deletion from the other device", () => {
     expect(mergePulled("entries", { id: "e", text: "a" }, { id: "e", text: "a", deletedAt: 5 }).deletedAt).toBe(5);
   });

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 
 // The birthday and optional class code, shared by signup and by the screen
@@ -22,6 +23,14 @@ export default function BirthdateFields({ bdY, setBdY, bdM, setBdM, bdD, setBdD,
     ? new Date(Number(bdY), Number(bdM), 0).getDate()
     : 31;
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+  // Picking the 31st and then a shorter month left the 31st in state though
+  // the list no longer offered it, so the form looked unanswered but sent
+  // 31 February — the server refused that, and at signup it cost the
+  // account, which was then left asking for its age.
+  useEffect(() => {
+    if (bdD && Number(bdD) > daysInMonth) setBdD("");
+  }, [bdD, daysInMonth, setBdD]);
 
   return (
     <div className="sf-stack">

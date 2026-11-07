@@ -16,6 +16,12 @@ export function UIProvider({ children }) {
   const [undo, setUndo] = useState(null);
   const undoRef = useRef(null);
   useEffect(() => { undoRef.current = undo; }, [undo]);
+  // This unmounts at sign-out, which wipes the device's copy. A delete still
+  // inside its undo window would otherwise commit a few seconds later into
+  // the wiped database — leaving the trashed row behind for whoever signs in
+  // next. ProfileScreen commits it first (flushUndo); this is for any other
+  // way out.
+  useEffect(() => () => { if (undoRef.current) clearTimeout(undoRef.current.timerId); }, []);
   // A plain "here's what just happened" note — no action attached, unlike
   // `undo` above. Separate state so a coin toast and a pending delete can
   // never evict one another; they stack rather than compete.
@@ -73,6 +79,15 @@ export function UIProvider({ children }) {
     showToast: (message, ms = 2600) => {
       toastQueue.current.push({ id: Date.now() + Math.random(), message, ms });
       if (!toastShowing.current) pumpToast.current();
+    },
+    // Commits a pending delete right now instead of when its window closes.
+    flushUndo: () => {
+      const u = undoRef.current;
+      if (!u) return;
+      clearTimeout(u.timerId);
+      undoRef.current = null;
+      u.commit();
+      setUndo(null);
     },
     undoNow: () => {
       setUndo((u) => {
