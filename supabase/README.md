@@ -30,3 +30,12 @@ everything that must be refused. Paste it into the SQL editor and run it
 after any migration that touches a policy or a trigger. It always ends in a
 red error box that carries the results and undoes everything it created;
 "14 of 14 passed" is the answer you want.
+
+## Checking account recovery
+
+`tests/recovery_checks.sql` does the same for recovery codes: it redeems
+codes as a signed-out visitor and checks that passwords reset, that a
+student's login address is moved to match their name only when it should
+be, and that an educator's email and a wrong code change nothing. Run it
+after applying `20261108000000_recovery_moves_login_address.sql`;
+"9 of 9 passed" is the answer you want.

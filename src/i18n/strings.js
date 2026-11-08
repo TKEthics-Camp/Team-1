@@ -149,6 +149,8 @@ export const STR = {
   recSetNewPassword: ["Set new password", "设置新密码"],
   recBadCode:   ["That username and code don't match. Check both and try again.", "用户名和找回码不匹配，请检查后重试。"],
   recResetNowLogIn: ["Password changed — go back and log in with it.", "密码已修改，请返回并用新密码登录。"],
+  recNotEmail:  ["Enter the name on your account here, not your email. Educators: it's the name people see you as.", "这里请输入账户上的名字，而不是邮箱。老师：就是别人看到的你的名字。"],
+  recResetEducator: ["Password changed — go back and log in with it. Educators: use your email. If your username doesn't work, try the one you had before you changed it.", "密码已修改，请返回并用新密码登录。老师请用邮箱登录。如果用户名登录不了，试试改名之前的用户名。"],
   recConfirmPw: ["Type your password to make a code. This stops someone else making one on your phone while you're signed in.", "请输入你的密码才能生成找回码。这样别人就不能趁你登录时，用你的手机生成一个。"],
   recWrongPw:   ["That isn't your password.", "密码不正确。"],
   // ---- age gate (signup)

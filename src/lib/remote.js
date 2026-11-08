@@ -533,10 +533,20 @@ export async function syncLoginToUsername(username) {
   if (!isDerivedEmail(email)) return { ok: true };
   const next = usernameToEmail(username);
   if (next === email) return { ok: true };
-  const { error } = await supabase.auth.updateUser({ email: next, data: { username } });
+  const { data, error } = await supabase.auth.updateUser({ email: next, data: { username } });
   if (error) {
     console.error("Sync (login address) failed:", error.message);
     return { ok: false, taken: error.code === "email_exists" };
+  }
+  // Succeeding isn't the same as moving. With "Confirm email" turned on in
+  // Supabase, the new address is parked until a link sent to it is clicked
+  // — and these addresses can't receive mail — while the account keeps
+  // signing in under the old one. Only an address that actually changed
+  // counts; anything else is reported as a failure, so the rename is undone
+  // instead of leaving a name that can't sign in.
+  if (!data || !data.user || data.user.email !== next) {
+    console.error("Sync (login address) did not take effect: is \"Confirm email\" on in Supabase Auth?");
+    return { ok: false, taken: false };
   }
   return { ok: true };
 }
@@ -902,12 +912,24 @@ export async function hasRecoveryCode() {
 // in, which is why it takes a username. Returns a status of "ok",
 // "invalid" (wrong username or wrong code — the server deliberately cannot
 // tell you which), or "error", which carries the server's own message.
+//
+// It also hands over the address it is about to sign in with, so a student
+// whose address still belongs to an older username is moved to the right one
+// once the code checks out (20261108000000). A database without that
+// migration doesn't know the extra argument and says so before running
+// anything (PGRST202), so the call is simply made again without it.
 export async function redeemRecoveryCode(username, code, newPassword) {
-  const { data, error } = await supabase.rpc("redeem_recovery_code", {
+  const args = {
     p_username: username,
     p_code: canonicalRecoveryCode(code),
     p_new_password: newPassword,
+  };
+  let { data, error } = await supabase.rpc("redeem_recovery_code", {
+    ...args, p_login_email: usernameToEmail(username),
   });
+  if (error && error.code === "PGRST202") {
+    ({ data, error } = await supabase.rpc("redeem_recovery_code", args));
+  }
   if (error) {
     console.error("Recovery redemption failed:", error.message);
     return { status: "error", message: error.message || error.hint || String(error) };

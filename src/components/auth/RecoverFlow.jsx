@@ -16,7 +16,7 @@ import SfHead from "../onboarding/SfHead";
 // has already had a bad day.
 export default function RecoverFlow({ onBack, onDone }) {
   const { t } = useI18n();
-  const { signIn } = useAuth();
+  const { signIn, clearAuthError } = useAuth();
   const [username, setUsername] = useState("");
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
@@ -30,6 +30,9 @@ export default function RecoverFlow({ onBack, onDone }) {
     if (busy) return;
     if (password.length < 6) { setErrorKey("pwTooShort"); return; }
     if (password !== confirm) { setErrorKey("authPasswordMismatch"); return; }
+    // The server finds the account by its name, never its email. An
+    // educator typing their email used to be told the code was wrong.
+    if (username.includes("@")) { setErrorKey("recNotEmail"); return; }
 
     setBusy(true);
     setErrorKey(null);
@@ -47,17 +50,20 @@ export default function RecoverFlow({ onBack, onDone }) {
       return;
     }
 
-    // Educators sign in with a real email; students with the address
-    // derived from their username. A typed username is never an email, so
-    // deriving is right here — an educator who lands on this screen will
-    // have typed their email, which usernameToEmail would mangle.
-    const signedIn = username.includes("@")
-      ? await signIn(username.trim(), password)
-      : await signIn(usernameToEmail(username), password, legacyUsernameToEmail(username));
+    // Students sign in with the address derived from their username, so the
+    // new password can sign them straight in. An educator's address is a
+    // real email this screen never learns — they finish on the log-in screen.
+    const signedIn = await signIn(usernameToEmail(username), password, legacyUsernameToEmail(username));
     setBusy(false);
     if (signedIn.ok) { onDone(); return; }
     // The password was genuinely changed; only the auto sign-in failed.
-    setErrorKey("recResetNowLogIn");
+    // That's expected for an educator. For a student, the server has moved
+    // their address to match this name (20261108000000), so this only
+    // happens against a database without that migration: their address
+    // still belongs to an older username, and signing in once with that
+    // name brings it up to date.
+    clearAuthError();
+    setErrorKey("recResetEducator");
   }
 
   return (
