@@ -6,7 +6,7 @@ import { useAudioURL } from "../../lib/image";
 import EmptyState from "../shared/EmptyState";
 import VoiceNote from "../shared/VoiceNote";
 import ReportMenu from "../shared/ReportMenu";
-import Icon, { Tag } from "../shared/Icon";
+import Icon, { Tag, hobbyLook } from "../shared/Icon";
 
 // Own component so useAudioURL (which may need to fetch from Storage) runs
 // once per entry rather than inside the list's own render — same shape as
@@ -29,18 +29,17 @@ function weekdayOf(dateKey, lang) {
   return keyToDate(dateKey).toLocaleDateString(lang === "zh" ? "zh-CN" : "en-US", { weekday: "short" });
 }
 
-// authorId is only passed for someone else's journal (see
-// PublicInterestScreen) — it's what turns the edit/delete controls into a
-// report control for the same row.
-export default function JournalTab({ entries, readOnly, authorId = null, onEntryReported = null }) {
-  const { t, lang } = useI18n();
-  const { deleteEntry, cacheEntryAudio } = useStore();
-  const { openSheet, offerUndo } = useUI();
-
-  function remove(id) {
-    const { restore, commit } = deleteEntry(id);
-    offerUndo(t("entryDeleted"), restore, commit);
-  }
+// Your own entry opens when its row is tapped, to edit it or delete it from
+// there. authorId is only passed for someone else's journal (see
+// PublicInterestScreen): those rows don't open, and carry a report control
+// instead.
+//
+// `interests` is passed by the Journal tab, where entries from every hobby
+// share one list: each row then leads with its hobby's icon and name.
+export default function JournalTab({ entries, readOnly, authorId = null, onEntryReported = null, interests = null }) {
+  const { t, lang, nameOf } = useI18n();
+  const { cacheEntryAudio } = useStore();
+  const { openSheet } = useUI();
 
   if (!entries.length) return <EmptyState text={t(readOnly ? "noEntriesPublic" : "noEntries")} />;
 
@@ -69,13 +68,39 @@ export default function JournalTab({ entries, readOnly, authorId = null, onEntry
             <div className="journal-card">
               {day.items.map((e) => {
                 const voice = !!(e.audio || e.audioPath);
+                const hobby = interests ? interests.find((x) => x.id === e.interestId) : null;
+                const look = hobby ? hobbyLook(hobby.name) : null;
+                const words = e.text || t(voice ? "voiceNote" : "justLogged");
                 return (
-                  <div className="journal-row" key={e.id}>
-                    <span className="journal-ico" aria-hidden="true">
-                      <Icon name={voice && !e.text ? "mic" : "book"} size={16} />
-                    </span>
+                  <div className={"journal-row" + (readOnly ? "" : " can-open")} key={e.id}>
+                    {look ? (
+                      <span className={"journal-ico idea-ico stat-ico tag-" + look.tone} aria-hidden="true">
+                        <Icon name={look.icon} size={17} />
+                      </span>
+                    ) : (
+                      <span className="journal-ico" aria-hidden="true">
+                        <Icon name={voice && !e.text ? "mic" : "book"} size={16} />
+                      </span>
+                    )}
                     <div className="journal-body">
-                      <div className={"t" + (e.text ? "" : " t-muted")}>{e.text || t("voiceNote")}</div>
+                      {hobby && <div className="journal-hobby">{nameOf(hobby)}</div>}
+                      {/* A log can be just its time, with neither words nor a
+                          recording. On your own journal the words are the
+                          button: its hit area is stretched over the whole row
+                          in CSS, the way a tree card's name is, so the voice
+                          player inside the row stays a control of its own. */}
+                      {readOnly ? (
+                        <div className={"t" + (e.text ? "" : " t-muted")}>{words}</div>
+                      ) : (
+                        <button
+                          type="button"
+                          className={"journal-open t" + (e.text ? "" : " t-muted")}
+                          title={t("editEntry")}
+                          onClick={() => openSheet("entry", { id: e.interestId, entryId: e.id })}
+                        >
+                          {words}
+                        </button>
+                      )}
                       {/* Small tinted tags for how, and who for. Duration
                           has its own place on the right. */}
                       {(voice && e.text || e.isPinned || e.visibility === "public") && (
@@ -89,20 +114,6 @@ export default function JournalTab({ entries, readOnly, authorId = null, onEntry
                     </div>
                     <div className="journal-side">
                       {e.minutes > 0 && <Tag tone="green">{durationOf(e.minutes, t)}</Tag>}
-                      {!readOnly && (
-                        <div className="entry-actions">
-                          <button
-                            className="icon"
-                            aria-label={t("editEntry")}
-                            onClick={() => openSheet("entry", { id: e.interestId, entryId: e.id })}
-                          >
-                            <Icon name="pencil" size={15} />
-                          </button>
-                          <button className="icon" aria-label={t("del")} onClick={() => remove(e.id)}>
-                            <Icon name="x" size={16} />
-                          </button>
-                        </div>
-                      )}
                       {readOnly && authorId && (
                         <div className="entry-actions">
                           <ReportMenu

@@ -4,9 +4,18 @@ import { useUI } from "../../ui/UIContext";
 
 export default function NudgeBanner({ interests }) {
   const { t, nameOf } = useI18n();
-  const { snoozeNudge } = useUI();
+  const { snoozeNudge, session, startSession, showToast } = useUI();
   const navigate = useNavigate();
   const solo = interests.length === 1 ? interests[0] : null;
+
+  // "Go do it" means leave: it starts the session timer so the phone can be
+  // put down, and the time is waiting when they're back. With a session
+  // already running it opens the tree instead.
+  function go(it) {
+    if (session) { navigate(`/interest/${it.id}?tab=journal`); return; }
+    startSession(it.id);
+    showToast(t("timerStarted"));
+  }
 
   return (
     <div className="nudge">
@@ -25,7 +34,7 @@ export default function NudgeBanner({ interests }) {
           // Inside the card, not below it: "Later" belongs to this reminder,
           // and sitting outside it read as a stray button on the page.
           <div className="nudge-actions">
-            <button className="btn" onClick={() => navigate(`/interest/${solo.id}?tab=journal`)}>{t("goDoIt")}</button>
+            <button className="btn" onClick={() => go(solo)}>{t("goDoIt")}</button>
             <button className="btn2" onClick={() => snoozeNudge(solo.id)}>{t("later")}</button>
           </div>
         ) : (

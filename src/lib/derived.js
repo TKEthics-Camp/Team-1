@@ -7,7 +7,7 @@ export function photosOf(photos, id) {
 export function entriesOf(entries, id) {
   return entries
     .filter((e) => e.interestId === id)
-    .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.createdAt - a.createdAt));
+    .sort(byEntryDate);
 }
 
 export function byNewest(a, b) { return b.createdAt - a.createdAt; }
@@ -85,6 +85,20 @@ export function fmtHours(mins) {
   if (mins < 60) return mins + "m";
   var h = mins / 60;
   return (h < 10 ? Math.round(h * 10) / 10 : Math.round(h)) + "h";
+}
+
+// A length of time as it's said: "30m", "1h", "1h 30m". Exact, unlike
+// fmtHours, which rounds for headline totals — this is for one session.
+export function fmtDuration(mins) {
+  const m = Math.max(0, Math.round(mins || 0));
+  if (m < 60) return m + "m";
+  return Math.floor(m / 60) + "h" + (m % 60 ? " " + (m % 60) + "m" : "");
+}
+
+// Newest first across every hobby: by the day an entry is for, then by when
+// it was written. entriesOf uses the same order within one hobby.
+export function byEntryDate(a, b) {
+  return a.date < b.date ? 1 : a.date > b.date ? -1 : b.createdAt - a.createdAt;
 }
 
 export { today };

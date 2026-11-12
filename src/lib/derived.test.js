@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { streakDetail, globalStreakDetail, fmtHours, entriesOf, minutesOf } from "./derived";
+import { streakDetail, globalStreakDetail, fmtHours, fmtDuration, byEntryDate, entriesOf, minutesOf } from "./derived";
 import { dateKey } from "./dates";
 
 // streakDetail walks back from "today", so every test here pins the clock.
@@ -141,5 +141,26 @@ describe("fmtHours", () => {
     expect(fmtHours(90)).toBe("1.5h");
     expect(fmtHours(60)).toBe("1h");
     expect(fmtHours(6000)).toBe("100h");
+  });
+});
+
+describe("fmtDuration", () => {
+  it("says a session's length exactly", () => {
+    expect(fmtDuration(0)).toBe("0m");
+    expect(fmtDuration(23)).toBe("23m");
+    expect(fmtDuration(60)).toBe("1h");
+    expect(fmtDuration(90)).toBe("1h 30m");
+    expect(fmtDuration(125)).toBe("2h 5m");
+  });
+});
+
+describe("byEntryDate", () => {
+  it("orders newest day first, then newest written", () => {
+    const list = [
+      { id: "a", date: "2026-03-01", createdAt: 5 },
+      { id: "b", date: "2026-03-03", createdAt: 1 },
+      { id: "c", date: "2026-03-03", createdAt: 9 },
+    ];
+    expect(list.sort(byEntryDate).map((e) => e.id)).toEqual(["c", "b", "a"]);
   });
 });

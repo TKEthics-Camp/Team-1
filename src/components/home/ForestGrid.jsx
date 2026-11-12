@@ -25,7 +25,7 @@ export default function ForestGrid({ interests, photos, entries }) {
             key={it.id}
             className="tree-cell"
             aria-label={`${nameOf(it)}, ${health === "dead" ? t("hlDead") : fmtHours(minutes)}`}
-            onClick={() => navigate(`/interest/${it.id}?tab=album`)}
+            onClick={() => navigate(`/interest/${it.id}`)}
           >
             <Tree
               interest={it}

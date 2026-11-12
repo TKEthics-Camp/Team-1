@@ -69,14 +69,14 @@ function TreeCard({ interest: it, entries, photos }) {
   const when = idle <= 0 ? t("dayToday") : idle === 1 ? t("dayYesterday") : last;
   const sub = dead ? t("hlDead") : minutes > 0 ? when + " · " + fmtHours(minutes) : last;
 
-  const open = () => navigate(`/interest/${it.id}?tab=album`);
+  const open = () => navigate(`/interest/${it.id}`);
 
   // Kept to what a glance needs: the stage, the tree, who it is, when it
   // was last tended, and how far to the next stage. Days planted, the log
   // count, the percentage and what the next stage is called live on the
   // tree's own page.
   return (
-    <article className={"tree-card" + (dead ? " is-dead" : "")}>
+    <article className={"tree-card" + (dead ? " is-dead" : "")} style={{ "--c": it.color }}>
       <div className="tree-card-art">
         <span className="tree-card-tags">
           <span className="tag tag-grey">{t(STAGE_KEY[stage])}</span>

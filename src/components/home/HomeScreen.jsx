@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
@@ -13,6 +14,7 @@ import MemoryBanner from "./MemoryBanner";
 import DyingBanner from "./DyingBanner";
 import OrbWall from "./OrbWall";
 import ForestGrid from "./ForestGrid";
+import WeekStrip from "./WeekStrip";
 import Icon from "../shared/Icon";
 
 // Morning, afternoon or evening by the phone's own clock — the reference's
@@ -35,7 +37,8 @@ function todayLabel(lang) {
 export default function HomeScreen() {
   const { t, lang } = useI18n();
   const { profile, interests, photos, entries } = useStore();
-  const { dismissed, openSheet } = useUI();
+  const { dismissed, openSheet, session } = useUI();
+  const navigate = useNavigate();
   // "Zoom out": one tree at a time, or the whole forest at once. Local state
   // rather than a saved preference — it's a way of looking, not a setting.
   const [zoomedOut, setZoomedOut] = useState(false);
@@ -81,10 +84,17 @@ export default function HomeScreen() {
             value so the pop replays each time the streak actually moves. */}
         {/* the flame turns to a leaf while a rest day is holding the chain
             together, so a protected streak never looks like an unbroken one */}
-        <span className={"chip flame-badge" + (restingNow ? " resting" : "")} title={restingNow ? t("restDayOn") : undefined}>
+        {/* …and it opens Insights, where the streak's days are laid out. */}
+        <button
+          type="button"
+          className={"chip flame-badge" + (restingNow ? " resting" : "")}
+          title={restingNow ? t("restDayOn") : undefined}
+          aria-label={streak + " " + t("totalStreak") + ". " + t("weekOpen")}
+          onClick={() => navigate("/journal?view=insights")}
+        >
           {streak}
           <StreakFlame key={String(streak) + restingNow} resting={restingNow} />
-        </span>
+        </button>
         {/* No language toggle here: Home's bar is kept to the mark and the
             streak. Explore and Me both still carry one. */}
       </TopBar>
@@ -94,9 +104,16 @@ export default function HomeScreen() {
           <h1>{t(greetingKey()) + profile.name}</h1>
           <span className="page-rule" aria-hidden="true" />
         </header>
-        {dying && <DyingBanner interest={dying} entries={entries} photos={photos} />}
-        {due.length > 0 && <NudgeBanner interests={due} />}
-        {memory && <MemoryBanner memory={memory} />}
+        {interests.length > 0 && <WeekStrip entries={entries} photos={photos} />}
+        {/* One thing at a time, the most pressing first: a tree about to
+            die, then what's planned for today, then a memory. All three used
+            to stack, and the trees — the point of the screen — started a
+            scroll away. Dealing with one makes room for the next. */}
+        {dying ? <DyingBanner interest={dying} entries={entries} photos={photos} />
+          // Not while a session is being timed: they are already doing it.
+          : due.length > 0 && !session ? <NudgeBanner interests={due} />
+          : memory ? <MemoryBanner memory={memory} />
+          : null}
         {interests.length > 0 && (
           <div className="trees-head">
             <h2>{t("treesHeading")}</h2>

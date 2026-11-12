@@ -114,9 +114,13 @@ Every individual signup gives a date of birth before the account exists. `apply_
 
 ### 5.1 Cultivate — the primary loop
 
-Open → garden at current health → tap a tree → its "why", recent photos and entries, its own streak → log today → growth stage and health respond, coins awarded.
+Open → garden at current health, this week's days at the top → tap Log on a tree → pick how long → Log → a moment that shows what the log changed → back to a garden that has already moved.
 
-Logging paths, all reachable in two taps from a tree: journal entry (duration 15m / 30m / 45m / 1h / 1.5h / 2h), photo, voice note. An entry may carry text, audio, or both.
+Logging is two taps from Home (§2.3): the Log button on a tree's card opens the log sheet with that hobby's usual duration already chosen (15m / 30m / 45m / 1h / 1h 30m / 2h), and Log saves it. A note and a voice note are offered but not required — an entry may carry text, audio, both, or just its time. The date, who can see it, sharing and pinning sit behind "More options". A photo is logged from the tree's own page.
+
+**The session timer.** "Use a timer" on the log sheet, the Timer button on a tree's page, or "Go do it" on a reminder starts a session: the student puts the phone down and does the thing. A pill above the tab bar shows the hobby and the elapsed time on every screen; Stop opens the log sheet with the measured time filled in. Only the start time is stored (`src/lib/sessionTimer.js`), so it survives the app closing; it is cleared at sign-out, and discarding it takes two taps.
+
+**The moment after a log** (`LogCelebration`). The tree springs up at its real stage, the bar moves from where it was to where it is, and chips show the coins earned and — only when today's log extended it — the streak. Reaching a new stage shows the old tree first, then the new one. Everything on it is computed from the log itself (`src/lib/logOutcome.js`); it leaves on a tap or after about three seconds.
 
 ### 5.2 Tend — the stakes loop
 
@@ -146,13 +150,15 @@ Open Explore → "For you", a short personalised set of hobby ideas from categor
 ### 6.1 Home — garden (individual accounts)
 
 - A greeting by time of day and name, under a small line with today's date.
+- **This week:** seven days, Monday to Sunday, the logged ones filled, today ringed until it is, with the count of days and the week's time. Tapping it opens Insights.
 - A "Trees" heading with "+ Plant", then one card per interest: the tree drawn at its computed stage and health on a grey panel with a stage chip (and a health chip when it isn't healthy); the hobby's own icon, its name, and one line saying when it was last logged and its total hours; a grey Log button (Revive on a dead tree, which opens the tree); and a thin bar toward the next stage. Days planted, log counts, percentages and the next stage's name stay on the tree's own page. Home's header carries only the mark, the zoom button and the streak; the language toggle is on Explore and Me. The zoom button switches to a compact two-across grid. With nothing planted, an empty card plants the first tree.
 - A zoomed-out grid of the whole forest, toggled from the top bar, for gardens too large to swipe.
-- **Streak chip:** days logged across all hobbies combined. Logging any one tree keeps the whole streak alive. Shows an animated flame, or a leaf while a rest day is bridging the gap.
-- **Three banners,** independently triggered:
-  - **Memory** — a past pinned photo or entry resurfaced.
-  - **Nudge** — today is a scheduled day for one or more trees. One tree: "Go do it" and "Later". Several: one pill per tree, and "Later" for all of them.
+- **Streak chip:** days logged across all hobbies combined. Logging any one tree keeps the whole streak alive. Shows an animated flame, or a leaf while a rest day is bridging the gap. Tapping it opens Insights.
+- **One banner at a time,** the most pressing first:
   - **Dying** — a tree is inside its final five days.
+  - **Nudge** — today is a scheduled day for one or more trees. One tree: "Go do it" (starts the session timer) and "Later". Several: one pill per tree, and "Later" for all of them. Not shown while a session is being timed.
+  - **Memory** — a past pinned photo or entry with words resurfaced.
+- Each tree's panel carries a faint tint of the hobby's own colour.
 - Trees change foliage colour with the real season (`src/lib/season.js`): winter Dec–Feb, spring Mar–May, summer Jun–Aug, autumn Sep–Nov.
 
 ### 6.2 Home — dashboard (org accounts)
@@ -164,11 +170,12 @@ Open Explore → "For you", a short personalised set of hobby ideas from categor
 
 ### 6.3 Interest detail — the student's own tree
 
-- **Header:** name, colour, growth stage, health, and the tree drawn at that state. "Why I love this" is editable inline.
-- **Stats:** total hours, photo count, entry count, this tree's streak.
-- **Album and Journal**, switched by a row of pills.
-- **Journal:** newest first, one card per day under a spaced-out day heading ("Today", "Yesterday", or weekday and date) with the day's total time. Each row has a grey icon bubble, the entry's text (or "Voice note"), a voice note player if present, small tags for a voice note, "Pinned" and "Public", and on the right a green duration tag above edit and delete controls.
-- **Album:** photo grid. Tap opens the full viewer. A photo can be pinned as the tree's cover; with no photo, the cover falls back to a generated illustration matched to the hobby's category, then to the first letter of the name.
+- **Hero card:** the tree drawn large at its stage and health on its tinted panel, with the stage, days since planted, its health in words, a bar toward the next stage and how many more logs that needs. A dead tree shows the revive action here.
+- **Three actions** under it: Log, Timer (hidden while a session is running) and Photo.
+- **Stats,** one row: time logged, entries, photos, streak. The "why" sits below as a quote.
+- **Journal and Album**, switched by a segmented control; the page opens on whichever has something in it.
+- **Journal:** newest first, one card per day under a spaced-out day heading ("Today", "Yesterday", or weekday and date) with the day's total time. Each row has a grey icon bubble, the entry's text (or "Voice note"), a voice note player if present, small tags for a voice note, "Pinned" and "Public", and on the right a green duration tag. Tapping one of your own entries opens it to edit; Delete entry is in that sheet, undoable as before.
+- **Album:** photo grid. Tap opens the full viewer. A photo can be pinned as the tree's cover, shown above the hero card; with no photo there is no cover.
 - **Growth replay:** an animation stepping through every stage the tree has reached, each frame dated to the log that crossed that threshold. At most five frames.
 - Per-tree reminder schedule (which weekdays).
 - Revive action, shown only once the tree is dead.
@@ -258,10 +265,23 @@ Route `/user/:userId/interest/:interestId`. Read-only with respect to the owner'
 
 - Destructive actions hide the item immediately and hold the real delete behind an undo toast, rather than asking for confirmation first.
 - Nearly every add or edit interaction is a bottom sheet rather than a new page, in service of the under-a-minute bar.
-- The language toggle is in nearly every top bar.
+- A sheet springs up, can be pulled down by its handle to close, and scrolls rather than squeezing its fields. Buttons, cards and rows give slightly under a press; bars fill in; Home and the Journal arrive a section at a time. All of it is off under the system's reduced-motion setting.
+- The language toggle is in the top bar of Explore, Me and the signed-out screens.
 - A sync indicator appears only after something has been stuck for 30 seconds, and offers a manual retry.
 - **Badges:** 12 total, across four families — logs (1, 25, 100), streak (3, 7, 30, 100), trees planted (1, 5) and species variety (5), fully grown trees (1, 3).
-- **Visual language** (`src/styles/workspace.css`, loaded last so it can be replaced without touching behaviour): calm and flat, after two references the owner chose. A white page, a soft grey panel under every drawn tree and an empty cover (which shows the hobby's category line icon until there is a photo), segmented controls as a grey track with the chosen item a white pill — the Album/Journal tabs, every two-way switch and the bottom bar alike — white cards with a hairline outline and no shadow, one heavy heading with a small date line above it and a short green rule below it, plain sentence-case section titles, and matte grey-black for whatever is selected or primary, with every text button fully rounded. Colour appears only in thin line icons and tiny tinted tags (`src/components/shared/Icon.jsx`) in four tones — green, blue, purple, amber — for a journal entry's duration, voice note, pinned and public state, Explore's categories, the memory card, "planted", and the stat icons. Every glyph in the interface chrome is a line icon from the same set — no emoji — except where the emoji is the content: tree species, Market badges and Year in Review. Long lists of actions, as on Me, are grouped lists: one card per group, an icon per row, hairlines between.
+- **Visual language** (`src/styles/workspace.css`, loaded last so it can be replaced without touching behaviour): calm and flat, after two references the owner chose. A white page, a soft grey panel under every drawn tree (tinted faintly with the hobby's own colour), segmented controls as a grey track with the chosen item a white pill — the Album/Journal tabs, every two-way switch and the bottom bar alike — white cards with a hairline outline and no shadow, one heavy heading with a small date line above it and a short green rule below it, plain sentence-case section titles, and matte grey-black for whatever is selected or primary, with every text button fully rounded. Colour appears only in thin line icons and tiny tinted tags (`src/components/shared/Icon.jsx`) in four tones — green, blue, purple, amber — for a journal entry's duration, voice note, pinned and public state, Explore's categories, the memory card, "planted", and the stat icons. Every glyph in the interface chrome is a line icon from the same set — no emoji — except where the emoji is the content: tree species, Market badges and Year in Review. Long lists of actions, as on Me, are grouped lists: one card per group, an icon per row, hairlines between.
+
+### 6.11 Journal and Insights (individual accounts)
+
+A fourth tab, between Home and Explore.
+
+- **Entries:** every journal entry across every hobby, newest first, in the same day cards as a tree's own journal, each row led by its hobby's icon and name. A search field matches an entry's words or its hobby's name; a row of chips narrows to one hobby. Forty entries are drawn at a time, with "Show more".
+- **Insights** (`src/lib/insights.js`), all the student's own record against itself — there is no ranking and nothing to compare with anyone else (§9.1):
+  - Four numbers: current streak, best streak (counted by the same rest-day rule, so it is never shorter than the current one), time this week, time in all.
+  - **Time each week:** the last eight weeks as bars, this week highlighted, with the difference from last week in words.
+  - **Days you showed up:** fifteen weeks of days as a grid, shaded by time logged that day (showed up, half an hour, an hour or more), with the number of active days and the weekday the student logs on most.
+  - **Last 30 days:** time per hobby as bars, busiest first.
+- Weeks start on Monday in both languages.
 
 ---
 
@@ -316,7 +336,7 @@ Fourteen tables. Row-level security is enabled on all of them. IDs on content ta
 | `id` | text, PK |
 | `interest_id` | cascade |
 | `date` | the day being logged |
-| `text` | |
+| `text` | may be empty: a log can be just its time |
 | `minutes` | defaults to 30 for rows predating the field |
 | `visibility` | independent of everything above it |
 | `is_pinned` | eligible for the memory banner |
@@ -385,7 +405,7 @@ Individuals have no email. `usernameToEmail` lowercases the username, replaces e
 
 ### 7.10 Derived, never stored
 
-Growth stage, health, streaks and rest days, hours, the Explore recommendations, badges, the memory-banner candidate, and the iPhone reminder schedule are all computed from the tables above.
+Growth stage, health, streaks and rest days, hours, the week strip and everything on Insights, what a log changed, the Explore recommendations, badges, the memory-banner candidate, and the iPhone reminder schedule are all computed from the tables above.
 
 ---
 
@@ -467,6 +487,7 @@ React 18, Vite 7, React Router 7, Supabase JS 2, Dexie 4, JSZip, Capacitor 8 for
 | `/` | garden, or educator dashboard |
 | `/interest/:id` | own tree |
 | `/user/:userId/interest/:interestId` | someone else's tree |
+| `/journal` | every entry, and Insights (`?view=insights`); individuals only |
 | `/explore`, `/profile`, `/market` | |
 | `/reports` | moderators only |
 | `/privacy`, `/terms`, `/support` | no session needed |
@@ -491,7 +512,7 @@ A root error boundary wraps the providers, and a per-route boundary means one cr
 
 ### 10.6 Tests
 
-- **Vitest**, 124 tests across 11 files, run with `TZ=Asia/Singapore`. Covers streaks and rest days, growth and health, dates, the derived address, recovery codes, the text filter, guardian links, data export, the saved sync list, the iPhone reminder schedule, and which copy of an edit wins.
+- **Vitest**, 177 tests across 16 files, run with `TZ=Asia/Singapore`. Covers streaks and rest days, growth and health, dates, the derived address, recovery codes, the text filter, guardian links, data export, the saved sync list and the list of records the server has confirmed, the iPhone reminder schedule, which copy of an edit wins, Explore's suggestions, the week strip and Insights, what a log changed, and the session timer.
 - **Privacy checks** (`supabase/tests/privacy_checks.sql`): run in the SQL editor, it signs in as pretend accounts and tries 14 things the database must refuse, then undoes everything it created. See `supabase/README.md`.
 - Nothing tests sync end-to-end or any component.
 

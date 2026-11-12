@@ -18,6 +18,7 @@ import SupportScreen from "./components/policy/SupportScreen";
 import { guardianTokenFromLocation, policyFromLocation } from "./lib/guardianLink";
 import { myConsentStatus, refreshConsentState } from "./lib/remote";
 import { forgetConsentStatus, signupGateSettled } from "./lib/useConsentStatus";
+import { clearSession } from "./lib/sessionTimer";
 import HomeScreen from "./components/home/HomeScreen";
 import BottomNav from "./components/shared/BottomNav";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
@@ -31,6 +32,7 @@ const EducatorDashboard = lazy(() => import("./components/home/EducatorDashboard
 const InterestScreen = lazy(() => import("./components/interest/InterestScreen"));
 const PublicInterestScreen = lazy(() => import("./components/interest/PublicInterestScreen"));
 const ExploreScreen = lazy(() => import("./components/explore/ExploreScreen"));
+const JournalScreen = lazy(() => import("./components/journal/JournalScreen"));
 const ProfileScreen = lazy(() => import("./components/profile/ProfileScreen"));
 const MarketScreen = lazy(() => import("./components/market/MarketScreen"));
 const ModerationScreen = lazy(() => import("./components/moderation/ModerationScreen"));
@@ -39,6 +41,8 @@ const PhotoViewer = lazy(() => import("./components/interest/PhotoViewer"));
 import UndoToast from "./components/shared/UndoToast";
 import Toast from "./components/shared/Toast";
 import SyncStatusBadge from "./components/shared/SyncStatusBadge";
+import SessionPill from "./components/shared/SessionPill";
+import LogCelebration from "./components/shared/LogCelebration";
 
 export default function App() {
   const { loading, profile, profileCheck, interests, entries, photos, clearAllData } = useStore();
@@ -97,7 +101,9 @@ export default function App() {
     // Same reasoning as clearAllData: the next student on a shared computer
     // must not inherit anything of the previous one's, and consent state
     // decides what whole screens do.
-    if (lastUserId.current && !user) { clearAllData(); forgetConsentStatus(); }
+    // A running session timer goes too: it names one of the previous
+    // student's hobbies.
+    if (lastUserId.current && !user) { clearAllData(); forgetConsentStatus(); clearSession(); }
     lastUserId.current = user ? user.id : null;
   }, [user, clearAllData]);
 
@@ -272,6 +278,8 @@ function RoutedShell() {
           <Route path="/" element={profile.accountType === "org" ? <EducatorDashboard /> : <HomeScreen />} />
           <Route path="/interest/:id" element={<InterestScreen />} />
           <Route path="/user/:userId/interest/:interestId" element={<PublicInterestScreen />} />
+          {/* The whole journal and its insights. An educator has neither. */}
+          <Route path="/journal" element={profile.accountType === "org" ? <Navigate to="/" replace /> : <JournalScreen />} />
           <Route path="/explore" element={<ExploreScreen />} />
           <Route path="/profile" element={<ProfileScreen />} />
           <Route path="/market" element={<MarketScreen />} />
@@ -288,9 +296,12 @@ function RoutedShell() {
         {sheet && <SheetHost />}
         {viewer && <PhotoViewer />}
       </Suspense>
+      {/* Before the toasts, which sit above the pill while one is running. */}
+      <SessionPill />
       <UndoToast />
       <Toast />
       <SyncStatusBadge />
+      <LogCelebration />
     </>
   );
 }

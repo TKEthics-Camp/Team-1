@@ -1,11 +1,13 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { today } from "../lib/dates";
+import { loadSession, saveSession, clearSession, sessionMinutes } from "../lib/sessionTimer";
 
 const UICtx = createContext(null);
 
-// Transient, non-persisted UI state shared across screens: which sheet (if
-// any) is open, which photo is being viewed full-size, and which nudges the
-// user has waved off for today.
+// Transient UI state shared across screens: which sheet (if any) is open,
+// which photo is being viewed full-size, which nudges the user has waved off
+// for today, the reward shown after a log, and a running session timer —
+// the one thing here that outlives a reload.
 export function UIProvider({ children }) {
   const [sheet, setSheet] = useState(null); // { type: "entry"|"photo"|"orb"|"student", id?, preset?, student? }
   const [viewer, setViewer] = useState(null); // photo id
@@ -41,6 +43,14 @@ export function UIProvider({ children }) {
   };
   useEffect(() => () => clearTimeout(toastTimer.current), []);
 
+  // The moment after a log: what it changed (lib/logOutcome), shown once
+  // over the whole app, then gone on a tap or by itself.
+  const [celebration, setCelebration] = useState(null);
+  // A running session timer (lib/sessionTimer). Read back from the device
+  // on mount, so a session started before the app was closed is still
+  // running when it reopens.
+  const [session, setSession] = useState(() => loadSession());
+
   const value = useMemo(() => ({
     sheet,
     viewer,
@@ -53,6 +63,27 @@ export function UIProvider({ children }) {
     closeSheet: () => setSheet(null),
     openViewer: (id) => setViewer(id),
     closeViewer: () => setViewer(null),
+    celebration,
+    celebrate: (outcome) => setCelebration({ id: Date.now() + Math.random(), ...outcome }),
+    closeCelebration: () => setCelebration(null),
+    session,
+    startSession: (interestId) => {
+      const next = { interestId, startedAt: Date.now() };
+      saveSession(next);
+      setSession(next);
+    },
+    // Stops the timer and hands back what it measured, for the log sheet.
+    endSession: () => {
+      if (!session) return null;
+      const result = { interestId: session.interestId, minutes: sessionMinutes(session) };
+      clearSession();
+      setSession(null);
+      return result;
+    },
+    cancelSession: () => {
+      clearSession();
+      setSession(null);
+    },
     // Waves the nudge off for the rest of today (a dateKey string).
     dismissNudge: (id) => setDismissed((d) => ({ ...d, [id]: today() })),
     // Waves it off for a short while instead of the whole day (a future
@@ -97,7 +128,7 @@ export function UIProvider({ children }) {
         return null;
       });
     },
-  }), [sheet, viewer, dismissed, undo, toast]);
+  }), [sheet, viewer, dismissed, undo, toast, celebration, session]);
 
   return <UICtx.Provider value={value}>{children}</UICtx.Provider>;
 }

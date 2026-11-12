@@ -13,6 +13,8 @@ export function getResurfacedMemory(interests, photos, entries) {
   });
   entries.forEach((e) => {
     const it = byId(e.interestId); if (!it) return;
+    // A log with no words has nothing to remember it by.
+    if (!e.text) return;
     pool.push({ interest: it, blob: null, text: e.text, date: e.date, pin: e.isPinned, at: e.createdAt });
   });
   if (!pool.length) return null;

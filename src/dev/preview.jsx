@@ -6,12 +6,16 @@ import { UIProvider, useUI } from "../ui/UIContext";
 import HomeScreen from "../components/home/HomeScreen";
 import ProfileScreen from "../components/profile/ProfileScreen";
 import ExploreScreen from "../components/explore/ExploreScreen";
+import JournalScreen from "../components/journal/JournalScreen";
 import InterestScreen from "../components/interest/InterestScreen";
 import BottomNav from "../components/shared/BottomNav";
 import PendingConsentScreen from "../components/consent/PendingConsentScreen";
 import LookStep from "../components/onboarding/LookStep";
 import SheetHost from "../components/sheets/SheetHost";
 import Toast from "../components/shared/Toast";
+import UndoToast from "../components/shared/UndoToast";
+import SessionPill from "../components/shared/SessionPill";
+import LogCelebration from "../components/shared/LogCelebration";
 import "../styles/index.css";
 
 // A design preview: the app's real screens, fed sample data. Run with
@@ -40,13 +44,17 @@ function Shell() {
         <Routes>
           <Route path="/" element={<HomeScreen />} />
           <Route path="/interest/:id" element={<InterestScreen />} />
+          <Route path="/journal" element={<JournalScreen />} />
           <Route path="/explore" element={<ExploreScreen />} />
           <Route path="/profile" element={<ProfileScreen />} />
         </Routes>
       </Suspense>
       <BottomNav />
       {sheet && <SheetHost />}
+      <SessionPill />
+      <UndoToast />
       <Toast />
+      <LogCelebration />
     </>
   );
 }

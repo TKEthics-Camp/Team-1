@@ -6,7 +6,7 @@ import { useUI } from "../../ui/UIContext";
 import { uid } from "../../lib/id";
 import { COINS_PER_LOG } from "../../lib/constants";
 import { prepareImage, useObjectURL } from "../../lib/image";
-import { actsToNextStage } from "../../lib/tree";
+import { logOutcome } from "../../lib/logOutcome";
 import { celebrate, levelUpCelebrate } from "../../lib/feedback";
 import Sheet from "../shared/Sheet";
 import Field from "../shared/Field";
@@ -17,7 +17,7 @@ import Icon from "../shared/Icon";
 export default function PhotoSheet({ interestId }) {
   const { t, nameOf } = useI18n();
   const { interests, entries, photos, profile, addPhoto } = useStore();
-  const { closeSheet, showToast } = useUI();
+  const { closeSheet, celebrate: showCelebration } = useUI();
   const it = interests.find((x) => x.id === interestId);
 
   const fileRef = useRef(null);
@@ -52,15 +52,16 @@ export default function PhotoSheet({ interestId }) {
       setBlocked(true);
       return;
     }
-    const leveledUp = actsToNextStage(it, entries, photos) === 1;
     const rec = {
       id: uid(), interestId: it.id, blob, caption: caption.trim(),
       visibility, isPinned: pinned, createdAt: Date.now(),
     };
+    // Same reward as a journal entry: a photo is a log too.
+    const outcome = logOutcome(it, entries, photos, { photo: rec });
     addPhoto(rec);
-    if (leveledUp) levelUpCelebrate(profile); else celebrate(profile);
-    showToast(t("coinsEarned").replace("{n}", COINS_PER_LOG));
+    if (outcome.leveledUp) levelUpCelebrate(profile); else celebrate(profile);
     closeSheet();
+    showCelebration({ interestId: it.id, minutes: 0, coins: COINS_PER_LOG, ...outcome });
   }
 
   return (

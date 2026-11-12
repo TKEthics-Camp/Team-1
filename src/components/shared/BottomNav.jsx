@@ -1,12 +1,16 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useI18n } from "../../i18n/I18nContext";
+import { useStore } from "../../store/StoreContext";
 
-const ITEMS = [["/", "home"], ["/explore", "explore"], ["/profile", "me"]];
+const ITEMS = [["/", "home"], ["/journal", "journal"], ["/explore", "explore"], ["/profile", "me"]];
 
 // Outline icons in one stroke weight, drawn inline so they take the label's
 // colour and need no icon font or image request.
 const ICONS = {
   home: <path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z" />,
+  journal: (
+    <path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" />
+  ),
   explore: (
     <>
       <circle cx="12" cy="12" r="8" />
@@ -23,8 +27,13 @@ const ICONS = {
 
 export default function BottomNav() {
   const { t } = useI18n();
+  const { profile } = useStore();
   const location = useLocation();
   const navigate = useNavigate();
+  // An educator keeps no journal of their own, so has no Journal tab.
+  const items = profile && profile.accountType === "org"
+    ? ITEMS.filter(([, key]) => key !== "journal")
+    : ITEMS;
 
   // Home stays lit while browsing an interest, matching the original app.
   function isActive(path) {
@@ -34,7 +43,7 @@ export default function BottomNav() {
 
   return (
     <div className="nav">
-      {ITEMS.map(([path, key]) => (
+      {items.map(([path, key]) => (
         <button
           key={path}
           aria-current={isActive(path) ? "page" : undefined}

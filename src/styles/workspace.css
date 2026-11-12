@@ -724,13 +724,6 @@ select:focus-visible, summary:focus-visible {
 .tree-view .tree-status > :first-child {
   flex: none; border-radius: 14px; background: var(--panel);
 }
-.tree-view .cover.blank { background: var(--panel); place-items: start; }
-.cover-ico {
-  position: absolute; top: 16px; left: 16px; margin: 0;
-  width: 52px; height: 52px; border-radius: 50%;
-  display: grid; place-items: center; background: var(--card); box-shadow: var(--lift);
-}
-.cover-ico .ico { width: 26px; height: 26px; }
 
 /* Explore's idea rows lead with the hobby's own icon, as an iOS list does. */
 .ideas .idea { align-items: center; gap: 12px; }
@@ -753,7 +746,7 @@ select:focus-visible, summary:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 .me-stat .k {
-  font-size: 12px; color: var(--muted); padding: 0 4px;
+  font-size: 11.5px; color: var(--muted); padding: 0 2px; letter-spacing: -.01em;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
 }
 .me-stat .k::first-letter { text-transform: uppercase; }
@@ -801,3 +794,350 @@ select:focus-visible, summary:focus-visible {
 .badge.earned .badge-sub { color: var(--ico-green); font-weight: 600; }
 .badge-bar { height: 4px; background: var(--track); }
 .badge-bar span { background: var(--rule); }
+
+/* ==========================================================================
+   The daily loop: log, see what it did, come back tomorrow.
+
+   PRD §2.3: logging has to be as frictionless, and its payoff as immediate,
+   as what it competes with. Everything from here down serves that — a sheet
+   that is one choice and one button, a moment afterwards that shows exactly
+   what the log changed, and a timer for doing the thing first.
+   ========================================================================== */
+
+/* ---------- the log sheet ---------- */
+.log-sheet { gap: 14px; }
+/* The sheet scrolls when it's tall; nothing in it gives up height first.
+   Left to shrink, the note field was the one that did, down to a sliver. */
+.log-sheet > * { flex-shrink: 0; }
+.log-label-row { display: flex; align-items: center; justify-content: space-between; min-height: 26px; }
+.log-link {
+  background: none; border: none; padding: 4px 2px; cursor: pointer; gap: 5px;
+  font-family: var(--body); font-size: 14px; font-weight: 600; letter-spacing: -.01em;
+  color: var(--ico-green);
+}
+.log-link:hover { opacity: .7; }
+/* Big, plain targets: this is the one choice the sheet asks for. */
+.dur-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+/* A timed session adds its own exact length as a seventh choice. */
+.dur-grid-wide { grid-template-columns: repeat(4, 1fr); }
+.dur-grid-wide .dur { font-size: 14px; letter-spacing: -.02em; }
+.dur {
+  height: 52px; border: none; border-radius: 16px; cursor: pointer;
+  background: var(--track); color: var(--ink);
+  font-family: var(--body); font-size: 17px; font-weight: 650; letter-spacing: -.015em;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+  transition: background .16s, color .16s, transform .12s;
+}
+.dur[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+/* 16px, not smaller: below that iOS zooms the page when the field is tapped. */
+.log-sheet .log-note { min-height: 0; resize: none; padding: 12px 14px; font-size: 16px; line-height: 1.45; }
+.log-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.log-tools .chip { display: inline-flex; align-items: center; gap: 6px; }
+.log-more { margin-left: auto; color: var(--muted); }
+.log-chev { transition: transform .22s cubic-bezier(.32, .72, 0, 1); }
+.log-chev.open { transform: rotate(90deg); }
+.log-more-body {
+  display: flex; flex-direction: column; gap: 14px; padding-top: 2px;
+  animation: celRise .26s cubic-bezier(.32, .72, 0, 1) both;
+}
+.log-sheet .log-go { padding: 15px 16px; font-size: 17px; font-weight: 650; }
+.log-foot { display: flex; justify-content: center; gap: 28px; margin-top: -6px; }
+.log-sheet .log-cancel { width: auto; border: none; background: none; color: var(--muted); padding: 4px 6px; }
+.log-sheet .log-cancel:hover { background: none; color: var(--ink); }
+.log-sheet .log-delete, .log-sheet .log-delete:hover { color: var(--bad); }
+
+/* ---------- the moment after a log ---------- */
+.cel {
+  position: absolute; inset: 0; z-index: 60; border-radius: inherit;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--app-bg) 93%, transparent);
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  animation: celIn .2s ease both;
+}
+.cel-close { position: absolute; inset: 0; background: none; border: none; cursor: pointer; }
+.cel-close:focus-visible { outline: none; }
+.cel-body {
+  position: relative; pointer-events: none; width: 100%; padding: 0 34px;
+  display: flex; flex-direction: column; align-items: center; gap: 18px;
+}
+.cel-stage {
+  position: relative; width: 100%; height: 214px;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+/* Springs up from the ground it stands on, a little past its size and back. */
+.cel-tree {
+  display: block; line-height: 0; transform-origin: 50% 92%;
+  animation: celPop .72s cubic-bezier(.2, 1.5, .35, 1) both;
+}
+/* A ring of seeds thrown outward from behind the tree: the hobby's own
+   colour, the app's green, and a warm one, so it never reads as confetti
+   from somewhere else. */
+.cel-burst { position: absolute; left: 50%; bottom: 96px; width: 0; height: 0; }
+.cel-burst i {
+  position: absolute; width: 8px; height: 8px; margin: -4px; border-radius: 50%;
+  background: var(--c); --a: calc(var(--i) * 30deg);
+  animation: celBurst .95s cubic-bezier(.15, .7, .3, 1) both;
+}
+.cel-burst i:nth-child(3n)     { background: var(--rule); width: 6px; height: 6px; margin: -3px; }
+.cel-burst i:nth-child(3n + 1) { background: var(--ico-amber); }
+.cel-burst i:nth-child(even)   { animation-duration: 1.15s; }
+.cel-text { text-align: center; animation: celRise .46s .1s cubic-bezier(.32, .72, 0, 1) both; }
+.cel-headline {
+  font-size: 46px; font-weight: 750; letter-spacing: -.035em; line-height: 1.05;
+  color: var(--ink); font-variant-numeric: tabular-nums;
+}
+.cel-sub { margin-top: 6px; font-size: 17px; font-weight: 500; letter-spacing: -.01em; color: var(--muted); }
+.cel-progress { width: 100%; max-width: 250px; animation: celRise .46s .18s cubic-bezier(.32, .72, 0, 1) both; }
+.cel-progress .bar { height: 6px; margin-top: 0; }
+/* The bar starts where the tree was and travels to where it is now. */
+.cel-progress .bar > span { transition: width .95s cubic-bezier(.32, .72, 0, 1) .3s; animation: none; }
+.cel-next { margin-top: 9px; text-align: center; font-size: 13.5px; color: var(--muted); }
+.cel-chips { display: flex; gap: 8px; min-height: 34px; animation: celRise .46s .28s cubic-bezier(.32, .72, 0, 1) both; }
+.cel-chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px;
+  border-radius: 999px; background: var(--card); border: 1px solid var(--line); box-shadow: var(--lift);
+  font-family: var(--body); font-size: 14px; font-weight: 650; letter-spacing: -.01em;
+  color: var(--ink); font-variant-numeric: tabular-nums;
+}
+.cel-chip .ico { color: var(--ico-amber); }
+.cel-hint {
+  position: absolute; left: 0; right: 0; bottom: 26px; pointer-events: none;
+  text-align: center; font-size: 13px; color: var(--dim);
+  animation: celRise .4s 1.1s both;
+}
+@keyframes celIn   { from { opacity: 0; } }
+@keyframes celRise { from { opacity: 0; transform: translateY(10px); } }
+@keyframes celPop {
+  0%   { transform: scale(.7); opacity: 0; }
+  50%  { opacity: 1; }
+  100% { transform: scale(1); }
+}
+@keyframes celBurst {
+  0%   { transform: rotate(var(--a)) translateY(0) scale(.4); opacity: 0; }
+  14%  { opacity: 1; }
+  100% { transform: rotate(var(--a)) translateY(-124px) scale(1); opacity: 0; }
+}
+
+/* ---------- the session timer ---------- */
+.session-pill {
+  position: absolute; left: 14px; right: 14px; bottom: 84px; z-index: 15;
+  display: flex; align-items: center; gap: 9px; padding: 8px 8px 8px 15px;
+  border-radius: 999px; background: var(--accent); color: var(--accent-ink);
+  box-shadow: 0 10px 26px -10px rgba(0, 0, 0, .45);
+  animation: coinToastIn .34s cubic-bezier(.32, .72, 0, 1);
+}
+.session-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #FF5A52; animation: recPulse 1.4s ease-in-out infinite; }
+.session-ico { flex: none; opacity: .8; }
+.session-name {
+  flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 14.5px; font-weight: 600; letter-spacing: -.01em;
+}
+.session-time { flex: none; font-size: 15px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.session-stop {
+  flex: none; border: none; border-radius: 999px; padding: 7px 13px; cursor: pointer;
+  background: var(--accent-ink); color: var(--accent);
+  font-family: var(--body); font-size: 13.5px; font-weight: 650; letter-spacing: -.01em;
+}
+.session-x {
+  flex: none; min-width: 30px; height: 30px; padding: 0; border: none; border-radius: 999px; cursor: pointer;
+  display: grid; place-items: center; background: none; color: inherit; opacity: .7;
+  font-family: var(--body); font-size: 12.5px; font-weight: 600;
+}
+.session-x.armed { opacity: 1; padding: 0 11px; background: #FF5A52; color: #FFFFFF; }
+/* Room for the pill, so it never sits on the last thing on a screen… */
+.app:has(.session-pill) .view { padding-bottom: 82px; }
+/* …and the notes that share that strip of screen ride above it. */
+.session-pill ~ .undo-toast { bottom: 140px; }
+.session-pill ~ .coin-toast { bottom: 150px; }
+.session-pill ~ .undo-toast ~ .coin-toast { bottom: 200px; }
+
+/* ---------- Home: this week ---------- */
+.week {
+  flex: none; width: 100%; padding: 14px 12px 12px; cursor: pointer; text-align: left;
+  display: flex; flex-direction: column; gap: 12px;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r-card);
+  font-family: var(--body); color: inherit;
+}
+.week-days { display: grid; grid-template-columns: repeat(7, 1fr); }
+.week-day { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+.week-letter { font-size: 11.5px; font-weight: 600; letter-spacing: .02em; color: var(--dim); }
+.week-day.today .week-letter { color: var(--ink); font-weight: 750; }
+.week-dot {
+  width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--track); color: #FFFFFF;
+}
+.week-day.on .week-dot { background: var(--rule); }
+/* Today is a ring until it is filled: the one gap that can still be closed. */
+.week-day.today:not(.on) .week-dot { background: none; box-shadow: inset 0 0 0 2px var(--ink); }
+.week-day.future .week-dot { background: none; box-shadow: inset 0 0 0 1.5px var(--line); }
+.week-day.today.on .week-dot { animation: celPop .5s cubic-bezier(.2, 1.5, .35, 1) both; }
+.week-sum {
+  display: flex; align-items: center; justify-content: space-between; padding: 0 4px;
+  font-size: 13.5px; color: var(--muted); letter-spacing: -.005em;
+}
+.week-sum .ico { color: var(--dim); }
+
+/* Each tree stands on a breath of its own hobby's colour, so a card is
+   recognisable before its name is read. Faint on purpose: the tree is the
+   colour, this is only the light it stands in. */
+.tree-card-art { background: color-mix(in srgb, var(--c, transparent) 8%, var(--panel)); }
+.stage[data-theme="black"] .tree-card-art { background: color-mix(in srgb, var(--c, transparent) 11%, var(--panel)); }
+
+/* ---------- the Journal tab ---------- */
+.journal-view { gap: 16px; }
+.journal-search { flex: none; width: 100%; font-size: 16px; }
+.filter-row {
+  flex: none; display: flex; gap: 8px; overflow-x: auto;
+  margin: -4px -18px; padding: 4px 18px; scrollbar-width: none;
+}
+.filter-row::-webkit-scrollbar { display: none; }
+.filter-row .chip { flex: none; padding: 7px 14px; font-size: 14px; }
+.journal-ico.idea-ico { width: 36px; height: 36px; }
+.journal-hobby { font-size: 12.5px; font-weight: 650; letter-spacing: -.005em; color: var(--muted); margin-bottom: -5px; }
+.journal-body:has(.journal-hobby) { padding-top: 0; }
+
+/* ---------- Insights ---------- */
+.ins-card {
+  flex: none; display: flex; flex-direction: column; gap: 14px; padding: 16px;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r-card);
+}
+/* Title, then what it comes to, underneath: side by side they wrapped
+   into each other on a narrow phone. */
+.ins-head { display: flex; flex-direction: column; gap: 2px; }
+.ins-head h2 { margin: 0; font-size: 16px; font-weight: 650; letter-spacing: -.015em; color: var(--ink); }
+.ins-note { font-size: 13.5px; color: var(--muted); }
+.ins-bars { display: flex; align-items: flex-end; gap: 8px; height: 104px; }
+.ins-bar {
+  flex: 1; height: var(--h); border-radius: 7px 7px 3px 3px;
+  background: color-mix(in srgb, var(--rule) 26%, var(--track));
+  transform-origin: bottom; animation: barUp .6s cubic-bezier(.32, .72, 0, 1) both;
+}
+.ins-bar.now { background: var(--rule); }
+.ins-bar:nth-child(2) { animation-delay: .03s; } .ins-bar:nth-child(3) { animation-delay: .06s; }
+.ins-bar:nth-child(4) { animation-delay: .09s; } .ins-bar:nth-child(5) { animation-delay: .12s; }
+.ins-bar:nth-child(6) { animation-delay: .15s; } .ins-bar:nth-child(7) { animation-delay: .18s; }
+.ins-bar:nth-child(8) { animation-delay: .21s; }
+.ins-axis { display: flex; justify-content: space-between; margin-top: -6px; font-size: 12px; color: var(--dim); }
+@keyframes barUp { from { transform: scaleY(0); } }
+
+.heat-months {
+  display: grid; grid-template-columns: repeat(15, 1fr); gap: 4px; height: 14px; margin-bottom: -8px;
+  font-size: 11px; color: var(--dim);
+}
+.heat-months span { white-space: nowrap; }
+.heat {
+  display: grid; grid-template-rows: repeat(7, auto); grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px;
+}
+.heat-day { display: block; aspect-ratio: 1; border-radius: 4.5px; background: var(--track); }
+.heat-day.l1 { background: color-mix(in srgb, var(--rule) 32%, var(--track)); }
+.heat-day.l2 { background: color-mix(in srgb, var(--rule) 64%, var(--track)); }
+.heat-day.l3 { background: var(--rule); }
+.heat-day.ahead { background: none; }
+.heat-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ins-fact { font-size: 13px; color: var(--muted); }
+.heat-legend { flex: none; margin-left: auto; display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--dim); }
+.heat-legend .heat-day { width: 11px; border-radius: 3px; }
+
+.ins-hobbies { display: flex; flex-direction: column; gap: 14px; }
+.ins-hobby { display: flex; align-items: center; gap: 12px; }
+.ins-hobby .idea-ico { width: 36px; height: 36px; }
+.ins-hobby-body { flex: 1; min-width: 0; }
+.ins-hobby-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.ins-hobby-name {
+  font-size: 15px; font-weight: 600; letter-spacing: -.01em; color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ins-hobby-n { flex: none; font-size: 13.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ins-hobby .bar { margin-top: 7px; }
+
+/* ==========================================================================
+   Motion. The difference between an app that works and one that feels good
+   in the hand is mostly here: things answer the finger, arrive rather than
+   appear, and move on the curve iOS moves on. All of it is switched off by
+   the reduced-motion rule in index.css.
+   ========================================================================== */
+
+/* Everything pressable gives a little under the finger. */
+.btn, .btn2, .chip, .lang, .dur, .tree-card-log, .session-stop, .idea-add, .plant-btn, .log-link,
+.nav button, .list-row, .week, .memory, .nudge-chip, .tree-card, .tree-cell {
+  transition: transform .13s ease, background-color .16s ease, color .16s ease, opacity .16s ease, box-shadow .16s ease;
+}
+.btn:active, .btn2:active, .chip:active, .lang:active, .dur:active, .tree-card-log:active,
+.session-stop:active, .idea-add:active, .plant-btn:active, .log-link:active { transform: scale(.955); }
+.nav button:active { transform: scale(.93); }
+.week:active, .memory:active, .nudge-chip:active, .tree-cell:active,
+.tree-card:has(.tree-card-name:active) { transform: scale(.985); }
+.list-row:active { background: var(--card-2); }
+
+/* Sheets come up on a spring, the page dims behind them, and the strip at
+   the top can be pulled to send one back down (see Sheet.jsx). */
+.sheet { animation: sheetUp .4s cubic-bezier(.32, .72, 0, 1); will-change: transform; }
+.sheet-bg { animation: celIn .24s ease both; }
+@keyframes sheetUp { from { transform: translateY(72px); opacity: 0; } }
+.sheet-grab {
+  position: absolute; top: 0; left: 0; right: 0; height: 30px; z-index: 2;
+  touch-action: none; cursor: grab;
+}
+.sheet-grab:active { cursor: grabbing; }
+
+/* Progress fills in rather than being there, and moves when it changes. */
+.bar > span {
+  transform-origin: left center;
+  animation: barIn .75s cubic-bezier(.32, .72, 0, 1) both;
+  transition: width .6s cubic-bezier(.32, .72, 0, 1);
+}
+@keyframes barIn { from { transform: scaleX(0); } }
+
+/* Home and the Journal arrive a section at a time, top first. */
+.home-view > *, .journal-view > * { animation: celRise .5s cubic-bezier(.32, .72, 0, 1) both; }
+.home-view > *:nth-child(2), .journal-view > *:nth-child(2) { animation-delay: .04s; }
+.home-view > *:nth-child(3), .journal-view > *:nth-child(3) { animation-delay: .08s; }
+.home-view > *:nth-child(4), .journal-view > *:nth-child(4) { animation-delay: .12s; }
+.home-view > *:nth-child(5), .journal-view > *:nth-child(5) { animation-delay: .16s; }
+.home-view > *:nth-child(n + 6), .journal-view > *:nth-child(n + 6) { animation-delay: .2s; }
+
+/* Your own journal rows open on a tap. The words are the button and its hit
+   area covers the row; the voice player sits above it as its own control. */
+.journal-row { position: relative; transition: background-color .16s ease; }
+.journal-open {
+  display: block; width: 100%; padding: 0; text-align: left; cursor: pointer;
+  background: none; border: none; font-family: var(--body);
+}
+.journal-open::after { content: ""; position: absolute; inset: 0; }
+.journal-open:focus-visible { outline: none; }
+.journal-row:has(.journal-open:focus-visible) { outline: 2px solid var(--ico-blue); outline-offset: -2px; }
+.journal-row.can-open:has(.journal-open:active) { background: var(--card-2); }
+.journal-row .voice-note, .journal-row .entry-actions { position: relative; z-index: 1; }
+
+/* ---------- a tree's own page ----------
+   Home's card, a step larger, as the page's hero: the tree on its tinted
+   panel, then its health, the bar and what the next stage needs. */
+.tree-hero .tree-card-art { height: 208px; }
+.tree-card-age { position: absolute; top: 17px; right: 16px; font-size: 12.5px; color: var(--muted); }
+.hero-replay {
+  position: absolute; right: 12px; bottom: 12px; width: 38px; height: 38px; border-radius: 50%;
+  display: grid; place-items: center; border: none; cursor: pointer;
+  background: var(--card); color: var(--ink); box-shadow: var(--lift);
+  transition: transform .13s ease;
+}
+.hero-replay:active { transform: scale(.92); }
+.tree-hero .tree-card-body { padding: 14px 16px 16px; }
+.hero-line { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 12px; }
+.hero-health { font-size: 15px; font-weight: 600; letter-spacing: -.01em; color: var(--ink); }
+.hero-health.warn { color: var(--tag-amber); }
+.hero-health.dead { color: var(--bad); }
+.hero-next { flex: none; font-size: 13.5px; color: var(--muted); }
+.tree-hero .bar { margin-top: 11px; }
+.hero-revive-note { margin-top: 12px; }
+.tree-hero .revive-btn { margin-top: 10px; }
+.hero-actions { flex: none; display: flex; gap: 8px; }
+.hero-actions .btn, .hero-actions .btn2,
+.tree-view .hero-actions .btn, .tree-view .hero-actions .btn2 {
+  flex: 1; width: auto; padding: 12px 8px; font-size: 15px; font-weight: 600; white-space: nowrap;
+}
+.hero-why { margin-top: -4px; padding: 0 4px; font-size: 14.5px; }
+
+/* A note that fires during the moment after a log — a badge, most often —
+   shows over it rather than waiting behind it: one more good thing. */
+.coin-toast { z-index: 70; }
+.app:has(.cel) .coin-toast { bottom: 64px; }
