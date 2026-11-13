@@ -130,10 +130,22 @@ export default function App() {
   // has no account, so this is resolved before the auth gate.
   const policy = policyFromLocation();
   if (policy) {
+    // Reached by a full navigation (window.location.href from Me, or a
+    // direct link a guardian followed with no session at all), not through
+    // the router — so there is no in-app screen to pop back to. Without
+    // onBack, neither screen renders a back button at all (see their own
+    // `{onBack ? ... : <span/>}`), and on a PWA in standalone display mode
+    // there is no browser chrome either — nothing to exit with. Navigating
+    // to the base URL works the same way regardless of how this was
+    // reached: signed-in users land back in the app, and a guardian with no
+    // session lands on sign-in, same as opening the link fresh.
+    const exitToApp = () => { window.location.href = import.meta.env.BASE_URL || "/"; };
     return (
       <div className="stage" data-theme={resolvedTheme}>
         <div className="app">
-          {policy === "support" ? <SupportScreen /> : <PolicyScreen which={policy} />}
+          {policy === "support"
+            ? <SupportScreen onBack={exitToApp} />
+            : <PolicyScreen which={policy} onBack={exitToApp} />}
         </div>
       </div>
     );
