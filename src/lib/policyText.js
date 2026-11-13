@@ -119,6 +119,10 @@ export const PRIVACY = {
           "存储在你自己的设备上（因此没有网络也能使用），以及由 Supabase 运营的服务器上，它提供数据库和文件存储服务。",
         ],
         [
+          "Anything sent between your device and our servers travels over an encrypted connection (HTTPS) — the same kind of protection used for online banking.",
+          "你的设备与我们服务器之间传输的所有内容，都通过加密连接（HTTPS）传输 —— 这与网上银行所使用的保护方式相同。",
+        ],
+        [
           "If you sign out on a shared computer, the copy on that device is erased.",
           "如果你在共用电脑上退出登录，该设备上的副本会被清除。",
         ],
@@ -150,6 +154,23 @@ export const PRIVACY = {
       ],
     },
     {
+      h: ["How long we keep it", "保留多长时间"],
+      p: [
+        [
+          "Your account's data is kept for as long as the account exists. There is no automatic expiry — it stays until you delete it or the account is removed.",
+          "只要账号存在，账号中的数据就会一直保留。没有自动到期机制 —— 数据会持续保留，直到你删除它或账号被移除。",
+        ],
+        [
+          "Deleting a hobby, entry or photo does not erase it right away — it moves to Recently Deleted first. From there you can restore it, or tap Erase Now (confirmed with a second tap) to delete it for good immediately, on your device and on the server. If you do neither, it is permanently removed on its own after 30 days.",
+          "删除爱好、日记或照片不会立即清除它 —— 它会先进入「最近删除」。在那里你可以选择恢复它，或点按「立即清除」（需再次点按确认）立刻永久删除，设备和服务器上的副本都会一并清除。如果你不做任何操作，它会在 30 天后自动永久删除。",
+        ],
+        [
+          "If a parent or guardian's permission is needed, we keep a record of that permission — and who asked for it — for as long as the account exists, as evidence that it was given.",
+          "如果账号需要父母或监护人同意，我们会在账号存续期间保留该同意的记录（以及谁请求了同意），作为已获得同意的证明。",
+        ],
+      ],
+    },
+    {
       h: ["Deleting your account", "删除你的账号"],
       p: [
         [
@@ -172,6 +193,10 @@ export const PRIVACY = {
         [
           "If you see something that should not be there, use the ⋯ menu to report it. Reports are read by a person, who can hide the content. Hidden content stays visible to whoever made it and to nobody else.",
           "如果你看到不该出现的内容，请使用 ⋯ 菜单举报。举报会由专人查看，该人员可以隐藏相关内容。被隐藏的内容仍然只对创作者本人可见。",
+        ],
+        [
+          "Reviewing a report means seeing the reported item itself — including a private photo or voice note — so the decision isn't made blind. That access is limited to the specific thing that was reported, not the rest of your account.",
+          "审核举报时需要查看被举报的内容本身 —— 包括私密的照片或语音 —— 这样才能做出合理判断，而不是盲目处理。该访问权限仅限于被举报的那一项内容，不涉及你账号中的其他内容。",
         ],
       ],
     },
