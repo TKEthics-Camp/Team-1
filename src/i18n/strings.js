@@ -256,6 +256,9 @@ export const STR = {
 
   helpTitle:    ["Help and contact", "帮助与联系"],
 
+  authAgreeLead: ["I agree to the", "我同意"],
+  authAgreeAnd: ["and", "和"],
+
   exportData:     ["Download my data", "下载我的数据"],
   exportPreparing: ["Preparing your download…", "正在准备下载…"],
   exportDone:     ["Downloaded: your journal, photos and voice notes.", "已下载：你的日记、照片和语音。"],

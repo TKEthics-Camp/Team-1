@@ -55,6 +55,11 @@ export default function AuthFlow() {
   const [loginPassword, setLoginPassword] = useState("");
 
   const isOrg = accountType === "org";
+  const base = import.meta.env.BASE_URL || "/";
+  // Required before the account can be created — see the checkbox in the
+  // credentials step. The policy links open in a new tab rather than
+  // navigating away, or everything typed on this screen would be lost.
+  const [agreedToPolicies, setAgreedToPolicies] = useState(false);
 
   function goWelcome() {
     clearAuthError();
@@ -70,6 +75,7 @@ export default function AuthFlow() {
     if (!trimmedUsername || !password) return;
     if (password !== confirmPassword) { setLocalError("authPasswordMismatch"); return; }
     if (isOrg && !email.trim()) return;
+    if (!agreedToPolicies) return;
 
     setBusy(true);
     // Registered before the account exists, because the session (and App's
@@ -320,11 +326,29 @@ export default function AuthFlow() {
 
           {(localError || authError) && <p className="sf-err">{localError ? t(localError) : authError}</p>}
 
+          <label className="sf-agree">
+            <input
+              type="checkbox"
+              checked={agreedToPolicies}
+              disabled={busy}
+              onChange={(e) => setAgreedToPolicies(e.target.checked)}
+            />
+            <span>
+              {t("authAgreeLead")}{" "}
+              <a href={base + "terms"} target="_blank" rel="noopener noreferrer">{t("termsTitle")}</a>
+              {" "}{t("authAgreeAnd")}{" "}
+              <a href={base + "privacy"} target="_blank" rel="noopener noreferrer">{t("privacyTitle")}</a>
+            </span>
+          </label>
+
           <div className="sf-grow" />
           <div className="sf-foot">
             <button
               className="sf-btn" type="submit"
-              disabled={busy || !username.trim() || !password || !confirmPassword || (isOrg && !email.trim())}
+              disabled={
+                busy || !username.trim() || !password || !confirmPassword
+                || (isOrg && !email.trim()) || !agreedToPolicies
+              }
             >
               {busy ? t("authWorking") : t("sfContinue")}
             </button>

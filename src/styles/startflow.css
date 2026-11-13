@@ -185,6 +185,18 @@
 .sf-label { display: block; margin-bottom: 8px; font-size: 15px; font-weight: 500; }
 .sf-hint { margin: 8px 2px 0; font-size: 12.5px; color: var(--dim); }
 
+/* ---------- policy agreement (sign up) ---------- */
+
+.sf-agree {
+  display: flex; align-items: flex-start; gap: 10px;
+  margin-top: 18px; font-size: 13.5px; color: var(--sf-muted);
+}
+.sf-agree input[type="checkbox"] {
+  width: 19px; height: 19px; flex: none; margin: 1px 0 0;
+  accent-color: var(--sf-blue);
+}
+.sf-agree a { color: var(--sf-blue); }
+
 /* double-scoped on purpose: controls.css targets input[type="text"], whose
    attribute selector out-specifies a bare .sf-field class */
 .sf .sf-field {
