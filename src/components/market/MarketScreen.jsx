@@ -23,7 +23,10 @@ export default function MarketScreen() {
   return (
     <>
       <TopBar>
-        <button className="icon" aria-label={t("back")} onClick={() => navigate("/profile")}><Icon name="chevronLeft" size={22} /></button>
+        {/* Only ever reached from Profile today, but hardcoding that
+            destination is the same mistake InterestScreen's back button
+            had — real back returns to wherever actually opened this. */}
+        <button className="icon" aria-label={t("back")} onClick={() => navigate(-1)}><Icon name="chevronLeft" size={22} /></button>
         <h1>{t("market")}</h1>
         <span className="chip coin-pill"><Icon name="coin" size={15} />{coins}</span>
       </TopBar>

@@ -69,7 +69,12 @@ export default function InterestScreen() {
   return (
     <>
       <TopBar className="tree-bar">
-        <button className="icon" aria-label={t("home")} onClick={() => navigate("/")}><Icon name="chevronLeft" size={22} /></button>
+        {/* Entered from Home, a Memories/Watching sheet, or a nudge banner —
+            never the same place twice. A hardcoded navigate("/") here used
+            to send every one of those back to Home regardless of which it
+            was; real browser/router back returns to whichever actually
+            opened this tree. */}
+        <button className="icon" aria-label={t("back")} onClick={() => navigate(-1)}><Icon name="chevronLeft" size={22} /></button>
         <h1>{nameOf(it)}</h1>
         <button className="icon" aria-label={t("editOrb")} onClick={() => openSheet("orb", it.id)}>⋯</button>
       </TopBar>
