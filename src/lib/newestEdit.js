@@ -34,3 +34,11 @@ export function mergePulled(store, local, remote) {
   }
   return merged;
 }
+
+// Every user edit is stamped at the moment it is made, not when it is
+// pushed: the server keeps whichever copy of a record carries the newest
+// stamp (20261017010000), and reconciliation pulls a newer copy down. Never
+// goes backwards, even if the clock does.
+export function touched(rec, now = Date.now()) {
+  return { ...rec, updatedAt: Math.max(now, (rec.updatedAt || 0) + 1) };
+}

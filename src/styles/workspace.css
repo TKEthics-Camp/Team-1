@@ -177,7 +177,6 @@
 .topbar h1 {
   font-size: 22px; font-weight: 700; letter-spacing: -.02em; color: var(--ink);
 }
-.page-sub { margin: -2px 0 2px; font-size: 15px; color: var(--muted); }
 
 /* The main heading: a small spaced-out line above, the greeting, a short
    green rule below — the reference's "SATURDAY, YOUR WORKSPACE / Good
@@ -195,7 +194,6 @@
   display: block; width: 48px; height: 4px; border-radius: 999px;
   background: var(--rule); margin-top: 4px;
 }
-.page-head .page-sub { margin: 0; }
 
 /* Section titles on a screen: plain sentence case, like the reference's
    "Recently visited". Inside sheets .label stays a small field label. */
@@ -206,10 +204,6 @@
 .sheet .label {
   font-size: 13px; font-weight: 600; letter-spacing: 0;
   text-transform: none; color: var(--muted);
-}
-.memory .kicker {
-  font-size: 11.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--muted);
 }
 .sub { color: var(--muted); }
 
@@ -271,9 +265,9 @@ input:focus-visible, textarea:focus-visible, .sf .sf-field:focus {
 
 /* ---------- cards: white, hairline, no shadow ---------- */
 .nudge, .memory, .stat, .choice, .memory-row,
-.consent-block, .mod-row, .post, .post-card, .user-row,
+.consent-block, .mod-row, .post,
 .tree-view .stat, .tree-view .tree-status,
-.code-card, .deco-card, .acct-card {
+.code-card, .deco-card {
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: var(--r-card);
@@ -621,8 +615,6 @@ select:focus-visible, summary:focus-visible {
 .list-row > .ico:last-child:not(.list-ico):not(.list-chev) { color: var(--ico-green); }
 .list-row.danger, .list-row.danger .list-ico { color: var(--bad); }
 
-/* Three themes, three across — no tile left alone on a second row. */
-.themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 
 /* ---------- Home: tree cards ----------
    The reference's tree card, pared back and set the way iOS sets a list

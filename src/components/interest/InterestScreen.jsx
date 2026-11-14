@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useBack } from "../../lib/useBack";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
@@ -21,6 +22,7 @@ export default function InterestScreen() {
   const { id } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const goBack = useBack("/");
   const { t, nameOf, nOf } = useI18n();
   const { interests, photos, entries, profile, reviveInterest } = useStore();
   const { openSheet, openViewer, showToast, session, startSession } = useUI();
@@ -74,7 +76,7 @@ export default function InterestScreen() {
             to send every one of those back to Home regardless of which it
             was; real browser/router back returns to whichever actually
             opened this tree. */}
-        <button className="icon" aria-label={t("back")} onClick={() => navigate(-1)}><Icon name="chevronLeft" size={22} /></button>
+        <button className="icon" aria-label={t("back")} onClick={goBack}><Icon name="chevronLeft" size={22} /></button>
         <h1>{nameOf(it)}</h1>
         <button className="icon" aria-label={t("editOrb")} onClick={() => openSheet("orb", it.id)}>⋯</button>
       </TopBar>

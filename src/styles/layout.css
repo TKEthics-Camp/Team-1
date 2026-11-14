@@ -16,10 +16,7 @@
 .app {
   width: 100%;
   max-width: 400px;
-  background: var(--app-bg);
-  border: 1px solid var(--line);
   border-radius: 32px;
-  box-shadow: var(--lg-shadow-lg);
   transition: background .5s ease;
   /* clip, not hidden: `hidden` still makes this a scroll container, and the
      drifting cloud pseudo-elements below overflow it by ~140px. Focusing a
@@ -36,20 +33,6 @@
 }
 
 /* marshmallow clouds: pure decoration, drifting behind everything */
-.app::before, .app::after {
-  content: ""; position: absolute; z-index: 0; pointer-events: none;
-  border-radius: 50%; filter: blur(26px);
-}
-.app::before {
-  width: 260px; height: 130px; left: -70px; top: 190px;
-  background: radial-gradient(ellipse, var(--cloud), transparent 70%);
-  animation: drift 26s ease-in-out infinite;
-}
-.app::after {
-  width: 300px; height: 150px; right: -110px; bottom: 130px;
-  background: radial-gradient(ellipse, var(--cloud), transparent 70%);
-  animation: drift 34s ease-in-out infinite reverse;
-}
 @keyframes drift {
   0%, 100% { transform: translate(0, 0); }
   50%      { transform: translate(26px, -18px); }
@@ -62,15 +45,9 @@
   /* 18px horizontally, the same inset .view and .sheet use — the screen title
      and the content under it share one left edge instead of staggering by 2px. */
   padding: 15px 18px; min-height: 58px;
-  border-bottom: 1px solid var(--line);
-  background: var(--glass);
-  backdrop-filter: blur(10px);
 }
 .topbar h1 {
-  margin: 0; flex: 1;
-  font-family: var(--display); font-size: var(--fs-title); font-weight: 650;
-  letter-spacing: var(--tracking); text-wrap: balance;
-  color: var(--ink);
+  margin: 0; flex: 1; text-wrap: balance;
 }
 
 .view {
@@ -80,17 +57,11 @@
 }
 
 .nav {
-  display: flex; border-top: 1px solid var(--line);
-  background: var(--glass2);
-  backdrop-filter: blur(10px);
+  display: flex;
 }
 .nav button {
-  flex: 1; background: none; border: none; color: var(--dim);
-  padding: 12px 6px 14px; font-size: 11.5px; font-weight: 600;
-  font-family: var(--display); letter-spacing: .02em; cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  flex: 1; border: none; cursor: pointer;
 }
-.nav button[aria-current="page"] { color: var(--gold); }
 
 .undo-toast {
   position: absolute; left: 14px; right: 14px; bottom: 78px; z-index: 35;
@@ -111,8 +82,7 @@
 .sync-badge { position: absolute; top: 14px; right: 14px; z-index: 40; }
 .sync-chip {
   width: 30px; height: 30px; border-radius: 50%;
-  background: var(--ink); border: none; font-size: 14px;
-  display: grid; place-items: center; cursor: pointer;
+  background: var(--ink); border: none; font-size: 14px; cursor: pointer;
   box-shadow: var(--lg-shadow);
 }
 .sync-popover {
@@ -133,16 +103,9 @@
   box-shadow: var(--lg-shadow);
 }
 .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.cover .cover-scene { position: absolute; inset: 0; }
-.cover .cover-scene svg { width: 100%; height: 100%; display: block; }
 .cover.blank {
   background: radial-gradient(circle at 28% 22%, rgba(255,255,255,.5) 0%, transparent 42%), var(--c);
   display: grid; place-items: center;
-}
-.cover.blank .mono {
-  font-family: var(--display); font-size: 84px; font-weight: 700;
-  color: rgba(255,255,255,.5); line-height: 1;
-  text-shadow: 0 3px 14px rgba(50,15,70,.3);
 }
 .cover .veil {
   position: absolute; inset: 0;
@@ -160,33 +123,26 @@
 
 /* ---------- blocks ---------- */
 .memory {
-  border: 1px solid var(--line); border-radius: 18px; padding: 14px;
-  background: var(--card);
   display: flex; gap: 13px; align-items: center; cursor: pointer; width: 100%;
   text-align: left; color: inherit;
 }
 .memory:hover { border-color: var(--dim); }
 .memory .body { flex: 1; min-width: 0; }
-.memory .kicker { font-size: var(--fs-micro); letter-spacing: .04em; text-transform: uppercase; color: var(--gold); font-weight: 650; }
-.memory .text { font-size: 13.5px; color: var(--ink); margin-top: 3px; overflow-wrap: anywhere;
+.memory .text { margin-top: 3px; overflow-wrap: anywhere;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.memory .when { font-family: var(--mono); font-size: 11px; color: var(--dim); margin-top: 4px; }
+.memory .when { margin-top: 4px; }
 .memory img { width: 54px; height: 54px; border-radius: 12px; object-fit: cover; flex: none; }
 
-.nudge {
-  border: 1px solid var(--line); border-left: 2px solid var(--gold); border-radius: 16px;
-  background: var(--card); padding: 13px 14px;
-  display: flex; gap: 12px; align-items: center;
+.nudge { border-left: 2px solid var(--gold);
+  display: flex; gap: 12px;
 }
 .nudge .body { flex: 1; }
-.nudge .head { font-family: var(--display); font-size: 14.5px; font-weight: 600; }
-.nudge .sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.nudge .head { font-family: var(--display); }
+.nudge .sub { color: var(--muted); margin-top: 2px; }
 .nudge .bell { font-size: 18px; }
 
 .code-card {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  background: var(--card); border: 1px solid var(--line);
-  border-radius: 16px; padding: 14px 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px;
 }
 .code-value { font-family: var(--mono); font-size: 21px; font-weight: 600; letter-spacing: .06em; color: var(--ink); }
 
@@ -194,10 +150,6 @@
    faintest grey available. A section heading should be readable at a glance
    by a child holding the phone at arm's length; this one needed leaning in
    for. */
-.label {
-  font-size: var(--fs-sub); font-weight: 600; letter-spacing: -.005em;
-  text-transform: none; color: var(--muted);
-}
 .empty {
   color: var(--muted); font-size: 14px; text-align: center; padding: 26px 14px; line-height: 1.7;
   display: flex; flex-direction: column; align-items: center; gap: 10px;
@@ -213,28 +165,5 @@
    carry it. */
 .tab-content { display: flex; flex-direction: column; gap: 16px; margin: 0 -18px; padding: 0 18px; }
 
-/* ---------- onboarding ---------- */
-.onb { flex: 1; display: flex; flex-direction: column; gap: 18px; }
-.onb h2 { font-family: var(--display); font-size: 25px; font-weight: 600; margin: 0; letter-spacing: -.015em; text-wrap: balance; }
-.onb p { margin: 0; color: var(--muted); font-size: 14px; max-width: 32ch; }
-/* individual vs organisation picker */
-.acct-choices { display: flex; flex-direction: column; gap: 12px; }
-.acct-card {
-  text-align: left; cursor: pointer; display: grid;
-  grid-template-columns: 44px 1fr; grid-template-rows: auto auto; column-gap: 12px;
-  background: var(--card); border: 1.5px solid var(--line); border-radius: 18px; padding: 16px;
-}
-.acct-card .acct-emoji { grid-row: 1 / 3; align-self: center; font-size: 30px; }
-.acct-label { font-family: var(--display); font-weight: 700; font-size: 16px; color: var(--ink); }
-.acct-note { font-size: 12.5px; color: var(--muted); line-height: 1.45; margin-top: 2px; }
-.acct-card[aria-pressed="true"] {
-  border-color: var(--candy);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--candy) 28%, transparent);
-}
-
-.setup-row { border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 9px; }
-.setup-row .who { display: flex; align-items: center; gap: 10px; }
-.setup-row .who .n { font-family: var(--display); font-weight: 600; font-size: 14.5px; }
-
-.sub { font-size: var(--fs-sub); color: var(--muted); line-height: 1.55; }
+.sub { line-height: 1.55; }
 .center { text-align: center; }

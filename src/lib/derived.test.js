@@ -164,3 +164,28 @@ describe("byEntryDate", () => {
     expect(list.sort(byEntryDate).map((e) => e.id)).toEqual(["c", "b", "a"]);
   });
 });
+
+describe("entriesOf / photosOf grouping", () => {
+  const entries = [
+    { id: "a", interestId: "t1", date: "2026-11-01", createdAt: 1 },
+    { id: "b", interestId: "t2", date: "2026-11-03", createdAt: 2 },
+    { id: "c", interestId: "t1", date: "2026-11-05", createdAt: 3 },
+  ];
+  it("groups once per list and returns newest first", async () => {
+    const { entriesOf } = await import("./derived");
+    const first = entriesOf(entries, "t1");
+    expect(first.map((e) => e.id)).toEqual(["c", "a"]);
+    expect(entriesOf(entries, "t1")).toBe(first);
+    expect(entriesOf(entries, "none")).toEqual([]);
+  });
+  it("sees a changed list as new", async () => {
+    const { entriesOf } = await import("./derived");
+    const next = [...entries, { id: "d", interestId: "t1", date: "2026-11-09", createdAt: 4 }];
+    expect(entriesOf(next, "t1").map((e) => e.id)).toEqual(["d", "c", "a"]);
+  });
+  it("can't be sorted in place by a caller", async () => {
+    const { photosOf } = await import("./derived");
+    const ph = photosOf([{ id: "p", interestId: "t1", createdAt: 1 }, { id: "q", interestId: "t1", createdAt: 2 }], "t1");
+    expect(() => ph.sort((a, b) => a.createdAt - b.createdAt)).toThrow();
+  });
+});

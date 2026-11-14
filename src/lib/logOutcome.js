@@ -26,7 +26,13 @@ export function logOutcome(interest, entries, photos, { entry = null, photo = nu
 
 // The duration to offer first for a hobby: whatever was logged for it most
 // recently, since most sessions of one hobby run about the same length.
+/**
+ * @param {import("./types").Entry[]} entries
+ * @param {string} interestId
+ * @param {number} [fallback]
+ */
 export function usualMinutes(entries, interestId, fallback = 30) {
+  /** @type {import("./types").Entry | null} */
   let latest = null;
   entries.forEach((e) => {
     if (e.interestId !== interestId || !(e.minutes > 0)) return;

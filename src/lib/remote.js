@@ -4,17 +4,9 @@ import { canonicalRecoveryCode } from "./recoveryCode";
 import { TERMS_VERSION, PRIVACY_VERSION } from "./policyVersions";
 import { usernameToEmail, isDerivedEmail } from "./syntheticEmail";
 
-// users.avatar is '' until the first sync, and JSON.parse('') throws —
-// null here means "nothing remote yet" (render the default look), not
-// "reset to defaults" as a stored value.
-export function parseAvatar(raw) {
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
+import { parseAvatar } from "./parseAvatar";
+
+export { parseAvatar };
 
 // DEBUG ONLY: mirrors the flag in AuthContext.jsx. When set, searchUsers and
 // pullPublicProfile serve one fixture "friend" instead of hitting Supabase,
@@ -848,7 +840,9 @@ export async function pullFeed(userId, limit = 40) {
     if (error.code !== "42703") console.error("Sync (feed) failed:", error);
     return [];
   }
-  return (data || [])
+  /** @type {any[]} — a many-to-one embed arrives as one object, not the array supabase-js infers */
+  const rows = data || [];
+  return rows
     .filter((r) => r.interests && r.interests.users)
     .filter((r) => r.interests.user_id !== userId)
     .filter((r) => !blocked.has(r.interests.user_id))
@@ -1180,7 +1174,9 @@ export async function pullWatchedInterests(userId) {
   // carried by the position of each id in `ids`, not by anything on the
   // interests row itself.
   const order = new Map(ids.map((id, i) => [id, i]));
-  return (data || [])
+  /** @type {any[]} — `users` is one object per row (many-to-one), not an array */
+  const watched = data || [];
+  return watched
     .filter((i) => i.users)
     .filter((i) => !blocked.has(i.user_id))
     .sort((a, b) => order.get(a.id) - order.get(b.id))

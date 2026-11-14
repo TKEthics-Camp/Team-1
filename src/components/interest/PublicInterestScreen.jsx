@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useBack } from "../../lib/useBack";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useAuth } from "../../store/AuthContext";
@@ -53,6 +54,7 @@ export default function PublicInterestScreen() {
   const { userId, interestId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const historyBack = useBack("/explore");
   const { t, nameOf, nOf } = useI18n();
   const { interests: myInterests, profile } = useStore();
   const { user } = useAuth();
@@ -111,7 +113,7 @@ export default function PublicInterestScreen() {
     if (reopen) {
       navigate((location.state && location.state.from) || "/explore", { state: { openUserProfile: reopen } });
     } else {
-      navigate(-1);
+      historyBack();
     }
   }
 

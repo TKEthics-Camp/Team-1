@@ -55,6 +55,7 @@ Copy `.env.local.example` to `.env.local` and fill in your own [Supabase](https:
 npm run dev        # start the dev server
 npm run build       # production build, output in dist/
 npm run preview     # serve the production build locally
+npm run check       # lint, type check, tests and build — what CI runs
 ```
 
 Deploying to Vercel or Netlify both work out of the box — `vercel.json` and `netlify.toml` (plus `public/_redirects` for any other static host) are already set up to rewrite every path back to `index.html`, so refreshing `/interest/xyz` doesn't 404.

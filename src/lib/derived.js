@@ -1,13 +1,40 @@
 import { dateKey, today } from "./dates";
 
+// One tree's photos or entries, sorted. Screens and the tree helpers ask
+// for these many times per render — once per tree, and again inside sorts —
+// and filtering every log each time made Home slow for a long-time student.
+// So each list is grouped by tree once, the first time it's asked about, and
+// kept for as long as that list is (state is replaced on every change, never
+// edited in place, so a new list is a new grouping). Results are shared: in
+// development they're frozen, so anything that sorts one in place fails in
+// tests instead of quietly corrupting every later answer.
+const EMPTY = Object.freeze([]);
+const photoGroups = new WeakMap();
+const entryGroups = new WeakMap();
+
+function groupedBy(cache, list, compare) {
+  let groups = cache.get(list);
+  if (!groups) {
+    groups = new Map();
+    for (const r of list) {
+      const g = groups.get(r.interestId);
+      if (g) g.push(r); else groups.set(r.interestId, [r]);
+    }
+    for (const g of groups.values()) {
+      g.sort(compare);
+      if (import.meta.env.DEV) Object.freeze(g);
+    }
+    cache.set(list, groups);
+  }
+  return groups;
+}
+
 export function photosOf(photos, id) {
-  return photos.filter((p) => p.interestId === id).sort(byNewest);
+  return groupedBy(photoGroups, photos, byNewest).get(id) || EMPTY;
 }
 
 export function entriesOf(entries, id) {
-  return entries
-    .filter((e) => e.interestId === id)
-    .sort(byEntryDate);
+  return groupedBy(entryGroups, entries, byEntryDate).get(id) || EMPTY;
 }
 
 export function byNewest(a, b) { return b.createdAt - a.createdAt; }

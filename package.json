@@ -9,7 +9,10 @@
     "preview": "vite preview",
     "test": "TZ=Asia/Singapore vitest run",
     "test:watch": "TZ=Asia/Singapore vitest",
-    "design": "vite --config vite.preview.config.js --port 5181"
+    "design": "vite --config vite.preview.config.js --port 5181",
+    "lint": "eslint .",
+    "typecheck": "tsc -p jsconfig.json",
+    "check": "npm run lint && npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
     "@capacitor/core": "^8.5.2",
@@ -26,7 +29,17 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^8.5.2",
+    "@eslint/js": "^9.39.5",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
     "@vitejs/plugin-react": "^5.2.0",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "fake-indexeddb": "^6.2.8",
+    "globals": "^15.15.0",
+    "jsdom": "^25.0.1",
+    "typescript": "^5.9.3",
     "vite": "^7.3.6",
     "vitest": "^5.0.0"
   },

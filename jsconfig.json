@@ -1,0 +1,25 @@
+{
+  // Type checks the app's logic — sync, storage, streaks, trees, insights —
+  // from the JSDoc types written beside it (see src/lib/types.js). Screens
+  // aren't included: their mistakes show on screen, these don't.
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["vite/client"],
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    // Libraries without type definitions (React ships none) are taken on
+    // trust rather than checked line by line.
+    "maxNodeModuleJsDepth": 0
+  },
+  "include": ["src/lib/**/*.js", "src/db/**/*.js", "src/store/**/*.js"],
+  "exclude": ["src/**/*.test.js"]
+}

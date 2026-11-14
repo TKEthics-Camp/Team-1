@@ -33,7 +33,6 @@ function ReportedMedia({ kind, path }) {
     </div>
   );
 }
-import { useI18n } from "../../i18n/I18nContext";
 import { moderationQueue, moderateHide, moderateResolve, downloadPhotoBlob, downloadAudioBlob } from "../../lib/remote";
 import TopBar from "../shared/TopBar";
 import LangToggle from "../shared/LangToggle";
@@ -51,7 +50,6 @@ import LangToggle from "../shared/LangToggle";
 // pretending otherwise by translating it would suggest it is part of the
 // product.
 export default function ModerationScreen() {
-  const { t } = useI18n();
   const [rows, setRows] = useState(null);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(null);

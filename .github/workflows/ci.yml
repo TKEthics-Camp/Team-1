@@ -1,0 +1,46 @@
+name: Checks
+
+# Every pull request, and every push to a shared branch, has to lint, type
+# check, pass the tests and build before anyone relies on it. Deploying is
+# a separate workflow (deploy-pages.yml); this one never touches the site.
+on:
+  pull_request:
+  push:
+    branches: [main, develop, "feature/**"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test
+
+      # The real keys aren't needed to prove it builds, and a pull request
+      # from a fork can't read secrets anyway.
+      - name: Build
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: https://example.invalid
+          VITE_SUPABASE_ANON_KEY: ci-placeholder

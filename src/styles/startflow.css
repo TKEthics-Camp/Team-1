@@ -59,38 +59,29 @@
 .sf-back:active { opacity: .5; }
 
 /* the shared language toggle, restyled to sit quietly in this flow */
-.sf .lang {
-  background: var(--sf-fill); border: none; border-radius: 999px;
-  color: var(--sf-muted); font-family: inherit; font-size: 13px; font-weight: 600;
-  padding: 6px 13px;
+.sf .lang { border-radius: 999px; font-family: inherit; font-size: 13px; font-weight: 600;
 }
 
 /* ---------- shared page furniture ---------- */
 
 /* mascot + title, the header on every step after Welcome */
 .sf-head {
-  display: flex; align-items: center; gap: 12px;
-  padding: 6px 0 26px;
+  display: flex; align-items: center;
 }
 .sf-mascot { width: 54px; height: 55px; flex: none; }
 .sf-head h2 {
-  flex: 1; margin: 0;
-  font-size: 24px; font-weight: 600; line-height: 1.18;
-  letter-spacing: -.022em; text-align: center; text-wrap: balance;
+  flex: 1; margin: 0; text-wrap: balance;
 }
 
 .sf-grow { flex: 1; min-height: 20px; }
 .sf-foot { padding-top: 20px; }
 .sf-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; }
-
-.sf-muted { margin: 0; color: var(--sf-muted); font-size: 14.5px; }
-.sf-note { margin: 0 0 14px; text-align: center; font-size: 14.5px; }
-.sf-err { margin: 10px 0 0; color: #ff3b30; font-size: 13.5px; font-weight: 500; }
+.sf-err { margin: 10px 0 0; font-size: 13.5px; font-weight: 500; }
 
 /* ---------- buttons ---------- */
 
 .sf-btn {
-  width: 100%; border: none; border-radius: 999px;
+  width: 100%; border: none;
   background: var(--sf-blue); color: var(--accent-ink);
   font-family: inherit; font-size: 17px; font-weight: 600;
   letter-spacing: -.01em; padding: 15px 20px;
@@ -100,27 +91,23 @@
 .sf-btn[disabled] { opacity: .35; cursor: not-allowed; transform: none; }
 
 .sf-linkbtn {
-  width: 100%; background: none; border: none; padding: 14px 0 0;
-  color: var(--sf-blue); font-family: inherit; font-size: 15px; font-weight: 500;
+  width: 100%; background: none; border: none; padding: 14px 0 0; font-family: inherit; font-size: 15px;
 }
 
 /* ---------- pill choices (account type, gender, look) ---------- */
 
 .sf-options { display: flex; flex-direction: column; gap: 12px; }
 .sf-pill {
-  width: 100%; border: none; border-radius: 10px;
-  background: var(--sf-fill); color: var(--sf-ink);
-  font-family: inherit; font-size: 16px; font-weight: 600;
-  letter-spacing: -.01em; padding: 11px 16px; text-align: center;
+  width: 100%;
+  font-family: inherit; font-weight: 600;
+  letter-spacing: -.01em; text-align: center;
   transition: background .15s ease, color .15s ease, transform .12s ease;
 }
 .sf-pill:active { transform: scale(.985); }
-.sf-pill[aria-pressed="true"] { background: var(--sf-blue); color: var(--accent-ink); }
 
 /* the look picker adds a leading glyph and a little more height */
 .sf-pill.sf-look {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  border-radius: 12px; padding: 14px 16px;
+  display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 16px;
 }
 .sf-look-ico { display: inline-flex; line-height: 1; }
 
@@ -200,14 +187,9 @@
 /* double-scoped on purpose: controls.css targets input[type="text"], whose
    attribute selector out-specifies a bare .sf-field class */
 .sf .sf-field {
-  width: 100%; font: inherit; font-size: 16px;
-  background: var(--card); color: var(--sf-ink);
-  border: 1px solid var(--sf-line); border-radius: 8px;
-  padding: 9px 12px;
+  width: 100%; font: inherit; font-size: 16px; color: var(--sf-ink);
 }
-.sf .sf-field::placeholder { color: #b4b4b8; }
 .sf .sf-field:focus {
-  outline: none; border-color: var(--sf-blue);
   box-shadow: 0 0 0 3px rgba(0, 136, 255, .15);
 }
 .sf-stack { display: flex; flex-direction: column; gap: 18px; }
@@ -234,12 +216,9 @@
 .sf-days { display: flex; gap: 5px; }
 .sf-day {
   flex: 1; min-width: 0; padding: 7px 0;
-  border: none; border-radius: 8px;
-  background: var(--sf-fill); color: var(--sf-ink);
   font-family: inherit; font-size: 13px; font-weight: 600;
   transition: background .15s ease, color .15s ease;
 }
-.sf-day[aria-pressed="true"] { background: var(--sf-blue); color: var(--accent-ink); }
 
 /* ---------- welcome / intro ---------- */
 
@@ -248,18 +227,14 @@
   align-items: center; justify-content: center; text-align: center;
 }
 .sf-wordmark {
-  margin: 0; font-size: 54px; font-weight: 600;
-  letter-spacing: -.035em; line-height: 1;
+  margin: 0; font-size: 54px; line-height: 1;
 }
 .sf-hero { width: 132px; height: 134px; margin-top: 30px; }
 .sf-tagline {
   margin: 32px 0 0; max-width: 22ch;
-  font-size: 16px; line-height: 1.35;
 }
 .sf-title-c {
-  margin: 0; max-width: 18ch;
-  font-size: 24px; font-weight: 600; line-height: 1.18;
-  letter-spacing: -.022em; text-wrap: balance;
+  margin: 0; max-width: 18ch; text-wrap: balance;
 }
 
 /* ---------- notifications ask ---------- */

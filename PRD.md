@@ -510,11 +510,18 @@ Sheets are not routed. A tapped iPhone reminder opens the screen it points to (a
 
 A root error boundary wraps the providers, and a per-route boundary means one crashed screen does not take the tab bar with it. Errors go to the console only (§14.10).
 
-### 10.6 Tests
+### 10.6 Tests and checks
 
-- **Vitest**, 177 tests across 16 files, run with `TZ=Asia/Singapore`. Covers streaks and rest days, growth and health, dates, the derived address, recovery codes, the text filter, guardian links, data export, the saved sync list and the list of records the server has confirmed, the iPhone reminder schedule, which copy of an edit wins, Explore's suggestions, the week strip and Insights, what a log changed, and the session timer.
+`npm run check` runs everything below except the privacy checks, and so does GitHub Actions on every pull request and every push to `main`, `develop` and `feature/*` (`.github/workflows/ci.yml`).
+
+- **Vitest**, 233 tests across 22 files, run with `TZ=Asia/Singapore`.
+  - **Logic:** streaks and rest days, growth and health, dates, the derived address, recovery codes, the text filter, guardian links, data export, the saved sync list and the list of records the server has confirmed, the iPhone reminder schedule, which copy of an edit wins, Explore's suggestions, the week strip and Insights, what a log changed, and the session timer.
+  - **Sign-in sync** (`lib/reconcile`, `lib/trash`, `store/syncEngine`): onboarded or not, rebuilding a wiped device's profile, which settings come down and which go up, Recently Deleted, and retrying failed pushes.
+  - **The store end to end** (`store/StoreContext.test.jsx`): the real store on an in-memory IndexedDB against a fake server. It covers planting surviving a restart, delete and restore with a tree's logs, a returning account on a wiped device, an unreachable server not starting onboarding, offline work uploading, a newer edit coming down, an erase on another device reaching this one, and a failed push being retried.
+  - **Screens:** Home, Journal, Explore, Profile, the Market and a tree each render in English and Chinese with no React warnings. The back arrow falls back to a sensible screen when it was opened directly.
+- **ESLint** (`eslint.config.js`): React and hooks rules, zero warnings.
+- **Type checking** (`jsconfig.json`): `tsc` checks `src/lib`, `src/db` and `src/store` from their JSDoc, with shared shapes in `src/lib/types.js`.
 - **Privacy checks** (`supabase/tests/privacy_checks.sql`): run in the SQL editor, it signs in as pretend accounts and tries 14 things the database must refuse, then undoes everything it created. See `supabase/README.md`.
-- Nothing tests sync end-to-end or any component.
 
 ### 10.7 Deployment
 

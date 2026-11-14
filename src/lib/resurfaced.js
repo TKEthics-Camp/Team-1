@@ -5,7 +5,8 @@ import { entriesOf } from "./derived";
 // if one has gone untouched for 4+ days, otherwise a pinned/recent photo or
 // journal entry (day-rotated so it doesn't repeat within the same day).
 export function getResurfacedMemory(interests, photos, entries) {
-  const byId = (id) => interests.find((x) => x.id === id);
+  const treeById = new Map(interests.map((x) => [x.id, x]));
+  const byId = (id) => treeById.get(id);
   const pool = [];
   photos.forEach((p) => {
     const it = byId(p.interestId); if (!it) return;
