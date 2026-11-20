@@ -19,12 +19,12 @@ import Icon from "../shared/Icon";
 export default function RecoveryCodeSheet() {
   const { t } = useI18n();
   const { closeSheet } = useUI();
-  const [existing, setExisting] = useState(null); // null = still checking
-  const [code, setCode] = useState(null);
+  const [existing, setExisting] = useState(/** @type {boolean | null} */ (null)); // null = still checking
+  const [code, setCode] = useState(/** @type {string | null} */ (null));
   const [password, setPassword] = useState("");
   const [wrongPw, setWrongPw] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [failed, setFailed] = useState(null);
+  const [failed, setFailed] = useState(/** @type {string | null} */ (null));
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export default function RecoveryCodeSheet() {
       // the server's own wording — retrying reproduces those forever
       // without ever saying what is wrong.
       if (result.reason === "wrong") { setWrongPw(true); return; }
-      setFailed(result.message);
+      setFailed(result.message || null);
       return;
     }
     setPassword("");

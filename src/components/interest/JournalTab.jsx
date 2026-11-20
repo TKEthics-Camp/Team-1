@@ -36,7 +36,15 @@ function weekdayOf(dateKey, lang) {
 //
 // `interests` is passed by the Journal tab, where entries from every hobby
 // share one list: each row then leads with its hobby's icon and name.
-export default function JournalTab({ entries, readOnly, authorId = null, onEntryReported = null, interests = null }) {
+/**
+ * @param {object} props
+ * @param {import("../../lib/types").Entry[]} props.entries
+ * @param {boolean} [props.readOnly]
+ * @param {string | null} [props.authorId]
+ * @param {((entryId: string) => void) | null} [props.onEntryReported]
+ * @param {import("../../lib/types").Interest[] | null} [props.interests]
+ */
+export default function JournalTab({ entries, readOnly = false, authorId = null, onEntryReported = null, interests = null }) {
   const { t, lang, nameOf } = useI18n();
   const { cacheEntryAudio } = useStore();
   const { openSheet } = useUI();

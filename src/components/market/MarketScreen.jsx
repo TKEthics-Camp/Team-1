@@ -53,7 +53,7 @@ export default function MarketScreen() {
                     <button
                       className="btn2"
                       disabled={coins < deco.price}
-                      onClick={() => { if (buyDecoration(deco.id)) { coinSound(profile); showToast(t("coinsSpent").replace("{n}", deco.price)); } }}
+                      onClick={() => { if (buyDecoration(deco.id)) { coinSound(profile); showToast(t("coinsSpent").replace("{n}", String(deco.price))); } }}
                     >
                       <Icon name="coin" size={14} />{deco.price}
                     </button>

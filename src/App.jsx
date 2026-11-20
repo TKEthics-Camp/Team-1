@@ -47,9 +47,9 @@ import LogCelebration from "./components/shared/LogCelebration";
 export default function App() {
   const { loading, profile, profileCheck, interests, entries, photos, clearAllData } = useStore();
   const { session, loading: authLoading, user } = useAuth();
-  const [consent, setConsent] = useState(undefined); // undefined = not asked yet
+  const [consent, setConsent] = useState(/** @type {{ state: string } | null | undefined} */ (undefined)); // undefined = not asked yet
   const { lang, setLang, nameOf, t } = useI18n();
-  const appliedLang = useRef(null);
+  const appliedLang = useRef(/** @type {string | null} */ (null));
   const lastUserId = useRef(null);
   const resolvedTheme = useResolvedTheme((profile && profile.theme) || DEFAULT_THEME);
 
@@ -274,6 +274,9 @@ function RoutedShell() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
+  // App only mounts this once there is a profile; this is for the checker,
+  // and for the moment a sign-out clears it before App catches up.
+  if (!profile) return null;
   const hideNav = location.pathname.startsWith("/user/");
 
   return (

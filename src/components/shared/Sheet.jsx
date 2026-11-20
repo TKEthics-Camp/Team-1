@@ -14,20 +14,21 @@ const FLICK_SPEED = 0.6; // px per ms
 // else on a phone. Only the strip at the top takes the drag, so it never
 // fights the sheet's own scrolling or a field inside it.
 export default function Sheet({ onClose, children, className = "" }) {
-  const sheet = useRef(null);
-  const drag = useRef(null);
+  const sheet = useRef(/** @type {HTMLDivElement | null} */ (null));
+  const drag = useRef(/** @type {{ from: number, at: number, dy: number } | null} */ (null));
 
   function onDown(e) {
     drag.current = { from: e.clientY, at: performance.now(), dy: 0 };
     // Capture keeps the drag alive when the finger leaves the strip. Without
     // it the drag still works for as long as the finger stays on it.
     try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* not supported */ }
-    sheet.current.style.transition = "none";
+    if (sheet.current) sheet.current.style.transition = "none";
   }
   function onMove(e) {
-    if (!drag.current) return;
-    drag.current.dy = Math.max(0, e.clientY - drag.current.from);
-    sheet.current.style.transform = `translateY(${drag.current.dy}px)`;
+    const d = drag.current;
+    if (!d || !sheet.current) return;
+    d.dy = Math.max(0, e.clientY - d.from);
+    sheet.current.style.transform = `translateY(${d.dy}px)`;
   }
   function onUp() {
     const d = drag.current;

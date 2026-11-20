@@ -21,7 +21,7 @@ export default function WatchingSheet() {
   const { closeSheet } = useUI();
   const navigate = useNavigate();
   const location = useLocation();
-  const [state, setState] = useState({ loading: true, items: [] });
+  const [state, setState] = useState(/** @type {{ loading: boolean, items: any[] }} */ ({ loading: true, items: [] }));
 
   useEffect(() => {
     if (!user) { setState({ loading: false, items: [] }); return; }

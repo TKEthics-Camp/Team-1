@@ -16,7 +16,7 @@ export default function InterestCover({ interest, firstPhoto }) {
 
   return (
     <div className="cover" style={{ "--c": interest.color }}>
-      <img src={url} alt={t("coverAlt")} />
+      <img src={url || undefined} alt={t("coverAlt")} />
       <div className="veil" />
       <div className="cap">
         <div className="t">{nameOf(interest)}</div>

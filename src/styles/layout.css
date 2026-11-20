@@ -30,6 +30,10 @@
   /* Fixed device-shaped frame — content scrolls inside .view, the frame itself never grows. */
   height: min(720px, calc(100vh - 64px));
   position: relative;
+  /* the device frame itself */
+  border: 1px solid var(--lg-edge);
+  box-shadow: var(--lg-shadow-lg), 0 0 0 1px var(--lg-stroke) inset;
+  background: var(--app-bg);
 }
 
 /* marshmallow clouds: pure decoration, drifting behind everything */
@@ -48,6 +52,7 @@
 }
 .topbar h1 {
   margin: 0; flex: 1; text-wrap: balance;
+  font-family: var(--display);
 }
 
 .view {
@@ -58,9 +63,14 @@
 
 .nav {
   display: flex;
+  --home-fill: var(--card-2);
+  --home-line: var(--line);
+  --home-blue: var(--accent);
+  --home-card: var(--card);
+  --home-surface: var(--app-bg);
 }
 .nav button {
-  flex: 1; border: none; cursor: pointer;
+  flex: 1; border: none;
 }
 
 .undo-toast {
@@ -135,6 +145,9 @@
 
 .nudge { border-left: 2px solid var(--gold);
   display: flex; gap: 12px;
+  /* With several hobbies, "Later" sits quietly in the card's top corner
+     rather than wrapping onto a line of its own under the pills. */
+  position: relative;
 }
 .nudge .body { flex: 1; }
 .nudge .head { font-family: var(--display); }
@@ -165,5 +178,8 @@
    carry it. */
 .tab-content { display: flex; flex-direction: column; gap: 16px; margin: 0 -18px; padding: 0 18px; }
 
-.sub { line-height: 1.55; }
+.sub {
+  line-height: 1.55;
+  color: var(--muted);
+}
 .center { text-align: center; }

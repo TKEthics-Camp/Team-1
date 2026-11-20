@@ -17,6 +17,11 @@ const SPECIES_ICON = {
   maple: "🍁", cherry: "🌸", cypress: "🌵", palm: "🌴", bamboo: "🎋",
 };
 
+/**
+ * @param {object} props
+ * @param {string} [props.interestId]
+ * @param {{ name: string, nameZh?: string, color?: string } | null} [props.preset]
+ */
 export default function OrbSheet({ interestId, preset = null }) {
   const { t, lang } = useI18n();
   const { interests, addInterest, updateInterest, deleteInterest } = useStore();
@@ -26,14 +31,14 @@ export default function OrbSheet({ interestId, preset = null }) {
   const editing = interestId ? interests.find((x) => x.id === interestId) : null;
 
   const [name, setName] = useState(
-    editing ? editing.name : preset ? (lang === "en" ? preset.name : preset.nameZh) : ""
+    (editing ? editing.name : preset ? (lang === "en" ? preset.name : preset.nameZh) : "") || ""
   );
   const [why, setWhy] = useState(editing ? editing.why || "" : "");
   // Colour is assigned automatically (it only tints the tree's blossoms) — we
   // no longer ask the user for it. Existing trees keep whatever they had.
   const color = editing ? editing.color : preset ? preset.color : PALETTE[interests.length % PALETTE.length];
   const [days, setDays] = useState(editing ? editing.days || [] : []);
-  const nameRef = useRef(null);
+  const nameRef = useRef(/** @type {HTMLInputElement | null} */ (null));
   const previewId = useMemo(() => (editing ? editing.id : uid()), [editing]);
   const [species, setSpecies] = useState(editing ? editing.species || speciesOf(editing) : speciesOf({ id: previewId }));
   const [leafColor, setLeafColor] = useState(editing ? editing.leafColor || leafColorOf(editing) : leafColorOf({ id: previewId }));
@@ -57,6 +62,7 @@ export default function OrbSheet({ interestId, preset = null }) {
   }
 
   function remove() {
+    if (!editing) return;
     const { restore, commit } = deleteInterest(editing.id);
     closeSheet();
     navigate("/");

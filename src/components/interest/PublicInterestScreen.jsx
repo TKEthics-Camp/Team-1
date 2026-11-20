@@ -27,7 +27,7 @@ function PublicPhotoViewer({ photo, authorId, onClose }) {
   const url = usePhotoURL(photo);
   return (
     <div className="viewer">
-      <img src={url} alt={photo.caption || ""} />
+      <img src={url || undefined} alt={photo.caption || ""} />
       {photo.caption && <div className="cap">{photo.caption}</div>}
       {/* A photo is the likeliest thing in the app to need reporting, and
           this is the only screen where one is looked at properly — so the
@@ -59,11 +59,11 @@ export default function PublicInterestScreen() {
   const { interests: myInterests, profile } = useStore();
   const { user } = useAuth();
   const { openSheet, showToast } = useUI();
-  const [state, setState] = useState({ loading: true, interests: [], entries: [], photos: [] });
+  const [state, setState] = useState(/** @type {{ loading: boolean, interests: any[], entries: any[], photos: any[] }} */ ({ loading: true, interests: [], entries: [], photos: [] }));
   const [tab, setTab] = useState("album");
-  const [openPhotoId, setOpenPhotoId] = useState(null);
+  const [openPhotoId, setOpenPhotoId] = useState(/** @type {string | null} */ (null));
   const [watched, setWatched] = useState(false);
-  const [hiddenEntries, setHiddenEntries] = useState([]);
+  const [hiddenEntries, setHiddenEntries] = useState(/** @type {string[]} */ ([]));
 
   useEffect(() => {
     let cancelled = false;
@@ -157,7 +157,7 @@ export default function PublicInterestScreen() {
       <div className="view">
         <div className="planted-label center-label">
           <Icon name="sprout" size={14} />
-          {planted === 0 ? t("plantedToday") : t("plantedDays").replace("{n}", planted)}
+          {planted === 0 ? t("plantedToday") : t("plantedDays").replace("{n}", String(planted))}
         </div>
 
         <div className="tree-status">

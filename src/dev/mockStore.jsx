@@ -51,7 +51,7 @@ const profile = {
 // in-memory copy, so logging, planting and deleting can be tried end to end.
 // Nothing is saved — a reload is back to the sample garden. Anything not
 // listed here stays a harmless no-op.
-let state = { profile, interests, entries, photos: [] };
+let state = { profile, interests, entries, photos: /** @type {any[]} */ ([]) };
 const listeners = new Set();
 function set(patch) {
   state = { ...state, ...patch };
@@ -101,4 +101,8 @@ export function useStore() {
     { loading: false, ...s, pendingSyncCount: 0 },
     { get: (o, k) => (k in o ? o[k] : actions[k]) },
   );
+}
+
+export function useProfile() {
+  return useStore().profile;
 }

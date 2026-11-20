@@ -78,6 +78,7 @@
   position: absolute; right: -2px; bottom: -2px; z-index: 6;
   width: 26px; height: 26px; border-radius: 50%; font-size: 13px;
   box-shadow: 0 0 0 2px var(--shelf, #fff);
+  background: var(--accent);
 }
 
 .draft {
@@ -114,10 +115,12 @@
 .tree-add .plus { font-family: var(--display); font-size: 36px; color: var(--muted); line-height: 1; }
 .tree-add .tree-name { color: var(--muted); }
 
-
 /* the tree's status on its own page */
 .tree-status {
   display: flex; gap: 14px; align-items: center; border-radius: 18px; padding: 12px 14px;
+  background: var(--lg-fill);
+  border: 1px solid var(--lg-edge);
+  box-shadow: var(--lg-shadow), 0 1px 0 var(--lg-hi) inset;
 }
 .tree-status .info { flex: 1; min-width: 0; }
 .tree-status .st-stage { font-family: var(--display); font-weight: 700; font-size: 15px; color: var(--ink); }

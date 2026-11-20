@@ -7,7 +7,7 @@ function PhotoThumb({ photo, onOpen, altFallback, cachePhotoBlob }) {
   const url = usePhotoURL(photo, cachePhotoBlob && ((blob) => cachePhotoBlob(photo.id, blob)));
   return (
     <button aria-label={photo.caption || altFallback} onClick={() => onOpen(photo.id)}>
-      <img src={url} alt={photo.caption || ""} />
+      <img src={url || undefined} alt={photo.caption || ""} />
     </button>
   );
 }

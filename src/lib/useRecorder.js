@@ -25,11 +25,11 @@ export const canRecord = () =>
 export function useRecorder() {
   const [state, setState] = useState("idle"); // idle | recording | denied | unsupported
   const [ms, setMs] = useState(0);
-  const recRef = useRef(null);
-  const streamRef = useRef(null);
-  const chunksRef = useRef([]);
-  const tickRef = useRef(null);
-  const resolveRef = useRef(null);
+  const recRef = useRef(/** @type {MediaRecorder | null} */ (null));
+  const streamRef = useRef(/** @type {MediaStream | null} */ (null));
+  const chunksRef = useRef(/** @type {Blob[]} */ ([]));
+  const tickRef = useRef(/** @type {ReturnType<typeof setInterval> | undefined} */ (undefined));
+  const resolveRef = useRef(/** @type {((blob: Blob | null) => void) | null} */ (null));
   // Set while the microphone is being asked for. The permission prompt (or
   // just the hardware) can take a moment, and a second tap in that moment
   // used to open a second stream, orphaning the first: the recording dot
@@ -88,7 +88,7 @@ export function useRecorder() {
       // NotAllowedError is a refused permission; anything else (no mic at
       // all, hardware in use) is reported the same way — the user's next
       // move is identical either way.
-      setState(err && err.name === "NotAllowedError" ? "denied" : "unsupported");
+      setState(err instanceof Error && err.name === "NotAllowedError" ? "denied" : "unsupported");
       return false;
     }
   }, [release]);

@@ -8,58 +8,14 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act, waitFor, cleanup } from "@testing-library/react";
 import { afterEach } from "vitest";
 
-const h = vi.hoisted(() => {
-  const server = {
-    userRow: null,
-    rows: { interests: [], entries: [], photos: [] },
-    fail: false,
-    reset() {
-      this.userRow = null;
-      this.rows = { interests: [], entries: [], photos: [] };
-      this.fail = false;
-    },
-    upsert(store, rec) {
-      if (this.fail) return false;
-      const list = this.rows[store];
-      const i = list.findIndex((r) => r.id === rec.id);
-      if (i >= 0) list[i] = { ...rec }; else list.push({ ...rec });
-      return true;
-    },
-  };
-  const auth = { user: null };
-  return { server, auth };
-});
+const h = vi.hoisted(() => ({ auth: { user: null }, server: null }));
 
 vi.mock("./AuthContext", () => ({ useAuth: () => ({ user: h.auth.user }) }));
-vi.mock("../lib/remote", async () => {
-  const { parseAvatar } = await import("../lib/parseAvatar");
-  const s = h.server;
-  const ok = () => vi.fn(async () => !s.fail);
-  return {
-    parseAvatar,
-    pullUserRow: vi.fn(async () => (s.fail ? null : s.userRow)),
-    pullMine: vi.fn(async () => (s.fail
-      ? { interests: [], entries: [], photos: [], complete: false }
-      : { interests: [...s.rows.interests], entries: [...s.rows.entries], photos: [...s.rows.photos], complete: true })),
-    pushInterest: vi.fn(async (rec) => s.upsert("interests", rec)),
-    pushEntry: vi.fn(async (rec) => s.upsert("entries", { ...rec, audio: undefined })),
-    pushPhotoRow: vi.fn(async (rec) => s.upsert("photos", { ...rec, blob: undefined })),
-    uploadPhotoBlob: vi.fn(async (_u, id) => (s.fail ? null : `u/${id}.jpg`)),
-    uploadAudioBlob: vi.fn(async (_u, id) => (s.fail ? null : `u/${id}.m4a`)),
-    deleteRemoteInterest: ok(), deleteRemoteEntry: ok(), deleteRemotePhoto: ok(), deleteAllMine: ok(),
-    updateDisplayName: vi.fn(async () => ({ ok: true })),
-    syncLoginToUsername: vi.fn(async () => ({ ok: true })),
-    joinClass: vi.fn(async () => "joined"),
-    setMyClassCode: ok(), updateCoins: ok(),
-    updateOwnedDecorations: ok(), updateOwnedHair: ok(), updateOwnedOutfits: ok(),
-    updateDiscovery: ok(), updateSoundOn: ok(), updateLang: ok(), updateTheme: ok(),
-    updateEquippedDecoration: ok(), updateAvatar: ok(),
-    removeVoiceNoteFile: ok(),
-  };
-});
+vi.mock("../lib/remote", async () => (await import("../test/fakeServer")).remoteModule());
 
 const { StoreProvider, useStore } = await import("./StoreContext");
 const { clearAll, getAll, put } = await import("../db/db");
+h.server = (await import("../test/fakeServer")).server;
 
 function mount() {
   return renderHook(() => useStore(), { wrapper: StoreProvider });

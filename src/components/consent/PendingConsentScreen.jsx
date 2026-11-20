@@ -23,7 +23,7 @@ export default function PendingConsentScreen({ withdrawn = false }) {
   const { signOut, user } = useAuth();
   const [deleteArmed, setDeleteArmed] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState(null);
+  const [deleteError, setDeleteError] = useState(/** @type {string | null} */ (null));
 
   async function deleteAccount() {
     if (!deleteArmed) { setDeleteArmed(true); return; }
@@ -33,19 +33,19 @@ export default function PendingConsentScreen({ withdrawn = false }) {
     if (!result.ok) {
       setDeleting(false);
       setDeleteArmed(false);
-      setDeleteError(result.reason === "files" ? t("deleteFilesFailed") : result.message);
+      setDeleteError(result.reason === "files" ? t("deleteFilesFailed") : result.message || null);
       return;
     }
     await signOut();
   }
-  const [status, setStatus] = useState(null);
+  const [status, setStatus] = useState(/** @type {any} */ (null));
   const [contact, setContact] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(/** @type {string | null} */ (null));
   const [sent, setSent] = useState(false);
   const [code, setCode] = useState("");
   const [codeBusy, setCodeBusy] = useState(false);
-  const [codeError, setCodeError] = useState(null);
+  const [codeError, setCodeError] = useState(/** @type {string | null} */ (null));
 
   async function load() {
     const next = await myConsentStatus();
@@ -68,7 +68,7 @@ export default function PendingConsentScreen({ withdrawn = false }) {
     setError(null);
     const result = await startGuardianConsent(contact.trim());
     setBusy(false);
-    if (!result.ok) { setError(result.message); return; }
+    if (!result.ok) { setError(result.message || null); return; }
     setSent(true);
     setContact("");
     load();
@@ -84,7 +84,7 @@ export default function PendingConsentScreen({ withdrawn = false }) {
     const result = await joinClassFromPending(code.trim());
     setCodeBusy(false);
     if (result.status === "invalid") { setCodeError(t("pcCodeWrong")); return; }
-    if (result.status !== "ok") { setCodeError(result.message); return; }
+    if (result.status !== "ok") { setCodeError(result.message || null); return; }
     // App decided to show this screen from consent state it fetched at
     // sign-in. Reloading is the simplest way to have it ask again, and it
     // happens exactly once, at the moment the account is let in.

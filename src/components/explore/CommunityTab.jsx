@@ -12,8 +12,8 @@ import PostCard from "./PostCard";
 export default function CommunityTab() {
   const { t } = useI18n();
   const { user } = useAuth();
-  const [posts, setPosts] = useState(null); // null = still loading
-  const [gone, setGone] = useState([]);     // hidden locally the moment you block/report
+  const [posts, setPosts] = useState(/** @type {any[] | null} */ (null)); // null = still loading
+  const [gone, setGone] = useState(/** @type {string[]} */ ([]));     // hidden locally the moment you block/report
 
   const load = useCallback(() => {
     if (!user) { setPosts([]); return; }

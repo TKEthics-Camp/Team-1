@@ -45,7 +45,7 @@ const STAGE_COSTS = [5, 6, 7, 8]; // cost to go from stage N to N+1
 const STAGE_THRESHOLDS = STAGE_COSTS.reduce((acc, cost) => {
   acc.push((acc[acc.length - 1] || 0) + cost);
   return acc;
-}, []); // [5, 11, 18, 26]
+}, /** @type {number[]} */ ([])); // [5, 11, 18, 26]
 
 export function treeStage(interest, entries, photos) {
   const acts = entriesOf(entries, interest.id).length + photosOf(photos, interest.id).length;

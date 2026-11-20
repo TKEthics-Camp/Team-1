@@ -9,6 +9,31 @@
 // The server's snake_case rows are mapped to these in lib/remote.js.
 
 /**
+ * The signed-in account's own settings and wallet, kept on the device under
+ * the key "profile" (see lib/reconcile rebuildProfile for where each comes
+ * from on the server).
+ * @typedef {object} Profile
+ * @property {"profile"} key
+ * @property {string} name
+ * @property {string} [lang]
+ * @property {string} [color]
+ * @property {string} [theme]
+ * @property {"individual" | "org"} accountType
+ * @property {boolean} [discoverable]
+ * @property {string|null} [classCode]
+ * @property {Record<string, any>} [avatar]
+ * @property {number} coins
+ * @property {string[]} [ownedDecorations]
+ * @property {string|null} [equippedDecoration]
+ * @property {string[]} [ownedHair]
+ * @property {string[]} [ownedOutfits]
+ * @property {string[]} [earnedBadges]
+ * @property {number} [createdAt]
+ * @property {boolean} [soundOn]
+ * @property {string} [userId]       whose profile this is; a cache from another account is wiped
+ */
+
+/**
  * A hobby, drawn as a tree.
  * @typedef {object} Interest
  * @property {string} id

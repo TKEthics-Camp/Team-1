@@ -2,15 +2,22 @@
 button { font: inherit; color: var(--ink); cursor: pointer; border-radius: 12px; border: 1px solid transparent; }
 button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible { outline-offset: 2px; }
 
-.btn { width: 100%;
+.btn {
+  width: 100%;
 }
 .btn[disabled] { cursor: not-allowed; filter: none; }
 
-.btn2 { width: 100%; }
+.btn2 {
+  width: 100%;
+}
 
 .choice {
   display: flex; align-items: flex-start; gap: 13px; text-align: left; width: 100%;
   padding: 16px 15px; cursor: pointer;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  box-shadow: none;
 }
 .choice:hover { background: var(--card-2); }
 .choice[aria-pressed="true"] {
@@ -19,11 +26,16 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visib
 }
 .choice .emoji { font-size: 26px; line-height: 1; flex: none; margin-top: 1px; }
 
-.icon { background: none; border: none; padding: 6px 8px; font-size: 15px; line-height: 1; }
+.icon {
+  background: none; border: none; padding: 6px 8px; font-size: 15px; line-height: 1;
+  color: var(--accent);
+  position: relative;
+}
 .icon:hover { color: var(--ink); }
 
 .lang { padding: 5px 11px; font-size: 11.5px;
   letter-spacing: .04em; cursor: pointer;
+  position: relative;
 }
 .lang:hover { color: var(--ink); border-color: var(--dim); }
 
@@ -36,7 +48,11 @@ input[type="date"], input[type="time"], textarea {
   font: inherit; width: 100%; padding: 11px 12px;
 }
 input::placeholder, textarea::placeholder { color: var(--dim); }
-textarea { resize: vertical; min-height: 92px; }
+textarea {
+  resize: vertical; min-height: 92px;
+  color: var(--ink);
+  font-family: var(--body);
+}
 
 .field { display: flex; flex-direction: column; gap: 7px; }
 .row { display: flex; gap: 10px; align-items: center; }
@@ -52,11 +68,16 @@ textarea { resize: vertical; min-height: 92px; }
 .day-picker { display: flex; gap: 6px; }
 .day-btn {
   flex: 1; aspect-ratio: 1; border-radius: 50%; color: var(--muted); font-family: var(--display); font-weight: 700; font-size: 13px;
+  background: var(--lg-fill);
+  border: 1px solid var(--lg-edge);
+  box-shadow: 0 1px 0 var(--lg-hi) inset;
+  transition: background .18s ease, color .18s ease, border-color .18s ease, transform .12s ease;
 }
 .day-btn:hover { background: var(--card-2); }
 
-
-.stat { flex: 1; }
+.stat {
+  flex: 1;
+}
 .stat .n { font-family: var(--display); font-variant-numeric: tabular-nums; display: block; }
 .stat .k { letter-spacing: 0; }
 
@@ -84,7 +105,7 @@ textarea { resize: vertical; min-height: 92px; }
   display: flex; gap: 10px; align-items: center; width: 100%; padding: 8px 10px;
   margin-bottom: 8px; text-align: left;
 }
-.memory-row img { object-fit: cover; flex: none; }
+.memory-row img { flex: none; }
 .memory-row .body { flex: 1; min-width: 0; }
 .memory-row .text { overflow-wrap: anywhere; }
 
@@ -119,6 +140,10 @@ textarea { resize: vertical; min-height: 92px; }
 .species-btn {
   display: flex; flex-direction: column; align-items: center; gap: 4px; border-radius: 14px; padding: 9px 4px;
   font-size: 11.5px; color: var(--muted); font-family: var(--display); font-weight: 600;
+  background: var(--lg-fill);
+  border: 1px solid var(--lg-edge);
+  box-shadow: 0 1px 0 var(--lg-hi) inset;
+  transition: background .18s ease, color .18s ease, border-color .18s ease, transform .12s ease;
 }
 .species-btn .ico { font-size: 20px; line-height: 1; }
 .species-btn:hover { background: var(--card-2); }
@@ -204,6 +229,13 @@ textarea { resize: vertical; min-height: 92px; }
 .mod-by { font-size: 11.5px; color: var(--dim); margin-top: 8px; }
 .mod-actions { display: flex; gap: 8px; margin-top: 10px; }
 .mod-actions .btn2 { width: auto; flex: 1; padding: 9px 10px; font-size: 13px; }
+.mod-section { font-size: var(--fs-body); font-weight: 700; color: var(--ink); margin: 22px 0 10px; }
+.mod-stack { margin-top: 8px; font-size: 12px; color: var(--muted); }
+.mod-stack pre {
+  margin: 6px 0 0; padding: 10px 11px; background: var(--sel); border-radius: 10px;
+  font-family: var(--mono); font-size: 11px; line-height: 1.45;
+  white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink);
+}
 
 /* ---------- report / block sheet ---------- */
 /* Full-width rows, not a cramped dropdown. Reporting is one of the few

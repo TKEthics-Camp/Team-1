@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
+import { moderationQueue, moderateHide, moderateResolve, downloadPhotoBlob, downloadAudioBlob, crashDigest } from "../../lib/remote";
+import TopBar from "../shared/TopBar";
+import LangToggle from "../shared/LangToggle";
 
 // The reported photo or voice note itself. Storage lets a moderator read a
 // file only while a report on it is open (20261011010000), so this asks for
 // it when the row is drawn and lets go of it when the row goes away.
 function ReportedMedia({ kind, path }) {
-  const [url, setUrl] = useState(null);
+  const [url, setUrl] = useState(/** @type {string | null} */ (null));
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
@@ -33,9 +36,6 @@ function ReportedMedia({ kind, path }) {
     </div>
   );
 }
-import { moderationQueue, moderateHide, moderateResolve, downloadPhotoBlob, downloadAudioBlob } from "../../lib/remote";
-import TopBar from "../shared/TopBar";
-import LangToggle from "../shared/LangToggle";
 
 // The other end of the report button.
 //
@@ -50,13 +50,20 @@ import LangToggle from "../shared/LangToggle";
 // pretending otherwise by translating it would suggest it is part of the
 // product.
 export default function ModerationScreen() {
-  const [rows, setRows] = useState(null);
-  const [error, setError] = useState(null);
-  const [busy, setBusy] = useState(null);
+  const [rows, setRows] = useState(/** @type {any[] | null} */ (null));
+  const [error, setError] = useState(/** @type {string | null} */ (null));
+  const [busy, setBusy] = useState(/** @type {string | null} */ (null));
+  const [crashes, setCrashes] = useState(/** @type {any[] | null} */ (null));
+
+  useEffect(() => {
+    let cancelled = false;
+    crashDigest().then((result) => { if (!cancelled) setCrashes(result.rows); });
+    return () => { cancelled = true; };
+  }, []);
 
   async function load() {
     const result = await moderationQueue();
-    if (!result.ok) { setError(result.message); setRows([]); return; }
+    if (!result.ok) { setError(result.message || null); setRows([]); return; }
     setError(null);
     setRows(result.rows);
   }
@@ -67,7 +74,7 @@ export default function ModerationScreen() {
     setBusy(row.id);
     const result = await moderateHide(row.target_type, row.target_id, hidden);
     setBusy(null);
-    if (!result.ok) { setError(result.message); return; }
+    if (!result.ok) { setError(result.message || null); return; }
     load();
   }
 
@@ -75,7 +82,7 @@ export default function ModerationScreen() {
     setBusy(row.id);
     const result = await moderateResolve(row.id, status);
     setBusy(null);
-    if (!result.ok) { setError(result.message); return; }
+    if (!result.ok) { setError(result.message || null); return; }
     load();
   }
 
@@ -150,7 +157,44 @@ export default function ModerationScreen() {
             ))}
           </>
         )}
+
+        <Crashes rows={crashes} />
       </div>
+    </>
+  );
+}
+
+// What crashed in the last 14 days (lib/crashReport), most recent first.
+// Grouped by the error and the screen, so one bug hitting a whole class is
+// one row with a count, not thirty. Never says who: a crash is fixed from
+// the stack, not by asking the student.
+function Crashes({ rows }) {
+  if (!rows) return null;
+  return (
+    <>
+      <h2 className="mod-section">Crashes · last 14 days</h2>
+      {rows.length === 0 ? (
+        <div className="sub">None. Nothing has crashed for anyone.</div>
+      ) : rows.map((c) => (
+        <div key={c.message + "|" + c.where} className="mod-row">
+          <div className="mod-head">
+            <span className="mod-kind">{c.where || "unknown screen"}</span>
+            <span className="mod-when">{new Date(c.last_at).toLocaleString()}</span>
+          </div>
+          <div className="mod-content">{c.message}</div>
+          <div className="mod-by">
+            {c.times} {c.times === 1 ? "time" : "times"}, {c.accounts} {c.accounts === 1 ? "account" : "accounts"}
+            {c.platforms && c.platforms.length ? " · " + c.platforms.join(", ") : ""}
+            {c.version ? " · " + c.version : ""}
+          </div>
+          {c.stack && (
+            <details className="mod-stack">
+              <summary>Stack</summary>
+              <pre>{c.stack}</pre>
+            </details>
+          )}
+        </div>
+      ))}
     </>
   );
 }

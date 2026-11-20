@@ -21,8 +21,8 @@ export default function RecoverFlow({ onBack, onDone }) {
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [errorKey, setErrorKey] = useState(null);
-  const [serverError, setServerError] = useState(null);
+  const [errorKey, setErrorKey] = useState(/** @type {string | null} */ (null));
+  const [serverError, setServerError] = useState(/** @type {string | null} */ (null));
   const [busy, setBusy] = useState(false);
 
   async function submit(e) {

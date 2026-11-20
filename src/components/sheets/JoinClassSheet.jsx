@@ -15,7 +15,7 @@ export default function JoinClassSheet() {
   const { joinClass } = useStore();
   const { closeSheet } = useUI();
   const [code, setCode] = useState("");
-  const [errorReason, setErrorReason] = useState(null); // null | "invalid" | "error"
+  const [errorReason, setErrorReason] = useState(/** @type {string | null} */ (null)); // null | "invalid" | "error"
   const [checking, setChecking] = useState(false);
 
   async function join() {

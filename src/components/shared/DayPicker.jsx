@@ -3,6 +3,11 @@ import { useI18n } from "../../i18n/I18nContext";
 
 // Toggle which weekdays a hobby's reminder applies to. `days` is an array of
 // Date#getDay() numbers (0=Sun); empty means "every day".
+/**
+ * @param {object} props
+ * @param {number[]} [props.days]
+ * @param {(days: number[]) => void} props.onChange
+ */
 export default function DayPicker({ days = [], onChange }) {
   const { lang } = useI18n();
 

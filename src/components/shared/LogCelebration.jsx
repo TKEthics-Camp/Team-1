@@ -45,7 +45,7 @@ function Moment({ c, onClose }) {
   useEffect(() => {
     // Two frames, so the bar is painted at its old width before it moves.
     let raf = requestAnimationFrame(() => { raf = requestAnimationFrame(() => setFilled(true)); });
-    const grow = c.leveledUp ? setTimeout(() => setGrown(true), GROW_AT_MS) : null;
+    const grow = c.leveledUp ? setTimeout(() => setGrown(true), GROW_AT_MS) : undefined;
     const leave = setTimeout(onClose, c.leveledUp ? GROW_STAY_MS : STAY_MS);
     return () => { cancelAnimationFrame(raf); clearTimeout(grow); clearTimeout(leave); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -70,7 +70,7 @@ function Moment({ c, onClose }) {
     : c.minutes > 0 ? name : t("celPhoto").replace("{name}", name);
   const next = c.after.to === null
     ? t("stgFull")
-    : t("toStage").replace("{n}", c.after.to - c.after.acts).replace("{stage}", t(STAGE_KEY[c.after.stage + 1]));
+    : t("toStage").replace("{n}", String(c.after.to - c.after.acts)).replace("{stage}", t(STAGE_KEY[c.after.stage + 1]));
 
   return (
     <div

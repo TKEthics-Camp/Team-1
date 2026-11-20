@@ -1,12 +1,16 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { STR } from "./strings";
 
-const I18nCtx = createContext(null);
+const I18nCtx = createContext(/** @type {ReturnType<typeof useI18nValue> | null} */ (null));
 
 // "1 entry", not "1 entries". Chinese measure words don't inflect.
 const SINGULARS = { entries: "entry1", photos: "photo1", orbsCount: "orb1", publicCount: "publicCount1", classmates: "classmate1" };
 
 export function I18nProvider({ children }) {
+  return <I18nCtx.Provider value={useI18nValue()}>{children}</I18nCtx.Provider>;
+}
+
+function useI18nValue() {
   const [lang, setLang] = useState("en");
 
   // The page's own language follows the app's, so VoiceOver reads Chinese
@@ -16,6 +20,7 @@ export function I18nProvider({ children }) {
   }, [lang]);
 
   const value = useMemo(() => {
+    /** @param {string} k @returns {string} */
     function t(k) {
       const v = STR[k];
       return v ? v[lang === "en" ? 0 : 1] : k;
@@ -29,8 +34,7 @@ export function I18nProvider({ children }) {
     }
     return { lang, setLang, t, nOf, nameOf };
   }, [lang]);
-
-  return <I18nCtx.Provider value={value}>{children}</I18nCtx.Provider>;
+  return value;
 }
 
 export function useI18n() {

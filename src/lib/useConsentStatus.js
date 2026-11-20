@@ -34,6 +34,20 @@ export function signupGateSettled() {
   return signupGate;
 }
 
+// Why the age gate refused at signup, for AgeRequiredScreen — which App
+// shows next, asking again — to open with. Read once.
+let ageGateError = null;
+
+export function carryAgeGateError(message) {
+  ageGateError = message;
+}
+
+export function takeAgeGateError() {
+  const m = ageGateError;
+  ageGateError = null;
+  return m;
+}
+
 export function useConsentStatus(userId) {
   const [status, setStatus] = useState(cachedFor === userId ? cached : null);
 

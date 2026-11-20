@@ -59,7 +59,12 @@ insert into supabase_migrations.schema_migrations (version, name) values
   ('20261017000000', 'storage_sweeps'),
   ('20261017010000', 'newest_edit_wins'),
   ('20261017020000', 'drop_users_bio'),
-  ('20261018000000', 'moderator_storage_narrow')
+  ('20261018000000', 'moderator_storage_narrow'),
+  ('20261108000000', 'recovery_moves_login_address'),
+  ('20261114000000', 'crash_reports'),
+  ('20261114010000', 'fix_content_filter_fields'),
+  ('20261114020000', 'blocks_hide_both_ways'),
+  ('20261119000000', 'crash_digest')
 on conflict (version) do nothing;
 
 select count(*) as recorded from supabase_migrations.schema_migrations;

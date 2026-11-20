@@ -1074,6 +1074,24 @@ export async function moderateResolve(reportId, status) {
   return { ok: true };
 }
 
+// The last 14 days of crash reports, grouped by what went wrong and where
+// (20261119000000). Never says whose: each group has counts, not accounts.
+export async function crashDigest() {
+  const { data, error } = await supabase.rpc("crash_digest");
+  if (error) {
+    // No migration yet: there's simply nothing to show.
+    if (error.code !== "PGRST202") console.error("Crash digest failed:", error.message);
+    return { ok: false, message: error.message, rows: [] };
+  }
+  return { ok: true, rows: data || [] };
+}
+
+// Crashes in the last week, summed — what the Me tab's Reports row shows a
+// moderator, so a new crash gets noticed without going looking.
+export function recentCrashCount(rows) {
+  return rows.reduce((n, r) => n + (r.this_week || 0), 0);
+}
+
 // What a guardian can do with their link besides agreeing. Both run as
 // anon: the guardian has no session, and the token is the credential.
 export async function withdrawGuardianConsent(token) {
@@ -1179,7 +1197,7 @@ export async function pullWatchedInterests(userId) {
   return watched
     .filter((i) => i.users)
     .filter((i) => !blocked.has(i.user_id))
-    .sort((a, b) => order.get(a.id) - order.get(b.id))
+    .sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0))
     .map((i) => ({
       id: i.id,
       name: i.name,

@@ -366,7 +366,14 @@ export default function Icon({ name, size = 16, className = "" }) {
 
 // A small tinted pill: an icon and a word, in one of four soft colours.
 // The only colour in the interface besides the trees themselves.
-export function Tag({ tone = "grey", icon, children, className = "" }) {
+/**
+ * @param {object} props
+ * @param {string} [props.tone]
+ * @param {string} [props.icon]
+ * @param {import("react").ReactNode} props.children
+ * @param {string} [props.className]
+ */
+export function Tag({ tone = "grey", icon = undefined, children, className = "" }) {
   return (
     <span className={`tag tag-${tone} ${className}`}>
       {icon && <Icon name={icon} size={14} />}

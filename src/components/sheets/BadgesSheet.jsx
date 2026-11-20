@@ -15,7 +15,7 @@ export default function BadgesSheet() {
   return (
     <Sheet onClose={closeSheet}>
       <h2>{t("badges")}</h2>
-      <div className="sub">{t("badgesEarned").replace("{n}", earned).replace("{total}", badges.length)}</div>
+      <div className="sub">{t("badgesEarned").replace("{n}", String(earned)).replace("{total}", String(badges.length))}</div>
 
       <div className="badge-grid">
         {badges.map((b) => (

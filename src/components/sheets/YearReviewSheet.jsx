@@ -16,7 +16,7 @@ export default function YearReviewSheet() {
   const { t, nameOf } = useI18n();
   const { interests, photos, entries } = useStore();
   const { closeSheet } = useUI();
-  const [data, setData] = useState(null);
+  const [data, setData] = useState(/** @type {any} */ (null));
   const [i, setI] = useState(0);
 
   function cardsFor(d) {

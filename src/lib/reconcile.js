@@ -32,6 +32,7 @@ export function isOnboarded(userRow, remote) {
 // pulled, or useBadgeWatcher would see an empty garden first and then
 // re-announce every badge once the records arrive. Trashed rows don't count,
 // the same as in the live badge count they'll be compared against.
+/** @returns {import("./types").Profile} */
 export function rebuildProfile(userRow, remote, userId) {
   return {
     key: "profile",

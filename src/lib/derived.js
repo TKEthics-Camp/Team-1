@@ -8,7 +8,7 @@ import { dateKey, today } from "./dates";
 // edited in place, so a new list is a new grouping). Results are shared: in
 // development they're frozen, so anything that sorts one in place fails in
 // tests instead of quietly corrupting every later answer.
-const EMPTY = Object.freeze([]);
+const EMPTY = /** @type {any[]} */ (/** @type {unknown} */ (Object.freeze([])));
 const photoGroups = new WeakMap();
 const entryGroups = new WeakMap();
 

@@ -18,12 +18,12 @@ export default function PhotoViewer() {
   const url = usePhotoURL(photo, photo && ((blob) => cachePhotoBlob(photo.id, blob)));
   if (!photo) return null;
 
-  function startEdit() {
+  const startEdit = () => {
     setDraft(photo.caption || "");
     setBlocked(false);
     setEditing(true);
-  }
-  function saveCaption() {
+  };
+  const saveCaption = () => {
     const caption = draft.trim();
     // Same check PhotoSheet makes when the photo is added. Without it, the
     // server refused the edit (20260920000000), the caption stayed changed
@@ -34,11 +34,11 @@ export default function PhotoViewer() {
     }
     updatePhotoCaption(photo.id, caption);
     setEditing(false);
-  }
+  };
 
   return (
     <div className="viewer">
-      <img src={url} alt={photo.caption || ""} />
+      <img src={url || undefined} alt={photo.caption || ""} />
       {editing ? (
         <input
           autoFocus

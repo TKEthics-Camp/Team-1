@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "../../i18n/I18nContext";
-import { useStore } from "../../store/StoreContext";
+import { useStore, useProfile } from "../../store/StoreContext";
 import { useAuth } from "../../store/AuthContext";
 import { useUI } from "../../ui/UIContext";
 import { THEMES, DEFAULT_THEME, DECORATIONS } from "../../lib/constants";
@@ -13,7 +13,7 @@ import { deleteMyAccount } from "../../lib/remote";
 import { buildExport } from "../../lib/exportData";
 import { saveFile } from "../../lib/saveFile";
 import { useConsentStatus } from "../../lib/useConsentStatus";
-import { amIModerator } from "../../lib/remote";
+import { amIModerator, crashDigest, recentCrashCount } from "../../lib/remote";
 import { useNotificationPermission, requestNotificationPermission, isNative } from "../../lib/notifications";
 import Icon from "../shared/Icon";
 
@@ -23,7 +23,17 @@ import Icon from "../shared/Icon";
 // a wall of buttons.
 // `checked` makes it a switch row: the whole row toggles, and the switch on
 // the right shows which way it is.
-function ListRow({ icon, children, onClick, disabled = false, danger = false, trailing, checked }) {
+/**
+ * @param {object} props
+ * @param {string} props.icon
+ * @param {import("react").ReactNode} props.children
+ * @param {() => void} [props.onClick]
+ * @param {boolean} [props.disabled]
+ * @param {boolean} [props.danger]
+ * @param {import("react").ReactNode} [props.trailing]
+ * @param {boolean} [props.checked]
+ */
+function ListRow({ icon, children, onClick, disabled = false, danger = false, trailing = undefined, checked = undefined }) {
   const isSwitch = checked !== undefined;
   return (
     <button
@@ -45,7 +55,8 @@ function ListRow({ icon, children, onClick, disabled = false, danger = false, tr
 
 export default function ProfileScreen() {
   const { t, lang, nOf } = useI18n();
-  const { profile, interests, photos, entries, clearGarden, updateProfile, setDiscoverable, pendingSyncCount, retrySync } = useStore();
+  const { interests, photos, entries, clearGarden, updateProfile, setDiscoverable, pendingSyncCount, retrySync } = useStore();
+  const profile = useProfile();
   const { signOut, user } = useAuth();
   const { openSheet, showToast, flushUndo } = useUI();
   const navigate = useNavigate();
@@ -54,7 +65,7 @@ export default function ProfileScreen() {
   const [deleteArmed, setDeleteArmed] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [clearing, setClearing] = useState(false);
-  const [deleteError, setDeleteError] = useState(null);
+  const [deleteError, setDeleteError] = useState(/** @type {string | null} */ (null));
   // Logging out wipes this device's copy, so anything that never reached
   // the server goes with it. With changes still waiting, the first tap
   // says so and tries once more; the second tap logs out regardless.
@@ -93,6 +104,15 @@ export default function ProfileScreen() {
     amIModerator().then((v) => { if (!cancelled) setIsMod(v); });
     return () => { cancelled = true; };
   }, []);
+  // Crashes this week, on the Reports row — so they get seen without anyone
+  // having to remember to look.
+  const [crashCount, setCrashCount] = useState(0);
+  useEffect(() => {
+    if (!isMod) return;
+    let cancelled = false;
+    crashDigest().then((r) => { if (!cancelled) setCrashCount(recentCrashCount(r.rows)); });
+    return () => { cancelled = true; };
+  }, [isMod]);
   const locked = !!(consent && consent.disclosure_locked);
   const needsReconsent = !!(consent && consent.state === "re_consent_required");
 
@@ -132,7 +152,7 @@ export default function ProfileScreen() {
       const safeName = String(profile.name || "forest").replace(/[^a-zA-Z0-9_-]+/g, "-");
       await saveFile(blob, `forest-${safeName}-${stamp}.zip`);
       showToast(missing.length
-        ? t("exportMissing").replace("{n}", missing.length)
+        ? t("exportMissing").replace("{n}", String(missing.length))
         : t("exportDone"));
     } catch (e) {
       console.error("Export failed:", e);
@@ -154,7 +174,7 @@ export default function ProfileScreen() {
       // Shown on the screen, not just toasted: this one can't be retried
       // into working, and the server's own wording is the only thing that
       // says what actually went wrong.
-      setDeleteError(result.reason === "files" ? t("deleteFilesFailed") : result.message);
+      setDeleteError(result.reason === "files" ? t("deleteFilesFailed") : result.message || null);
       showToast(t("deleteAccountFailed"));
       return;
     }
@@ -312,7 +332,15 @@ export default function ProfileScreen() {
         <div className="list-group">
           <ListRow icon="key" onClick={() => openSheet("password")}>{t("pwTitle")}</ListRow>
           <ListRow icon="shield" onClick={() => openSheet("recovery")}>{t("recTitle")}</ListRow>
-          {isMod && <ListRow icon="flag" onClick={() => navigate("/reports")}>Reports</ListRow>}
+          {isMod && (
+            <ListRow
+              icon="flag"
+              onClick={() => navigate("/reports")}
+              trailing={crashCount > 0 ? <span className="list-count">{crashCount} {crashCount === 1 ? "crash" : "crashes"}</span> : undefined}
+            >
+              Reports
+            </ListRow>
+          )}
         </div>
 
         {/* Apple 5.1.1(i) wants the policy reachable inside the app, and a

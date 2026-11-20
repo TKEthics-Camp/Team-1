@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useAuth } from "../../store/AuthContext";
 import { applyAgeGate } from "../../lib/remote";
-import { forgetConsentStatus } from "../../lib/useConsentStatus";
+import { forgetConsentStatus, takeAgeGateError } from "../../lib/useConsentStatus";
 import BirthdateFields, { joinBirthdate } from "../auth/BirthdateFields";
 import LangToggle from "../shared/LangToggle";
 import SfHead from "../onboarding/SfHead";
@@ -20,7 +20,7 @@ export default function AgeRequiredScreen() {
   const [bdD, setBdD] = useState("");
   const [classCode, setClassCode] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(takeAgeGateError);
 
   const birthdate = joinBirthdate(bdY, bdM, bdD);
 

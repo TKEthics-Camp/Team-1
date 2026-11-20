@@ -55,6 +55,7 @@
 .sf-back {
   background: none; border: none; padding: 0 8px 0 0;
   color: var(--sf-blue); font-size: 27px; line-height: 1;
+  position: relative;
 }
 .sf-back:active { opacity: .5; }
 
@@ -71,6 +72,7 @@
 .sf-mascot { width: 54px; height: 55px; flex: none; }
 .sf-head h2 {
   flex: 1; margin: 0; text-wrap: balance;
+  text-align: left;
 }
 
 .sf-grow { flex: 1; min-height: 20px; }
@@ -150,18 +152,11 @@
   width: 100%; padding: 0; border: none; background: none;
   font-family: inherit; text-align: left; color: var(--sf-ink);
 }
-.sf-box {
-  width: 28px; height: 28px; flex: none; border-radius: 50%;
-  background: var(--sf-fill); color: var(--sf-ink);
-  display: grid; place-items: center;
-  font-size: 14px; font-weight: 700; line-height: 1;
-  transition: background .15s ease;
-}
 /* The tick has to be the opposite colour of the filled circle: it was the
    ink colour on an ink-coloured circle, so a chosen hobby looked like a
    plain dark dot. An empty circle gets an outline, since its pale fill
    alone all but vanished against the page. */
-.sf-box { border: 1.5px solid color-mix(in srgb, var(--dim) 55%, var(--sf-line)); background: var(--card); }
+.sf-box { width: 28px; height: 28px; flex: none; border-radius: 50%; color: var(--sf-ink); display: grid; place-items: center; font-size: 14px; font-weight: 700; line-height: 1; transition: background .15s ease;  border: 1.5px solid color-mix(in srgb, var(--dim) 55%, var(--sf-line)); background: var(--card); }
 .sf-check[aria-pressed="true"] .sf-box {
   background: var(--sf-blue); border-color: var(--sf-blue); color: var(--accent-ink);
 }
@@ -189,9 +184,6 @@
 .sf .sf-field {
   width: 100%; font: inherit; font-size: 16px; color: var(--sf-ink);
 }
-.sf .sf-field:focus {
-  box-shadow: 0 0 0 3px rgba(0, 136, 255, .15);
-}
 .sf-stack { display: flex; flex-direction: column; gap: 18px; }
 
 /* ---------- hobby confirm rows ---------- */
@@ -205,6 +197,7 @@
   border: none; border-radius: 50%; background: none;
   color: #bcbcc1; font-size: 21px; line-height: 1;
   display: grid; place-items: center;
+  position: relative;
 }
 .sf-x:hover { color: var(--sf-muted); }
 .sf-x:active { transform: scale(.9); }
