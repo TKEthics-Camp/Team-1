@@ -2,21 +2,26 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import { today } from "../lib/dates";
 import { loadSession, saveSession, clearSession, sessionMinutes } from "../lib/sessionTimer";
 
-const UICtx = createContext(null);
+const UICtx = createContext(/** @type {ReturnType<typeof useUIValue> | null} */ (null));
 
 // Transient UI state shared across screens: which sheet (if any) is open,
 // which photo is being viewed full-size, which nudges the user has waved off
 // for today, the reward shown after a log, and a running session timer —
 // the one thing here that outlives a reload.
 export function UIProvider({ children }) {
-  const [sheet, setSheet] = useState(null); // { type: "entry"|"photo"|"orb"|"student", id?, preset?, student? }
-  const [viewer, setViewer] = useState(null); // photo id
-  const [dismissed, setDismissed] = useState({}); // interestId -> dateKey
+  return <UICtx.Provider value={useUIValue()}>{children}</UICtx.Provider>;
+}
+
+function useUIValue() {
+  const [sheet, setSheet] = useState(/** @type {Record<string, any> & { type: string } | null} */ (null)); // { type: "entry"|"photo"|"orb"|"student", id?, preset?, student? }
+  const [viewer, setViewer] = useState(/** @type {string | null} */ (null)); // photo id
+  const [dismissed, setDismissed] = useState(/** @type {Record<string, string | number>} */ ({})); // interestId -> dateKey
   // A pending "undo" toast: { message, timerId, restore, commit }. Only one
   // at a time — offering a new one commits whatever was already pending
   // rather than losing it silently.
-  const [undo, setUndo] = useState(null);
-  const undoRef = useRef(null);
+  /** @typedef {{ message: string, timerId: ReturnType<typeof setTimeout>, restore: () => void, commit: () => void }} PendingUndo */
+  const [undo, setUndo] = useState(/** @type {PendingUndo | null} */ (null));
+  const undoRef = useRef(/** @type {PendingUndo | null} */ (null));
   useEffect(() => { undoRef.current = undo; }, [undo]);
   // This unmounts at sign-out, which wipes the device's copy. A delete still
   // inside its undo window would otherwise commit a few seconds later into
@@ -27,9 +32,9 @@ export function UIProvider({ children }) {
   // A plain "here's what just happened" note — no action attached, unlike
   // `undo` above. Separate state so a coin toast and a pending delete can
   // never evict one another; they stack rather than compete.
-  const [toast, setToast] = useState(null); // { id, message }
-  const toastQueue = useRef([]);
-  const toastTimer = useRef(null);
+  const [toast, setToast] = useState(/** @type {{ id: number, message: string } | null} */ (null));
+  const toastQueue = useRef(/** @type {{ id: number, message: string, ms: number }[]} */ ([]));
+  const toastTimer = useRef(/** @type {ReturnType<typeof setTimeout> | undefined} */ (undefined));
   const toastShowing = useRef(false);
   // Held in a ref so it can re-enter itself as the queue drains without
   // showToast having to change identity between renders.
@@ -45,7 +50,7 @@ export function UIProvider({ children }) {
 
   // The moment after a log: what it changed (lib/logOutcome), shown once
   // over the whole app, then gone on a tap or by itself.
-  const [celebration, setCelebration] = useState(null);
+  const [celebration, setCelebration] = useState(/** @type {Record<string, any> & { id: number } | null} */ (null));
   // A running session timer (lib/sessionTimer). Read back from the device
   // on mount, so a session started before the app was closed is still
   // running when it reopens.
@@ -129,8 +134,7 @@ export function UIProvider({ children }) {
       });
     },
   }), [sheet, viewer, dismissed, undo, toast, celebration, session]);
-
-  return <UICtx.Provider value={value}>{children}</UICtx.Provider>;
+  return value;
 }
 
 export function useUI() {

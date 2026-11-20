@@ -26,6 +26,7 @@
 const CURSE_WHOLE_WORD_ONLY = [
   "ass", "dick", "cock", "piss", "twat",
 ];
+/** @type {Array<[string, string[]]>} */
 const CURSE_WORDS = [
   ["fuck", ["f*ck", "fu*k", "fuc*"]],
   ["shit", ["sh*t", "s*it"]],

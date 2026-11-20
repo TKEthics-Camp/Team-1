@@ -24,7 +24,7 @@ export default function MemoryBanner({ memory }) {
       onClick={() => navigate(`/interest/${memory.interest.id}?tab=${isPhoto ? "album" : "journal"}`)}
     >
       {isPhoto ? (
-        <img src={photoUrl} alt="" />
+        <img src={photoUrl || undefined} alt="" />
       ) : (
         <div style={{ flex: "none" }}><Tree interest={memory.interest} size={54} stage={3} health="healthy" /></div>
       )}

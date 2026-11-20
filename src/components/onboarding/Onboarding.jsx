@@ -46,8 +46,8 @@ export default function Onboarding() {
   const accountType = meta.accountType || "individual";
   const name = meta.username || "";
   const [step, setStep] = useState(0);
-  const [gender, setGender] = useState(null);
-  const [drafts, setDrafts] = useState([]);
+  const [gender, setGender] = useState(/** @type {string | null} */ (null));
+  const [drafts, setDrafts] = useState(/** @type {any[]} */ ([]));
   const [theme, setTheme] = useState(DEFAULT_THEME);
   const [hobbyBlocked, setHobbyBlocked] = useState(false);
   const steps = stepsFor(accountType);

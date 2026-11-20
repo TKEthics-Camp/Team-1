@@ -101,7 +101,7 @@
   --r-field: 12px;
 }
 
-.stage[data-theme="black"] {
+.stage[data-theme="black"] { --cast: rgba(0,0,0,.65); --gold: #E0A33C; 
   --stage-bg: #101113;
   --app-bg:   #18191B;
   --shelf:    #202124;
@@ -166,7 +166,6 @@
 }
 
 /* ---------- frame and headers ---------- */
-.app { background: var(--app-bg); }
 
 /* Headers sit on the page, marked off by one hairline. */
 .topbar, .topbar.home-bar {
@@ -177,7 +176,6 @@
 .topbar h1 {
   font-size: 22px; font-weight: 700; letter-spacing: -.02em; color: var(--ink);
 }
-.page-sub { margin: -2px 0 2px; font-size: 15px; color: var(--muted); }
 
 /* The main heading: a small spaced-out line above, the greeting, a short
    green rule below — the reference's "SATURDAY, YOUR WORKSPACE / Good
@@ -195,7 +193,6 @@
   display: block; width: 48px; height: 4px; border-radius: 999px;
   background: var(--rule); margin-top: 4px;
 }
-.page-head .page-sub { margin: 0; }
 
 /* Section titles on a screen: plain sentence case, like the reference's
    "Recently visited". Inside sheets .label stays a small field label. */
@@ -207,29 +204,23 @@
   font-size: 13px; font-weight: 600; letter-spacing: 0;
   text-transform: none; color: var(--muted);
 }
-.memory .kicker {
-  font-size: 11.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--muted);
-}
-.sub { color: var(--muted); }
 
 /* ---------- buttons: flat pills ---------- */
 .btn, .tree-view .btn {
   background: var(--accent); color: var(--accent-ink);
-  border: none; border-radius: var(--r-ctl); box-shadow: none;
+  border: none; box-shadow: none;
   font-weight: 600; letter-spacing: -.01em;
 }
 .btn:hover { filter: none; opacity: .88; }
 .btn2, .tree-view .btn2 {
   background: var(--card); color: var(--ink);
-  border: 1px solid var(--line); border-radius: var(--r-ctl);
+  border: 1px solid var(--line);
   font-weight: 550; box-shadow: none;
 }
 .btn2:hover { background: var(--card-2); }
 .btn-danger { color: var(--bad); border-color: var(--line); }
 
-.chip, .lang {
-  border-radius: 999px; border: 1px solid var(--line);
+.chip, .lang { border: 1px solid var(--line);
   background: var(--card); color: var(--body-ink); font-weight: 550; box-shadow: none;
 }
 .chip[aria-pressed="true"], .tree-view .chip[aria-pressed="true"] {
@@ -248,7 +239,7 @@
 .tabs button, .seg button, .tree-view .tabs button {
   flex: 0 0 auto; padding: 8px 18px;
   background: none; color: var(--muted);
-  border: none; border-radius: 999px;
+  border: none;
   font-family: var(--body); font-size: 14px; font-weight: 550; letter-spacing: -.01em;
   box-shadow: none;
 }
@@ -270,10 +261,10 @@ input:focus-visible, textarea:focus-visible, .sf .sf-field:focus {
 }
 
 /* ---------- cards: white, hairline, no shadow ---------- */
-.nudge, .memory, .stat, .choice, .memory-row,
-.consent-block, .mod-row, .post, .post-card, .user-row,
+.nudge, .memory, .stat, .memory-row,
+.consent-block, .mod-row, .post,
 .tree-view .stat, .tree-view .tree-status,
-.code-card, .deco-card, .acct-card {
+.code-card, .deco-card {
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: var(--r-card);
@@ -295,7 +286,7 @@ input:focus-visible, textarea:focus-visible, .sf .sf-field:focus {
 .stat.flame .n { color: var(--ink); }
 .tree-view .stat { padding: 16px 18px 15px; }
 .tree-view .stat .n { font-size: 26px; font-weight: 750; letter-spacing: -.03em; }
-.tree-view .stat .k { font-size: 14px; color: var(--muted); }
+.tree-view .stat .k { text-transform: none;  font-size: 14px; color: var(--muted); }
 /* Three stats sit on one row instead of two-and-an-orphan. */
 .stats:has(> .stat:nth-child(3):last-child) { grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .stats:has(> .stat:nth-child(3):last-child) .stat { padding: 14px 14px 13px; }
@@ -350,8 +341,7 @@ input:focus-visible, textarea:focus-visible, .sf .sf-field:focus {
 .journal-side .tag { font-variant-numeric: tabular-nums; }
 .entry-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .entry-actions { display: flex; gap: 0; margin: 0 -4px 0 0; }
-.entry-actions .icon { width: 30px; height: 30px; display: grid; place-items: center; }
-.entry-actions .icon { color: var(--dim); }
+.entry-actions .icon { width: 30px; height: 30px; display: grid; place-items: center;  color: var(--dim); }
 .entry-actions .icon:hover { color: var(--ink); }
 
 /* ---------- tags: tiny tinted pills ----------
@@ -409,7 +399,7 @@ input:focus-visible, textarea:focus-visible, .sf .sf-field:focus {
 .idea .idea-cat-tag { margin-top: 4px; }
 .idea-add {
   background: var(--card); color: var(--ink);
-  border: 1px solid var(--line); border-radius: 999px;
+  border: 1px solid var(--line);
   font-family: var(--body); font-size: 13px; font-weight: 600; box-shadow: none;
   padding: 6px 12px;
 }
@@ -431,7 +421,7 @@ input:focus-visible, textarea:focus-visible, .sf .sf-field:focus {
   left: 14px; right: 14px; top: 8px; bottom: calc(8px + env(safe-area-inset-bottom, 0px));
   border-radius: 999px; background: var(--track);
 }
-.nav button {
+.nav button { cursor: pointer; 
   position: relative; z-index: 1;
   display: flex; flex-direction: column; align-items: center; gap: 2px;
   margin: 4px 2px; padding: 6px 4px 5px; border-radius: 999px;
@@ -482,12 +472,8 @@ input:focus-visible, textarea:focus-visible, .sf .sf-field:focus {
 }
 .nudge-chip span { color: var(--dim); font-weight: 500; }
 .nudge-chip:hover { background: var(--card-2); }
-/* With several hobbies, "Later" sits quietly in the card's top corner
-   rather than wrapping onto a line of its own under the pills. */
-.nudge { position: relative; }
 .nudge:has(.nudge-later) .head { padding-right: 56px; }
-.nudge-later {
-  position: absolute; top: 12px; right: 12px; padding: 4px 6px;
+.nudge-later { top: 12px; right: 12px; padding: 4px 6px;
   background: none; border: none; color: var(--muted);
   font-family: var(--body); font-size: 14px; font-weight: 550; cursor: pointer;
 }
@@ -525,7 +511,7 @@ select:focus-visible, summary:focus-visible {
 
 /* Small controls keep their look but get a full-size target: Apple asks
    for 44 points, and these were nearer 30. The extra area is invisible. */
-.chip, .lang, .icon, .idea-add, .nudge-later, .sf-back, .sf-x {
+.chip, .nudge-later {
   position: relative;
 }
 .chip::after, .lang::after, .icon::after, .idea-add::after,
@@ -548,7 +534,6 @@ select:focus-visible, summary:focus-visible {
 .sf-head h2, .sf-title-c {
   font-size: 26px; font-weight: 750; letter-spacing: -.03em; line-height: 1.15;
 }
-.sf-head h2 { text-align: left; }
 .sf-linkbtn { color: var(--ink); font-weight: 600; }
 .sf-err { color: var(--bad); }
 .sf .lang { background: var(--card); border: 1px solid var(--line); color: var(--ink); padding: 5px 12px; }
@@ -618,11 +603,9 @@ select:focus-visible, summary:focus-visible {
 .list-row .list-ico { flex: none; color: var(--muted); }
 .list-row .list-label { flex: 1; padding: 14px 0; line-height: 1.35; }
 .list-row .list-chev { flex: none; color: var(--dim); }
+.list-row .list-count { flex: none; font-size: var(--fs-sub); font-weight: 600; color: var(--bad); }
 .list-row > .ico:last-child:not(.list-ico):not(.list-chev) { color: var(--ico-green); }
 .list-row.danger, .list-row.danger .list-ico { color: var(--bad); }
-
-/* Three themes, three across — no tile left alone on a second row. */
-.themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 
 /* ---------- Home: tree cards ----------
    The reference's tree card, pared back and set the way iOS sets a list
@@ -653,7 +636,6 @@ select:focus-visible, summary:focus-visible {
 .tree-card-art {
   position: relative; height: 168px; overflow: hidden;
   display: flex; align-items: flex-end; justify-content: center;
-  background: var(--panel);
 }
 .tree-card-tags { position: absolute; top: 12px; left: 12px; display: flex; gap: 6px; }
 .tree-card-tags .tag { padding: 4px 10px; font-size: 12.5px; font-weight: 600; }
@@ -698,7 +680,7 @@ select:focus-visible, summary:focus-visible {
   height: 4px; margin-top: 14px; border-radius: 999px;
   background: var(--track); overflow: hidden;
 }
-.bar > span { display: block; height: 100%; border-radius: inherit; background: var(--rule); }
+.bar > span { height: 100%; border-radius: inherit; background: var(--rule); }
 .tree-card.is-dead .bar > span { background: var(--dim); }
 
 /* Nothing planted yet: the empty panel is the way in. */
@@ -781,7 +763,7 @@ select:focus-visible, summary:focus-visible {
 }
 .memory-group .memory-row + .memory-row { border-top: 1px solid var(--line); }
 .memory-group .memory-row:hover { background: var(--card-2); }
-.memory-row img { width: 40px; height: 40px; border-radius: 10px; }
+.memory-row img { object-fit: cover;  width: 40px; height: 40px; border-radius: 10px; }
 .memory-row .text { font-size: 15px; line-height: 1.4; color: var(--ink); }
 .memory-row .when { font-family: var(--body); font-size: 13px; color: var(--muted); margin-top: 2px; }
 
@@ -826,7 +808,6 @@ select:focus-visible, summary:focus-visible {
   background: var(--track); color: var(--ink);
   font-family: var(--body); font-size: 17px; font-weight: 650; letter-spacing: -.015em;
   font-variant-numeric: tabular-nums; white-space: nowrap;
-  transition: background .16s, color .16s, transform .12s;
 }
 .dur[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
 /* 16px, not smaller: below that iOS zooms the page when the field is tapped. */
@@ -1081,7 +1062,7 @@ select:focus-visible, summary:focus-visible {
 .sheet-grab:active { cursor: grabbing; }
 
 /* Progress fills in rather than being there, and moves when it changes. */
-.bar > span {
+.bar > span { display: block; 
   transform-origin: left center;
   animation: barIn .75s cubic-bezier(.32, .72, 0, 1) both;
   transition: width .6s cubic-bezier(.32, .72, 0, 1);
@@ -1137,7 +1118,4 @@ select:focus-visible, summary:focus-visible {
 }
 .hero-why { margin-top: -4px; padding: 0 4px; font-size: 14.5px; }
 
-/* A note that fires during the moment after a log — a badge, most often —
-   shows over it rather than waiting behind it: one more good thing. */
-.coin-toast { z-index: 70; }
 .app:has(.cel) .coin-toast { bottom: 64px; }

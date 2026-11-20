@@ -6,7 +6,13 @@ import Icon from "./Icon";
 // for a blob already in hand (mid-recording, mid-edit), useAudioURL for a
 // synced entry that might need fetching from Storage first — the same
 // split PhotoViewer/AlbumTab use for images (see lib/image.js).
-export default function VoiceNote({ url, ms, onRemove }) {
+/**
+ * @param {object} props
+ * @param {string | null} props.url
+ * @param {number} props.ms
+ * @param {() => void} [props.onRemove]
+ */
+export default function VoiceNote({ url, ms, onRemove = undefined }) {
   const { t } = useI18n();
   if (!url) return null;
 

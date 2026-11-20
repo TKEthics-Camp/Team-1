@@ -70,6 +70,6 @@ export function planReminders({ interests, entries, photos, nameOf, t, now = new
     });
   }
 
-  plan.sort((a, b) => a.at - b.at);
+  plan.sort((a, b) => a.at.getTime() - b.at.getTime());
   return plan.slice(0, MAX_SCHEDULED).map((p, i) => ({ ...p, id: i + 1 }));
 }

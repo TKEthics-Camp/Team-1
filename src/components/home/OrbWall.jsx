@@ -61,7 +61,7 @@ function TreeCard({ interest: it, entries, photos }) {
   const last = !tended ? t("lastNone")
     : idle <= 0 ? t("lastToday")
     : idle === 1 ? t("lastYesterday")
-    : t("lastDays").replace("{n}", idle);
+    : t("lastDays").replace("{n}", String(idle));
 
   // One quiet line under the name. Hours join it once there are any — "0h"
   // beside "Not logged yet" only said the same thing twice.
@@ -121,7 +121,7 @@ function TreeCard({ interest: it, entries, photos }) {
           aria-valuenow={pct}
           aria-label={prog.to === null
             ? t("stgFull")
-            : t("toStage").replace("{n}", prog.to - prog.acts).replace("{stage}", t(STAGE_KEY[stage + 1]))}
+            : t("toStage").replace("{n}", String(prog.to - prog.acts)).replace("{stage}", t(STAGE_KEY[stage + 1]))}
         >
           <span style={{ width: pct + "%" }} />
         </div>

@@ -1,0 +1,30 @@
+{
+  // Type checks the whole app — logic and screens — from the JSDoc types
+  // written beside it (see src/lib/types.js) and React's own definitions.
+  //
+  // Strict, null checks included: a value that can be missing has to be
+  // checked before it's used. The one exception is noImplicitAny — this is
+  // JavaScript, and a parameter with no JSDoc type is taken as `any` rather
+  // than refused, so types are written where they pay (records, shared
+  // components, the store) instead of on every callback.
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": true,
+    "noImplicitAny": false,
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["vite/client"],
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "jsx": "react-jsx",
+    // Libraries without type definitions are taken on trust rather than
+    // checked line by line.
+    "maxNodeModuleJsDepth": 0
+  },
+  "include": ["src/**/*.js", "src/**/*.jsx", "src/types/*.d.ts"],
+  "exclude": ["src/**/*.test.js", "src/**/*.test.jsx", "src/test/**"]
+}

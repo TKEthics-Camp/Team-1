@@ -6,7 +6,18 @@ import Icon from "./Icon";
 
 // The glowing sphere: replaces the original orbEl(). `label` shows the
 // interest's own name + hours + streak baked into the glass.
-export default function Orb({ interest, size, faceBlob = null, label = false, minutes = 0, streak = 0, decoration = null, style }) {
+/**
+ * @param {object} props
+ * @param {{ color?: string } & Record<string, any>} props.interest
+ * @param {number} props.size
+ * @param {Blob | null} [props.faceBlob]
+ * @param {boolean | string} [props.label]
+ * @param {number} [props.minutes]
+ * @param {number} [props.streak]
+ * @param {{ ring?: string, badge?: string } | null} [props.decoration]
+ * @param {import("react").CSSProperties} [props.style]
+ */
+export default function Orb({ interest, size, faceBlob = null, label = false, minutes = 0, streak = 0, decoration = null, style = undefined }) {
   const { nameOf } = useI18n();
   const url = useObjectURL(faceBlob);
 

@@ -19,7 +19,7 @@ export default function UserProfileSheet({ userId, displayName, accountType, ava
   const { closeSheet } = useUI();
   const navigate = useNavigate();
   const location = useLocation();
-  const [state, setState] = useState({ loading: true, interests: [], entries: [], photos: [] });
+  const [state, setState] = useState(/** @type {{ loading: boolean, interests: any[], entries: any[], photos: any[] }} */ ({ loading: true, interests: [], entries: [], photos: [] }));
 
   useEffect(() => {
     // An org account never has hobbies of its own — skip the fetch and the

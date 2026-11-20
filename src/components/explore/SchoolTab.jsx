@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
-import { useStore } from "../../store/StoreContext";
+import { useProfile } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
 import { DECORATIONS } from "../../lib/constants";
 import { fetchClassmates } from "../../lib/remote";
@@ -16,9 +16,9 @@ import Icon from "../shared/Icon";
 // for a follow-up rather than N+1 queries here.
 export default function SchoolTab() {
   const { t, nOf } = useI18n();
-  const { profile } = useStore();
+  const profile = useProfile();
   const { openSheet } = useUI();
-  const [state, setState] = useState({ loading: true, classmates: [] });
+  const [state, setState] = useState(/** @type {{ loading: boolean, classmates: any[] }} */ ({ loading: true, classmates: [] }));
   const equippedDecoration = DECORATIONS.find((d) => d.id === (profile && profile.equippedDecoration)) || null;
 
   useEffect(() => {

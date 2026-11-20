@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useBack } from "../../lib/useBack";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
@@ -10,7 +10,7 @@ import Icon from "../shared/Icon";
 
 export default function MarketScreen() {
   const { t, lang } = useI18n();
-  const navigate = useNavigate();
+  const goBack = useBack("/profile");
   const { profile, buyDecoration, equipDecoration } = useStore();
   const { showToast } = useUI();
 
@@ -26,7 +26,7 @@ export default function MarketScreen() {
         {/* Only ever reached from Profile today, but hardcoding that
             destination is the same mistake InterestScreen's back button
             had — real back returns to wherever actually opened this. */}
-        <button className="icon" aria-label={t("back")} onClick={() => navigate(-1)}><Icon name="chevronLeft" size={22} /></button>
+        <button className="icon" aria-label={t("back")} onClick={goBack}><Icon name="chevronLeft" size={22} /></button>
         <h1>{t("market")}</h1>
         <span className="chip coin-pill"><Icon name="coin" size={15} />{coins}</span>
       </TopBar>
@@ -53,7 +53,7 @@ export default function MarketScreen() {
                     <button
                       className="btn2"
                       disabled={coins < deco.price}
-                      onClick={() => { if (buyDecoration(deco.id)) { coinSound(profile); showToast(t("coinsSpent").replace("{n}", deco.price)); } }}
+                      onClick={() => { if (buyDecoration(deco.id)) { coinSound(profile); showToast(t("coinsSpent").replace("{n}", String(deco.price))); } }}
                     >
                       <Icon name="coin" size={14} />{deco.price}
                     </button>

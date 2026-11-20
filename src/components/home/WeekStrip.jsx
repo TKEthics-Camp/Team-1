@@ -18,7 +18,7 @@ export default function WeekStrip({ entries, photos }) {
   const days = weekStrip(entries, photos);
   const shown = days.filter((d) => d.logged).length;
   const minutes = days.reduce((n, d) => n + d.minutes, 0);
-  const summary = t("weekSummary").replace("{n}", shown) + (minutes > 0 ? " · " + fmtHours(minutes) : "");
+  const summary = t("weekSummary").replace("{n}", String(shown)) + (minutes > 0 ? " · " + fmtHours(minutes) : "");
 
   return (
     <button

@@ -26,7 +26,7 @@ function MemoryRow({ item, sub, onOpen, cachePhotoBlob }) {
       {/* A photo shows itself; words get their hobby's icon, the same one
           its tree card and Explore use. */}
       {isPhotoMemory(item) ? (
-        <img src={url} alt="" />
+        <img src={url || undefined} alt="" />
       ) : (
         <span className={"idea-ico stat-ico tag-" + look.tone} aria-hidden="true">
           <Icon name={look.icon} size={18} />

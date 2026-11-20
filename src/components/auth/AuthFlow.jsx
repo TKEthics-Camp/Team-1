@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { useAuth } from "../../store/AuthContext";
 import { supabase } from "../../lib/supabase";
-import { applyAgeGate } from "../../lib/remote";
-import { holdConsentUntil } from "../../lib/useConsentStatus";
+import { applyAgeGate, myConsentStatus } from "../../lib/remote";
+import { holdConsentUntil, carryAgeGateError } from "../../lib/useConsentStatus";
 import { usernameToEmail, legacyUsernameToEmail } from "../../lib/syntheticEmail";
 import LangToggle from "../shared/LangToggle";
 import SfHead from "../onboarding/SfHead";
@@ -21,34 +21,36 @@ import Mascot from "../shared/Mascot";
 // collected now) rather than at the end of onboarding.
 // Survives the remount that signing out causes. Not state, deliberately:
 // the component this belongs to is destroyed between setting it and reading
-// it back.
-let carriedError = null;
+// it back. Signing out mid-signup used to drop the student on the welcome
+// screen, which shows no errors — so the account "just didn't happen" and
+// they were back at the start with no idea why. What's carried here reopens
+// the form they were on, filled in as they left it (bar the passwords),
+// with the reason showing.
+/** @type {null | {error: string, accountType: string | null, username: string, email: string, bdY: string, bdM: string, bdD: string, classCode: string}} */
+let carried = null;
 
 export default function AuthFlow() {
   const { t } = useI18n();
   const { signUp, signIn, authError, clearAuthError } = useAuth();
-  const [screen, setScreen] = useState("welcome"); // "welcome" | "signup" | "login" | "recover"
-  const [signupStep, setSignupStep] = useState("accountType"); // "accountType" | "age" | "credentials"
-  const [accountType, setAccountType] = useState(null);
+  const [back] = useState(() => { const c = carried; carried = null; return c; });
+  const [screen, setScreen] = useState(back ? "signup" : "welcome"); // "welcome" | "signup" | "login" | "recover"
+  const [signupStep, setSignupStep] = useState(back ? "credentials" : "accountType"); // "accountType" | "age" | "credentials"
+  const [accountType, setAccountType] = useState(back ? back.accountType : null);
 
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(back ? back.username : "");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [email, setEmail] = useState("");
-  const [localError, setLocalError] = useState(() => {
-    const carried = carriedError;
-    carriedError = null;
-    return carried;
-  });
+  const [email, setEmail] = useState(back ? back.email : "");
+  const [localError, setLocalError] = useState(back ? back.error : null);
   const [busy, setBusy] = useState(false);
 
   // Collected before the account exists, so an account is never created
   // without the thing that decides what it is allowed to do. Educators skip
   // this entirely — they are adults by definition of the account type.
-  const [bdY, setBdY] = useState("");
-  const [bdM, setBdM] = useState("");
-  const [bdD, setBdD] = useState("");
-  const [classCode, setClassCode] = useState("");
+  const [bdY, setBdY] = useState(back ? back.bdY : "");
+  const [bdM, setBdM] = useState(back ? back.bdM : "");
+  const [bdD, setBdD] = useState(back ? back.bdD : "");
+  const [classCode, setClassCode] = useState(back ? back.classCode : "");
   const birthdate = joinBirthdate(bdY, bdM, bdD);
 
   const [loginId, setLoginId] = useState("");
@@ -59,7 +61,7 @@ export default function AuthFlow() {
   // Required before the account can be created — see the checkbox in the
   // credentials step. The policy links open in a new tab rather than
   // navigating away, or everything typed on this screen would be lost.
-  const [agreedToPolicies, setAgreedToPolicies] = useState(false);
+  const [agreedToPolicies, setAgreedToPolicies] = useState(!!back);
 
   function goWelcome() {
     clearAuthError();
@@ -81,7 +83,8 @@ export default function AuthFlow() {
     // Registered before the account exists, because the session (and App's
     // question about consent state) arrives the moment signUp resolves —
     // before the age gate below has run. Settled on every path out.
-    let settle;
+    /** @type {(value?: any) => void} */
+    let settle = () => {};
     holdConsentUntil(new Promise((resolve) => { settle = resolve; }));
     try {
       await createAccount(trimmedUsername);
@@ -89,6 +92,13 @@ export default function AuthFlow() {
       settle();
       setBusy(false);
     }
+  }
+
+  // Signs out of a half-made account and comes back to this form, showing
+  // why. Set before signing out: the sign-out is what remounts this.
+  async function backOutWith(error) {
+    carried = { error, accountType, username, email, bdY, bdM, bdD, classCode };
+    await supabase.auth.signOut();
   }
 
   async function createAccount(trimmedUsername) {
@@ -101,6 +111,13 @@ export default function AuthFlow() {
         clearAuthError();
         setLocalError("usernameTaken");
       }
+      return;
+    }
+    // With email confirmation switched on, there is no session yet: nothing
+    // below could run as this account, and signing out wouldn't bring the
+    // form back with a reason. Say what happened instead.
+    if (result.needsConfirmation) {
+      setLocalError("authConfirmSent");
       return;
     }
 
@@ -120,8 +137,7 @@ export default function AuthFlow() {
       .eq("id", result.userId);
     if (error) {
       console.error("Failed to reserve username:", error);
-      await supabase.auth.signOut();
-      setLocalError(error.code === "23505" ? "usernameTaken" : "usernameError");
+      await backOutWith(error.code === "23505" ? "usernameTaken" : "usernameError");
       return;
     }
 
@@ -130,21 +146,20 @@ export default function AuthFlow() {
     // the three paths this is — an under-14 signup with no class lands in
     // 'pending' and App shows the guardian screen instead of the app.
     //
-    // Any failure signs out, including the gate function being missing.
-    // That used to be waved through so signup kept working on a project
-    // without the migration, which meant a database without the gate made
-    // accounts with no age check at all. The account itself survives the
-    // sign-out, but it was created in 'age_required' (20261011000000), so
-    // signing back in asks for the birthday again rather than letting it in.
+    // A failure never lets the account in unchecked. The account was
+    // created in 'age_required' (20261011000000), locked and unable to write,
+    // so it stays signed in and App shows the birthday question again
+    // (AgeRequiredScreen) with the reason — rather than signing out, which
+    // dropped the student on the welcome screen with a half-made account
+    // whose username a fresh signup then called taken. Only a database that
+    // didn't make it 'age_required' (or can't say) gets signed out, the way
+    // every failure used to be: a missing gate is never waved through.
     if (!isOrg) {
       const gate = await applyAgeGate(birthdate, classCode.trim() || null);
       if (!gate.ok) {
-        await supabase.auth.signOut();
-        // Signing out unmounts this component, so an error in local state
-        // would be thrown away with it. Module scope survives the remount
-        // within the same page load, which is the only lifetime that
-        // matters here.
-        carriedError = gate.message || "agBadDate";
+        const status = await myConsentStatus();
+        if (status && status.state === "age_required") carryAgeGateError(gate.message || t("agBadDate"));
+        else await backOutWith(gate.message || "agBadDate");
         return;
       }
     }

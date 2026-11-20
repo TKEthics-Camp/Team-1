@@ -9,7 +9,15 @@ import { DEFAULT_AVATAR } from "../../lib/constants";
 // fake STUDENTS fixture — see Avatar.jsx) — anywhere a real avatar object
 // is passed, its own bgColor wins, so the same account always shows the
 // same background everywhere instead of a different guess per screen.
-export default function PersonAvatar({ size, color, avatar = null, decoration = null, style }) {
+/**
+ * @param {object} props
+ * @param {number} props.size
+ * @param {string} [props.color]
+ * @param {Record<string, any> | null} [props.avatar]
+ * @param {{ ring?: string, badge?: string } | null} [props.decoration]
+ * @param {import("react").CSSProperties} [props.style]
+ */
+export default function PersonAvatar({ size, color = undefined, avatar = null, decoration = null, style = undefined }) {
   const a = { ...DEFAULT_AVATAR, ...avatar };
   const bg = avatar ? a.bgColor : (color || DEFAULT_AVATAR.bgColor);
   const w = Math.max(3, Math.round(size * 0.06));

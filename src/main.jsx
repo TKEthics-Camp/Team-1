@@ -7,6 +7,7 @@ import ErrorBoundary from "./components/shared/ErrorBoundary";
 import App from "./App";
 import "./styles/index.css";
 import { Capacitor } from "@capacitor/core";
+import { reportUncaughtErrors } from "./lib/crashReport";
 
 // Inside the iPhone app the layout fills the screen instead of drawing a
 // phone-shaped card (styles/native.css). Set before the first render so
@@ -40,7 +41,9 @@ if (native) {
   });
 }
 
-createRoot(document.getElementById("root")).render(
+reportUncaughtErrors();
+
+createRoot(/** @type {HTMLElement} */ (document.getElementById("root"))).render(
   <StrictMode>
     <ErrorBoundary>
       <I18nProvider>

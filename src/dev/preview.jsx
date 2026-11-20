@@ -61,7 +61,7 @@ function Shell() {
 
 const theme = new URLSearchParams(location.search).get("theme") || "white";
 
-createRoot(document.getElementById("root")).render(
+createRoot(/** @type {HTMLElement} */ (document.getElementById("root"))).render(
   <StrictMode>
     <I18nProvider>
       <div className="stage" data-theme={theme}>

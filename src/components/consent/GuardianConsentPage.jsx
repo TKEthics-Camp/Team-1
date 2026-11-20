@@ -25,10 +25,10 @@ import LangToggle from "../shared/LangToggle";
 // interface.
 export default function GuardianConsentPage({ token }) {
   const { t, lang } = useI18n();
-  const [info, setInfo] = useState(null);
-  const [outcome, setOutcome] = useState(null);
+  const [info, setInfo] = useState(/** @type {any} */ (null));
+  const [outcome, setOutcome] = useState(/** @type {any} */ (null));
   const [busy, setBusy] = useState(false);
-  const [armed, setArmed] = useState(null); // null | "withdraw" | "delete"
+  const [armed, setArmed] = useState(/** @type {string | null} */ (null)); // null | "withdraw" | "delete"
 
   async function load() {
     setInfo(await describeGuardianConsent(token));

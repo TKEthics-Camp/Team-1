@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 
-const AuthCtx = createContext(null);
+const AuthCtx = createContext(/** @type {ReturnType<typeof useAuthValue> | null} */ (null));
 
 // DEBUG ONLY: VITE_DEBUG_SKIP_AUTH lets local dev skip the real login screen
 // entirely, landing straight in the app under a fake account. Only ever set
@@ -14,8 +14,12 @@ const DEBUG_SKIP_AUTH = import.meta.env.DEV && import.meta.env.VITE_DEBUG_SKIP_A
 const DEBUG_SESSION = { user: { id: "00000000-0000-0000-0000-000000000001", email: "debug@local.test", isDebug: true } };
 
 export function AuthProvider({ children }) {
-  const [session, setSession] = useState(DEBUG_SKIP_AUTH ? DEBUG_SESSION : undefined); // undefined = not checked yet, null = signed out
-  const [authError, setAuthError] = useState(null);
+  return <AuthCtx.Provider value={useAuthValue()}>{children}</AuthCtx.Provider>;
+}
+
+function useAuthValue() {
+  const [session, setSession] = useState(/** @type {any} */ (DEBUG_SKIP_AUTH ? DEBUG_SESSION : undefined)); // undefined = not checked yet, null = signed out
+  const [authError, setAuthError] = useState(/** @type {string | null} */ (null));
 
   useEffect(() => {
     if (DEBUG_SKIP_AUTH) return;
@@ -92,8 +96,7 @@ export function AuthProvider({ children }) {
     () => ({ session, user: session ? session.user : null, loading: session === undefined, authError, ...actions }),
     [session, authError, actions]
   );
-
-  return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
+  return value;
 }
 
 export function useAuth() {

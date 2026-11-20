@@ -55,7 +55,7 @@ export default function EntrySheet({ interestId, entryId, minutes: timed = null 
   const [minutes, setMinutes] = useState(
     editing ? editing.minutes : timed || nearestPreset(usualMinutes(entries, interestId))
   );
-  const [text, setText] = useState(editing ? editing.text : "");
+  const [text, setText] = useState((editing ? editing.text : "") || "");
   const [visibility, setVisibility] = useState(editing ? editing.visibility || "private" : "private");
   const [shared, setShared] = useState(editing ? !!editing.sharedToFeed : false);
   const [blocked, setBlocked] = useState(false);
@@ -79,34 +79,35 @@ export default function EntrySheet({ interestId, entryId, minutes: timed = null 
 
   // The presets, plus whatever else is chosen: a timed session rarely lands
   // on a round number, and an old entry may predate these choices.
-  const choices = DURATIONS.includes(minutes) || !(minutes > 0)
+  const choices = !minutes || minutes <= 0 || DURATIONS.includes(minutes)
     ? DURATIONS
     : [minutes, ...DURATIONS];
 
-  async function toggleRecord() {
+  const toggleRecord = async () => {
     if (rec.recording) {
       const blob = await rec.stop();
       if (blob) { setAudio(blob); setAudioMs(rec.ms); }
       return;
     }
     await rec.start();
-  }
+  };
 
   // Same optimistic hide and undo window as before; it just lives here now
   // that an entry is opened by tapping its row.
-  function remove() {
+  const remove = () => {
+    if (!editing) return;
     const { restore, commit } = deleteEntry(editing.id);
     closeSheet();
     offerUndo(t("entryDeleted"), restore, commit);
-  }
+  };
 
-  function useTimer() {
+  const switchToTimer = () => {
     startSession(it.id);
     closeSheet();
     showToast(t("timerStarted"));
-  }
+  };
 
-  function save() {
+  const save = () => {
     const txt = text.trim();
     // Private entries are a diary and are left alone. This only guards what
     // leaves the account: once an entry is public it is readable by other
@@ -143,7 +144,7 @@ export default function EntrySheet({ interestId, entryId, minutes: timed = null 
     if (outcome.leveledUp) levelUpCelebrate(profile); else celebrate(profile);
     closeSheet();
     showCelebration({ interestId: it.id, minutes, coins: COINS_PER_LOG, ...outcome });
-  }
+  };
 
   return (
     <Sheet onClose={closeSheet} className="log-sheet">
@@ -156,7 +157,7 @@ export default function EntrySheet({ interestId, entryId, minutes: timed = null 
               offered while one is running, straight after one was stopped,
               or when fixing an old entry. */}
           {!editing && !session && !timed && (
-            <button type="button" className="log-link btn-with-ico" onClick={useTimer}>
+            <button type="button" className="log-link btn-with-ico" onClick={switchToTimer}>
               <Icon name="clock" size={14} />{t("useTimer")}
             </button>
           )}

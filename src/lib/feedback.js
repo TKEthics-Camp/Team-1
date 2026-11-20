@@ -31,7 +31,8 @@ const MASTER_VOLUME = 0.22;
 
 function getCtx() {
   if (audioCtx) return audioCtx;
-  const Ctx = window.AudioContext || window.webkitAudioContext;
+  // Older Safari only has the prefixed name.
+  const Ctx = window.AudioContext || /** @type {any} */ (window).webkitAudioContext;
   if (!Ctx) return null;
   audioCtx = new Ctx();
   masterGain = audioCtx.createGain();

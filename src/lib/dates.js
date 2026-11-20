@@ -19,7 +19,7 @@ export function keyDays(k) { return Math.round(keyToDate(k).getTime() / 86400000
 export function fmtDate(iso, lang) {
   var d = new Date(iso + "T00:00:00");
   var now = new Date(); now.setHours(0, 0, 0, 0);
-  var diff = Math.round((now - d) / 86400000);
+  var diff = Math.round((now.getTime() - d.getTime()) / 86400000);
   if (diff === 0) return lang === "en" ? "Today" : "今天";
   if (diff === 1) return lang === "en" ? "Yesterday" : "昨天";
   if (lang === "zh") return (d.getMonth() + 1) + "月" + d.getDate() + "日";

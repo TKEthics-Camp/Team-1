@@ -23,7 +23,7 @@ export default function DyingBanner({ interest, entries, photos }) {
       <span className="dying-txt">
         <span className="t">{t("dyingTitle").replace("{name}", nameOf(interest))}</span>
         <span className="sub">
-          {(left === 1 ? t("dyingOneDay") : t("dyingDays").replace("{n}", left))}
+          {(left === 1 ? t("dyingOneDay") : t("dyingDays").replace("{n}", String(left)))}
         </span>
       </span>
     </button>

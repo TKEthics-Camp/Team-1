@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useBack } from "../../lib/useBack";
 import { useI18n } from "../../i18n/I18nContext";
 import { useStore } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
@@ -21,6 +22,7 @@ export default function InterestScreen() {
   const { id } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const goBack = useBack("/");
   const { t, nameOf, nOf } = useI18n();
   const { interests, photos, entries, profile, reviveInterest } = useStore();
   const { openSheet, openViewer, showToast, session, startSession } = useUI();
@@ -61,10 +63,10 @@ export default function InterestScreen() {
     setSearchParams({ tab: next }, { replace: true });
   }
 
-  function startTimer() {
+  const startTimer = () => {
     startSession(it.id);
     showToast(t("timerStarted"));
-  }
+  };
 
   return (
     <>
@@ -74,7 +76,7 @@ export default function InterestScreen() {
             to send every one of those back to Home regardless of which it
             was; real browser/router back returns to whichever actually
             opened this tree. */}
-        <button className="icon" aria-label={t("back")} onClick={() => navigate(-1)}><Icon name="chevronLeft" size={22} /></button>
+        <button className="icon" aria-label={t("back")} onClick={goBack}><Icon name="chevronLeft" size={22} /></button>
         <h1>{nameOf(it)}</h1>
         <button className="icon" aria-label={t("editOrb")} onClick={() => openSheet("orb", it.id)}>⋯</button>
       </TopBar>
@@ -90,7 +92,7 @@ export default function InterestScreen() {
               <span className="tag tag-grey">{t(STAGE_KEY[stage])}</span>
             </span>
             <span className="tree-card-age">
-              {planted === 0 ? t("plantedToday") : t("plantedDays").replace("{n}", planted)}
+              {planted === 0 ? t("plantedToday") : t("plantedDays").replace("{n}", String(planted))}
             </span>
             <Tree interest={it} size={HERO_TREE_SIZE[stage]} stage={stage} health={health} className={health === "healthy" ? "alive" : ""} />
             {canReplay && (
@@ -105,7 +107,7 @@ export default function InterestScreen() {
               <span className="hero-next">
                 {dead ? "" : prog.to === null
                   ? t("stgFull")
-                  : t("toStage").replace("{n}", prog.to - prog.acts).replace("{stage}", t(STAGE_KEY[stage + 1]))}
+                  : t("toStage").replace("{n}", String(prog.to - prog.acts)).replace("{stage}", t(STAGE_KEY[stage + 1]))}
               </span>
             </div>
             <div className="bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label={t(STAGE_KEY[stage])}>
@@ -113,13 +115,13 @@ export default function InterestScreen() {
             </div>
             {dead && (
               <>
-                <div className="sub hero-revive-note">{canRevive ? t("reviveHint") : t("reviveNeed").replace("{n}", REVIVE_COST)}</div>
+                <div className="sub hero-revive-note">{canRevive ? t("reviveHint") : t("reviveNeed").replace("{n}", String(REVIVE_COST))}</div>
                 <button
                   className="btn revive-btn"
                   disabled={!canRevive}
-                  onClick={() => { if (reviveInterest(it.id)) showToast(t("coinsSpent").replace("{n}", REVIVE_COST)); }}
+                  onClick={() => { if (reviveInterest(it.id)) showToast(t("coinsSpent").replace("{n}", String(REVIVE_COST))); }}
                 >
-                  {t("reviveBtn").replace("{n}", REVIVE_COST)}
+                  {t("reviveBtn").replace("{n}", String(REVIVE_COST))}
                 </button>
               </>
             )}

@@ -75,6 +75,17 @@ function leafPuffs(r, count = 12) {
   return pts;
 }
 
+/**
+ * @param {object} props
+ * @param {{ id?: string, color?: string } & Record<string, any>} props.interest
+ * @param {number} props.size
+ * @param {number} [props.stage]
+ * @param {string} [props.health]
+ * @param {string | null} [props.species]
+ * @param {string | null} [props.leafColor]
+ * @param {string | null} [props.season]
+ * @param {string} [props.className]
+ */
 export default function Tree({ interest, size, stage = 4, health = "healthy", species = null, leafColor = null, season = null, className = "" }) {
   const color = interest?.color || "#6EE7A8";
   const kind = species || interest?.species || speciesOf(interest);

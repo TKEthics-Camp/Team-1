@@ -508,13 +508,22 @@ Sheets are not routed. A tapped iPhone reminder opens the screen it points to (a
 
 ### 10.5 Error handling
 
-A root error boundary wraps the providers, and a per-route boundary means one crashed screen does not take the tab bar with it. Errors go to the console only (§14.10).
+A root error boundary wraps the providers, and a per-route boundary means one crashed screen does not take the tab bar with it. Crashes, and errors no boundary catches, are reported to the project's own `crash_reports` table through `report_crash()` (lib/crashReport, 20261114000000): the error, the screen with record ids blanked, the app version and the platform — never anything the student made. Signed-in only, once per crash per session, at most 20 a day per account, kept 90 days. Moderators see the last 14 days on the Reports screen, grouped by error and screen with counts and never names (`crash_digest()`, 20261119000000), and the Me tab's Reports row shows how many crashed this week. Nobody else can read them. The privacy policy says so.
 
-### 10.6 Tests
+### 10.6 Tests and checks
 
-- **Vitest**, 177 tests across 16 files, run with `TZ=Asia/Singapore`. Covers streaks and rest days, growth and health, dates, the derived address, recovery codes, the text filter, guardian links, data export, the saved sync list and the list of records the server has confirmed, the iPhone reminder schedule, which copy of an edit wins, Explore's suggestions, the week strip and Insights, what a log changed, and the session timer.
-- **Privacy checks** (`supabase/tests/privacy_checks.sql`): run in the SQL editor, it signs in as pretend accounts and tries 14 things the database must refuse, then undoes everything it created. See `supabase/README.md`.
-- Nothing tests sync end-to-end or any component.
+`npm run check` runs lint, type checking, every test and the production build, and so does GitHub Actions on every pull request and every push to `main`, `develop` and `feature/*` (`.github/workflows/ci.yml`).
+
+- **Vitest**, 266 tests across 26 files, run with `TZ=Asia/Singapore`.
+  - **Logic:** streaks and rest days, growth and health, dates, the derived address, recovery codes, the text filter, guardian links, data export, the saved sync list and the list of records the server has confirmed, the iPhone reminder schedule, which copy of an edit wins, Explore's suggestions, the week strip and Insights, what a log changed, the session timer, and crash reports.
+  - **Sign-in sync** (`lib/reconcile`, `lib/trash`, `store/syncEngine`): onboarded or not, rebuilding a wiped device's profile, which settings come down and which go up, Recently Deleted, and retrying failed pushes.
+  - **The store end to end** (`store/StoreContext.test.jsx`): the real store on an in-memory IndexedDB against a fake server (`src/test/fakeServer.js`). It covers planting surviving a restart, delete and restore with a tree's logs, a returning account on a wiped device, an unreachable server not starting onboarding, offline work uploading, a newer edit coming down, an erase on another device reaching this one, and a failed push being retried.
+  - **Flows, clicked through** (`src/test/flows.test.jsx`, `src/test/auth.test.jsx`): planting a tree, a refused screen-time hobby, logging (saved, shown, coins paid), deleting with Undo and without, onboarding a new account into a garden, signing up (terms required, passwords must match, a taken username or failed age check signs back out) and signing in by username or email.
+  - **Screens:** Home, Journal, Explore, Profile, the Market and a tree each render in English and Chinese with no React warnings. The back arrow falls back to a sensible screen when it was opened directly.
+  - **The database** (`src/test/database.test.js`): every migration applied in order to a real Postgres (PGlite) on a stand-in for Supabase, then both check scripts below, plus sharing, blocking both ways, crash reports and the moderators' crash digest. See `supabase/README.md`.
+- **ESLint** (`eslint.config.js`): React and hooks rules, zero warnings.
+- **Type checking** (`jsconfig.json`): `tsc` checks the whole app, screens included, from JSDoc and React's own types, with shared shapes in `src/lib/types.js` (records and the profile). Strict mode, null checks included; the one rule left off is `noImplicitAny`, so an untyped callback parameter is allowed. The store, auth, language and UI hooks are fully typed, and so are the shared components' props.
+- **Privacy checks** (`supabase/tests/privacy_checks.sql`, 14 checks) and **recovery checks** (`supabase/tests/recovery_checks.sql`, 9 checks): run automatically by the database test, and by hand in the SQL editor after applying a migration to the live project.
 
 ### 10.7 Deployment
 
@@ -650,9 +659,9 @@ Ordered by what stands between this build and real children using it.
 
 **14.9 No automated image screening.** Photos are visible to classmates and to anyone the owner is discoverable to. Nothing inspects them; moderation is after the fact.
 
-**14.10 No error monitoring in production.** A crash is discovered when a child tells a teacher.
+**14.10 Error monitoring.** Resolved: crashes are reported to `crash_reports` (§10.5) once migration 20261114000000 is applied, and shown to moderators on the Reports screen with a count on the Me tab once 20261119000000 is (§10.5). No email or push alert: a moderator sees them when they next open the app.
 
-**14.11 Test coverage.** The database rules now have a self-checking script (§10.6) that has to be run by hand after each migration; nothing runs it automatically. Components and end-to-end sync are still untested.
+**14.11 Test coverage.** Covered (§10.6): logic, sync, the store end to end, the main flows clicked through, every migration and the database rules on a real Postgres. Not covered: anything that needs Supabase itself (auth emails, Storage uploads, edge functions) or a real phone — those are still checked by hand.
 
 **14.12 The name.** "Forest" is taken on the App Store by an app that also grows trees. Choose a new name before any store listing. The codebase also still says "orb" in component and CSS names.
 

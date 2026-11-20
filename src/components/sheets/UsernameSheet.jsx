@@ -12,7 +12,7 @@ export default function UsernameSheet() {
   const { profile, changeUsername } = useStore();
   const { closeSheet } = useUI();
   const [name, setName] = useState((profile && profile.name) || "");
-  const [errorKey, setErrorKey] = useState(null);
+  const [errorKey, setErrorKey] = useState(/** @type {string | null} */ (null));
   const [saving, setSaving] = useState(false);
 
   async function save() {

@@ -29,6 +29,7 @@ export function prepareImage(file, max, cb) {
     c.width = Math.max(1, Math.round(img.width * scale));
     c.height = Math.max(1, Math.round(img.height * scale));
     var ctx = c.getContext("2d");
+    if (!ctx) { cb(null, "photoUnreadable"); return; }
     // JPEG has no alpha, so anything transparent would flatten to black
     // without this — screenshots and exported drawings, mostly.
     ctx.fillStyle = "#fff";
@@ -44,7 +45,7 @@ export function prepareImage(file, max, cb) {
 
 // Creates an object URL for a blob and revokes it on unmount or when the blob changes.
 export function useObjectURL(blob) {
-  const [url, setUrl] = useState(null);
+  const [url, setUrl] = useState(/** @type {string | null} */ (null));
   useEffect(() => {
     if (!blob) { setUrl(null); return; }
     const u = URL.createObjectURL(blob);
@@ -64,7 +65,7 @@ export function useObjectURL(blob) {
 export function usePhotoURL(photo, onDownloaded) {
   const blob = photo && photo.blob;
   const storagePath = photo && photo.storagePath;
-  const [url, setUrl] = useState(null);
+  const [url, setUrl] = useState(/** @type {string | null} */ (null));
 
   useEffect(() => {
     if (blob) {
@@ -101,7 +102,7 @@ export function usePhotoURL(photo, onDownloaded) {
 export function useAudioURL(entry, onDownloaded) {
   const blob = entry && entry.audio;
   const storagePath = entry && entry.audioPath;
-  const [url, setUrl] = useState(null);
+  const [url, setUrl] = useState(/** @type {string | null} */ (null));
 
   useEffect(() => {
     if (blob) {

@@ -8,6 +8,12 @@ import { globalStreak } from "./derived";
 // Pure on purpose. The celebration is the reward for logging, and a reward
 // that claimed growth the tree didn't have would teach a student not to
 // believe it.
+/**
+ * @param {import("./types").Interest} interest
+ * @param {import("./types").Entry[]} entries
+ * @param {import("./types").Photo[]} photos
+ * @param {{ entry?: import("./types").Entry | null, photo?: import("./types").Photo | null }} [added]
+ */
 export function logOutcome(interest, entries, photos, { entry = null, photo = null } = {}) {
   const nextEntries = entry ? [...entries, entry] : entries;
   const nextPhotos = photo ? [...photos, photo] : photos;
@@ -26,11 +32,17 @@ export function logOutcome(interest, entries, photos, { entry = null, photo = nu
 
 // The duration to offer first for a hobby: whatever was logged for it most
 // recently, since most sessions of one hobby run about the same length.
+/**
+ * @param {import("./types").Entry[]} entries
+ * @param {string} interestId
+ * @param {number} [fallback]
+ */
 export function usualMinutes(entries, interestId, fallback = 30) {
+  /** @type {import("./types").Entry | null} */
   let latest = null;
-  entries.forEach((e) => {
-    if (e.interestId !== interestId || !(e.minutes > 0)) return;
+  for (const e of entries) {
+    if (e.interestId !== interestId || !e.minutes || e.minutes <= 0) continue;
     if (!latest || (e.createdAt || 0) > (latest.createdAt || 0)) latest = e;
-  });
-  return latest ? latest.minutes : fallback;
+  }
+  return latest && latest.minutes ? latest.minutes : fallback;
 }

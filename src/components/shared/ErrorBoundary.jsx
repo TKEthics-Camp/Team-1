@@ -1,5 +1,6 @@
 import { Component } from "react";
 import Icon from "./Icon";
+import { reportCrash } from "../../lib/crashReport";
 
 // Wraps the whole app (see main.jsx) — including every provider — so it
 // can't itself depend on any of them; a crash in a context is exactly the
@@ -18,6 +19,7 @@ export default class ErrorBoundary extends Component {
 
   componentDidCatch(error, info) {
     console.error("Uncaught render error:", error, info);
+    reportCrash(error, { componentStack: info && info.componentStack });
   }
 
   render() {

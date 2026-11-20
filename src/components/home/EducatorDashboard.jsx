@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useI18n } from "../../i18n/I18nContext";
-import { useStore } from "../../store/StoreContext";
+import { useStore, useProfile } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
 import { fetchClassmates, mintOrFetchClassCode } from "../../lib/remote";
 import TopBar from "../shared/TopBar";
@@ -14,10 +14,11 @@ import PersonAvatar from "../shared/PersonAvatar";
 // here — this *is* their Home.
 export default function EducatorDashboard() {
   const { t } = useI18n();
-  const { profile, updateProfile } = useStore();
+  const { updateProfile } = useStore();
+  const profile = useProfile();
   const { openSheet } = useUI();
   const [copied, setCopied] = useState(false);
-  const [state, setState] = useState({ loading: true, students: [] });
+  const [state, setState] = useState(/** @type {{ loading: boolean, students: any[] }} */ ({ loading: true, students: [] }));
 
   // Self-heal for an account whose class code never landed — the mint
   // attempt at the end of onboarding is fire-and-forget, so a network

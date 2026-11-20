@@ -50,3 +50,11 @@ describe("mergePulled", () => {
     expect(mergePulled("entries", { id: "e", text: "a" }, { id: "e", text: "a", deletedAt: 5 }).deletedAt).toBe(5);
   });
 });
+
+describe("touched", () => {
+  it("stamps now, and never goes backwards", async () => {
+    const { touched } = await import("./newestEdit");
+    expect(touched({ id: "a" }, 500).updatedAt).toBe(500);
+    expect(touched({ id: "a", updatedAt: 900 }, 500).updatedAt).toBe(901);
+  });
+});

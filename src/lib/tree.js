@@ -14,10 +14,13 @@ const DEAD = 30;  // gone
 
 // The most recent day this tree was tended: a log, a photo, a revive, or —
 // for a brand-new tree with nothing yet — the day it was planted.
+// Both lists come newest first, so only their first item can be the latest.
 export function lastActiveDay(interest, entries, photos) {
   const days = [];
-  entriesOf(entries, interest.id).forEach((e) => days.push(keyDays(e.date)));
-  photosOf(photos, interest.id).forEach((p) => days.push(keyDays(dateKey(new Date(p.createdAt)))));
+  const [latestEntry] = entriesOf(entries, interest.id);
+  const [latestPhoto] = photosOf(photos, interest.id);
+  if (latestEntry) days.push(keyDays(latestEntry.date));
+  if (latestPhoto) days.push(keyDays(dateKey(new Date(latestPhoto.createdAt))));
   if (interest.revivedAt) days.push(keyDays(dateKey(new Date(interest.revivedAt))));
   if (!days.length) days.push(keyDays(dateKey(new Date(interest.createdAt || Date.now()))));
   return Math.max(...days);
@@ -42,7 +45,7 @@ const STAGE_COSTS = [5, 6, 7, 8]; // cost to go from stage N to N+1
 const STAGE_THRESHOLDS = STAGE_COSTS.reduce((acc, cost) => {
   acc.push((acc[acc.length - 1] || 0) + cost);
   return acc;
-}, []); // [5, 11, 18, 26]
+}, /** @type {number[]} */ ([])); // [5, 11, 18, 26]
 
 export function treeStage(interest, entries, photos) {
   const acts = entriesOf(entries, interest.id).length + photosOf(photos, interest.id).length;

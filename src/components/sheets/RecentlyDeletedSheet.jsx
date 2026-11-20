@@ -12,8 +12,8 @@ export default function RecentlyDeletedSheet() {
   const { t, lang, nameOf } = useI18n();
   const { listTrash, restoreTrashed, purgeTrashed } = useStore();
   const { closeSheet, showToast } = useUI();
-  const [items, setItems] = useState(null);
-  const [armed, setArmed] = useState(null); // id awaiting a second tap to erase
+  const [items, setItems] = useState(/** @type {any[] | null} */ (null));
+  const [armed, setArmed] = useState(/** @type {string | null} */ (null)); // id awaiting a second tap to erase
 
   const load = useCallback(() => { listTrash().then(setItems); }, [listTrash]);
   useEffect(() => { load(); }, [load]);
@@ -46,7 +46,7 @@ export default function RecentlyDeletedSheet() {
   return (
     <Sheet onClose={closeSheet}>
       <h2>{t("recentlyDeleted")}</h2>
-      <div className="sub">{t("trashNote").replace("{n}", TRASH_DAYS)}</div>
+      <div className="sub">{t("trashNote").replace("{n}", String(TRASH_DAYS))}</div>
 
       {items === null ? (
         <div className="sub">{t("feedLoading")}</div>
@@ -63,7 +63,7 @@ export default function RecentlyDeletedSheet() {
                 <span className="t">{label(item)}</span>
                 <span className="sub">
                   {fmtDate(dateKey(new Date(item.deletedAt)), lang) + " · " +
-                    t("trashDaysLeft").replace("{n}", daysLeft(item))}
+                    t("trashDaysLeft").replace("{n}", String(daysLeft(item)))}
                 </span>
               </span>
               <button type="button" className="chip" onClick={() => restore(item)}>{t("restore")}</button>

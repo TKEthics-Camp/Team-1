@@ -74,7 +74,7 @@ export function useReminderTimers(interests, entries, photos, lang, nameOf, t) {
         once(`dead:${it.id}:${day}`, () => notify(t("appName"), `${nameOf(it)} — ${t("hlDead")}`));
       }
     });
-  }, [interests, entries, photos, lang]);
+  }, [interests, entries, photos, lang, nameOf, t]);
 }
 
 export function askNotifications() {

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "../../i18n/I18nContext";
-import { useStore } from "../../store/StoreContext";
+import { useStore, useProfile } from "../../store/StoreContext";
 import { useUI } from "../../ui/UIContext";
 import { dueNudges } from "../../lib/reminders";
 import { getResurfacedMemory } from "../../lib/resurfaced";
@@ -36,7 +36,8 @@ function todayLabel(lang) {
 
 export default function HomeScreen() {
   const { t, lang } = useI18n();
-  const { profile, interests, photos, entries } = useStore();
+  const { interests, photos, entries } = useStore();
+  const profile = useProfile();
   const { dismissed, openSheet, session } = useUI();
   const navigate = useNavigate();
   // "Zoom out": one tree at a time, or the whole forest at once. Local state

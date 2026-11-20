@@ -23,6 +23,18 @@ If a migration is still applied by hand for any reason, check it landed with
 a query afterwards — the editor runs a file as one transaction, and one that
 fails part-way can leave the database half changed.
 
+## Tested automatically
+
+`src/test/database.test.js` applies every migration in this folder, in
+order, to a real Postgres running inside the test suite (PGlite), on top of
+`tests/supabase_stub.sql` — a stand-in for the parts of Supabase the
+migrations build on. It then runs both check scripts below and some checks
+of its own. That happens on every `npm test` and in CI, so a migration that
+doesn't apply, or a rule that stops holding, fails before it ships.
+
+It can't replace running the scripts on the live project after applying a
+migration: Supabase itself isn't in the test, only a stand-in.
+
 ## Checking the privacy rules
 
 `tests/privacy_checks.sql` signs in as a set of pretend accounts and tries

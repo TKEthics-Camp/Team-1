@@ -20,18 +20,18 @@ export default function PhotoSheet({ interestId }) {
   const { closeSheet, celebrate: showCelebration } = useUI();
   const it = interests.find((x) => x.id === interestId);
 
-  const fileRef = useRef(null);
-  const [blob, setBlob] = useState(null);
+  const fileRef = useRef(/** @type {HTMLInputElement | null} */ (null));
+  const [blob, setBlob] = useState(/** @type {Blob | null} */ (null));
   const [caption, setCaption] = useState("");
-  const [visibility, setVisibility] = useState("private");
+  const [visibility, setVisibility] = useState(/** @type {"private" | "public"} */ ("private"));
   const [blocked, setBlocked] = useState(false);
   const [pinned, setPinned] = useState(false);
-  const [pickError, setPickError] = useState(null);
+  const [pickError, setPickError] = useState(/** @type {string | null} */ (null));
   const previewUrl = useObjectURL(blob);
 
   if (!it) return null;
 
-  function onFileChange(e) {
+  const onFileChange = (e) => {
     const f = e.target.files && e.target.files[0];
     if (!f) return;
     setPickError(null);
@@ -41,9 +41,9 @@ export default function PhotoSheet({ interestId }) {
     });
     // so picking the same file again after an error still fires onChange
     e.target.value = "";
-  }
+  };
 
-  function save() {
+  const save = () => {
     if (!blob) return;
     // Same rule as a journal entry: private is the child's own, public is
     // everyone's. The photo itself cannot be checked here — that is what
@@ -62,7 +62,7 @@ export default function PhotoSheet({ interestId }) {
     if (outcome.leveledUp) levelUpCelebrate(profile); else celebrate(profile);
     closeSheet();
     showCelebration({ interestId: it.id, minutes: 0, coins: COINS_PER_LOG, ...outcome });
-  }
+  };
 
   return (
     <Sheet onClose={closeSheet}>
@@ -70,7 +70,7 @@ export default function PhotoSheet({ interestId }) {
       <button className="btn2" onClick={() => fileRef.current?.click()}>{t("choosePhoto")}</button>
       <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={onFileChange} />
       {pickError && <div className="field-error">{t(pickError)}</div>}
-      {blob && <img src={previewUrl} alt="" style={{ maxWidth: 150, borderRadius: 12 }} />}
+      {blob && <img src={previewUrl || undefined} alt="" style={{ maxWidth: 150, borderRadius: 12 }} />}
       <Field label={t("caption")}>
         <input
           type="text"

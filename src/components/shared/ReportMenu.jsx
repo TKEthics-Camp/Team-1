@@ -31,6 +31,16 @@ const REPORT_REASONS = ["reportSpam", "reportMean", "reportUnsafe", "reportOther
 // caller that didn't pass one). Both actions tell the caller first and talk
 // to the network after: the row is already on screen, and making someone
 // wait on a request to stop seeing something they just reported reads badly.
+/**
+ * @param {object} props
+ * @param {string} props.targetType
+ * @param {string} props.targetId
+ * @param {string | null} [props.authorId]
+ * @param {((targetId: string) => void) | null} [props.onReported]
+ * @param {((authorId: string) => void) | null} [props.onBlocked]
+ * @param {string | null} [props.label]
+ * @param {"dots" | "button"} [props.variant]
+ */
 export default function ReportMenu({
   targetType,
   targetId,
@@ -47,7 +57,7 @@ export default function ReportMenu({
   const { t } = useI18n();
   const { user } = useAuth();
   const { showToast } = useUI();
-  const [step, setStep] = useState(null); // null | "menu" | "report"
+  const [step, setStep] = useState(/** @type {string | null} */ (null)); // null | "menu" | "report"
 
   useEffect(() => {
     if (!step) return undefined;

@@ -13,7 +13,7 @@ export default function UserSearch() {
   const { user } = useAuth();
   const { openSheet } = useUI();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState(/** @type {any[]} */ ([]));
   const [searched, setSearched] = useState(false);
 
   useEffect(() => {

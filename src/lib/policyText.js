@@ -67,6 +67,10 @@ export const PRIVACY = {
           "A parent or guardian's email address, only for accounts that need guardian permission, and only to ask for that permission.",
           "父母或监护人的电子邮箱，仅用于需要监护人同意的账号，且仅用于征求该同意。",
         ],
+        [
+          "If the app crashes while you are signed in, a short technical report: the error, which screen it happened on, the app's version, and whether it was the website or the iPhone app. It never includes anything you wrote, photographed or recorded. Only the people who run Forest can read it, and only to fix the problem.",
+          "如果你在登录状态下应用崩溃，会发送一份简短的技术报告：错误信息、发生在哪个页面、应用版本，以及是网页版还是 iPhone 应用。报告绝不包含你写下、拍摄或录制的任何内容。只有运营 Forest 的人员可以查看，且仅用于修复问题。",
+        ],
       ],
     },
     {
@@ -167,6 +171,10 @@ export const PRIVACY = {
         [
           "If a parent or guardian's permission is needed, we keep a record of that permission — and who asked for it — for as long as the account exists, as evidence that it was given.",
           "如果账号需要父母或监护人同意，我们会在账号存续期间保留该同意的记录（以及谁请求了同意），作为已获得同意的证明。",
+        ],
+        [
+          "Crash reports are deleted after 90 days, or straight away if the account is deleted.",
+          "崩溃报告会在 90 天后删除；如果账号被删除，则立即删除。",
         ],
       ],
     },

@@ -22,7 +22,7 @@ export default function PasswordSheet() {
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [errorKey, setErrorKey] = useState(null);
+  const [errorKey, setErrorKey] = useState(/** @type {string | null} */ (null));
   const [saving, setSaving] = useState(false);
 
   async function save() {

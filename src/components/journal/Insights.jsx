@@ -79,7 +79,7 @@ export default function Insights() {
       <section className="ins-card">
         <div className="ins-head">
           <h2>{t("insActivity")}</h2>
-          <span className="ins-note">{t("insActiveDays").replace("{n}", s.activeDays)}</span>
+          <span className="ins-note">{t("insActiveDays").replace("{n}", String(s.activeDays))}</span>
         </div>
         {/* A month's name sits over the first week that starts in it. */}
         <div className="heat-months" aria-hidden="true">
@@ -91,7 +91,7 @@ export default function Insights() {
             </span>
           ))}
         </div>
-        <div className="heat" role="img" aria-label={t("insActiveDays").replace("{n}", s.activeDays)}>
+        <div className="heat" role="img" aria-label={t("insActiveDays").replace("{n}", String(s.activeDays))}>
           {grid.flat().map((d) => (
             <i
               key={d.key}

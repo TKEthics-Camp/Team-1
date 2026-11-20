@@ -1,4 +1,18 @@
 import { defineConfig } from "vite";
+import { execSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+
+// Which build a crash report came from (lib/crashReport): the package
+// version plus the commit, when there is one.
+function appVersion() {
+  const { version } = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8"));
+  try {
+    return version + "+" + execSync("git rev-parse --short HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+  } catch {
+    return version;
+  }
+}
+process.env.VITE_APP_VERSION ||= appVersion();
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({

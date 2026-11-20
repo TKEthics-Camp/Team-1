@@ -69,6 +69,7 @@ export const DECORATIONS = [
 // Curated hobby ideas — the raw material for Explore and For-you.
 // No user content, no people: just things a kid could go do offline.
 // [name, nameZh, palette index, category (drives recommendations), descEn, descZh].
+/** @type {import("./types").Idea[]} */
 export const IDEAS = [
   ["Basketball", "篮球", 4, "sport",
     "A team sport where you shoot a ball through a hoop — great for speed, teamwork, and energy.",
